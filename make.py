@@ -19,7 +19,7 @@ if __name__ == "__main__":
     if command == ["build"]:
         suite = unittest.TestSuite()
         for module in [
-            "make",
+            "rlvideo",
         ]:
             suite.addTest(doctest.DocTestSuite(
                 importlib.import_module(module),
