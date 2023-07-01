@@ -50,6 +50,10 @@ class Timeline:
       Clip(source=Source(name='B'), in_out=Region(start=0, end=5), position=5)
     Section
       Clip(source=Source(name='B'), in_out=Region(start=5, end=10), position=10)
+
+    >>> timeline.flatten().render_ascii().render()
+    |AAAAA|AAAAA|BBBBB|
+    |     |BBBBB|     |
     """
 
     def __init__(self):
