@@ -115,10 +115,73 @@ class Sections:
         for section in self.sections:
             section.print_test_repr()
 
+    def render_ascii(self):
+        """
+        >>> Clips([
+        ...     Source("A").create_clip(0, 10),
+        ...     Source("b").create_clip(0, 10).at(5),
+        ... ]).flatten().render_ascii().render()
+        |AAAAA|AAAAA|bbbbb|
+        |     |bbbbb|     |
+        """
+        canvas = AsciiCanvas()
+        offset = 1
+        lines = [0]
+        for section in self.sections:
+            canvas.add_canvas(section.render_ascii(), dx=offset)
+            lines.append(canvas.get_max_x()+1)
+            offset += 1
+        for line in lines:
+            for y in range(canvas.get_max_y()+1):
+                canvas.add_text("|", line, y)
+        return canvas
+
+class AsciiCanvas:
+
+    def __init__(self):
+        self.chars = {}
+
+    def get_max_x(self):
+        return max(x for (x, y) in self.chars.keys())
+
+    def get_max_y(self):
+        return max(y for (x, y) in self.chars.keys())
+
+    def add_text(self, text, x, y):
+        for index, char in enumerate(text):
+            self.chars[(x+index, y)] = char
+
+    def add_canvas(self, canvas, dx=0, dy=0):
+        for (x, y), value in canvas.chars.items():
+            self.chars[(x+dx, y+dy)] = value
+
+    def render(self):
+        if self.chars:
+            max_y = max(y for (x, y) in self.chars.keys())
+            for y in range(max_y+1):
+                chars_for_y = {}
+                for (x2, y2), char in self.chars.items():
+                    if y2 == y:
+                        chars_for_y[x2] = char
+                if chars_for_y:
+                    max_x = max(x for x in chars_for_y.keys())
+                    print("".join([
+                        chars_for_y.get(x, " ")
+                        for x in range(max_x+1)
+                    ]))
+                else:
+                    print()
+
 class Section:
 
     def __init__(self, clips):
         self.clips = clips
+
+    def render_ascii(self):
+        canvas = AsciiCanvas()
+        for y, clip in enumerate(self.clips):
+            canvas.add_canvas(clip.render_ascii(), dx=clip.start, dy=y)
+        return canvas
 
     def print_test_repr(self):
         print(f"Section")
@@ -170,6 +233,19 @@ class Clip(namedtuple("Clip", "source,in_out,position")):
     @property
     def length(self):
         return self.in_out.length
+
+    @property
+    def start(self):
+        return self.position
+
+    def render_ascii(self):
+        """
+        >>> Source("A").create_clip(0, 4).render_ascii().render()
+        AAAA
+        """
+        canvas = AsciiCanvas()
+        canvas.add_text(self.source.name[0]*self.length, 0, 0)
+        return canvas
 
     @property
     def region(self):
