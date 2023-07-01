@@ -10,8 +10,8 @@ class Timeline:
     ...     0,
     ...     Source(name="A").create_clip(0, 10)
     ... )
-    >>> timeline.get_groups().print_test_repr()
-    Group
+    >>> timeline.flatten().print_test_repr()
+    Section
       Clip(source=Source(name='A'), in_out=Region(start=0, end=10), position=0)
 
     Two non-overlapping clips returns two groups with each clip in each:
@@ -25,10 +25,10 @@ class Timeline:
     ...     10,
     ...     Source(name="B").create_clip(0, 10)
     ... )
-    >>> timeline.get_groups().print_test_repr()
-    Group
+    >>> timeline.flatten().print_test_repr()
+    Section
       Clip(source=Source(name='A'), in_out=Region(start=0, end=10), position=0)
-    Group
+    Section
       Clip(source=Source(name='B'), in_out=Region(start=0, end=10), position=10)
 
     Overlap:
@@ -42,66 +42,99 @@ class Timeline:
     ...     5,
     ...     Source(name="B").create_clip(0, 10) #      |xxxxx|xxxxx
     ... )
-    >>> timeline.get_groups().print_test_repr()
-    Group
+    >>> timeline.flatten().print_test_repr()
+    Section
       Clip(source=Source(name='A'), in_out=Region(start=0, end=5), position=0)
-    Group
+    Section
       Clip(source=Source(name='A'), in_out=Region(start=5, end=10), position=5)
       Clip(source=Source(name='B'), in_out=Region(start=0, end=5), position=5)
-    Group
+    Section
       Clip(source=Source(name='B'), in_out=Region(start=5, end=10), position=10)
     """
 
     def __init__(self):
-        self.clips = []
+        self.clips = Clips()
 
     def add(self, position, clip):
         self.clips.append(clip.at(position))
 
-    def get_groups(self):
+    def flatten(self):
+        return self.clips.flatten()
+
+class Clips(list):
+
+    def flatten(self):
+        sections = Sections()
+        start = self.start
+        for overlap in self.get_regions_with_overlap():
+            for clip in self.cut_region(Region(start=start, end=overlap.start)):
+                sections.add(Clips([clip]))
+            sections.add(self.cut_region(overlap))
+            start = overlap.end
+        for clip in self.cut_region(Region(start=start, end=self.end)):
+            sections.add(Clips([clip]))
+        return sections
+
+    def get_regions_with_overlap(self):
         overlaps = Regions()
-        clips = list(self.clips)
+        clips = list(self)
         while clips:
             clip = clips.pop(0)
             for other in clips:
                 overlap = clip.get_overlap(other)
                 if overlap:
-                    overlaps.append(overlap)
-        start = 0
-        groups = Groups()
-        for overlap in overlaps.merge():
-            groups.extend(self.get_single_groups(Region(start=start, end=overlap.start)))
-            groups.append(self.extract_region(overlap))
-            start = overlap.end
-        groups.extend(self.get_single_groups(Region(start=start, end=self.last)))
-        return groups
+                    overlaps.add(overlap)
+        return overlaps.merge()
 
-    def get_single_groups(self, region):
-        groups = []
-        for clip in self.extract_region(region):
-            groups.append([clip])
-        return groups
-
-    @property
-    def last(self):
-        return max(clip.region.end for clip in self.clips)
-
-    def extract_region(self, region):
-        clips = []
-        for clip in self.clips:
-            y = clip.extract_region(region)
-            if y:
-                clips.append(y)
+    def cut_region(self, region):
+        clips = Clips()
+        for clip in self:
+            cut = clip.cut_region(region)
+            if cut:
+                clips.append(cut)
         return clips
 
-class Regions(list):
+    @property
+    def start(self):
+        return min(clip.region.start for clip in self)
+
+    @property
+    def end(self):
+        return max(clip.region.end for clip in self)
+
+class Sections:
+
+    def __init__(self):
+        self.sections = []
+
+    def add(self, *clips):
+        for c in clips:
+            self.sections.append(Section(c))
 
     def print_test_repr(self):
-        for x in self:
-            print(x)
+        for section in self.sections:
+            section.print_test_repr()
+
+class Section:
+
+    def __init__(self, clips):
+        self.clips = clips
+
+    def print_test_repr(self):
+        print(f"Section")
+        for clip in self.clips:
+            print(f"  {clip}")
+
+class Regions:
+
+    def __init__(self):
+        self.regions = []
+
+    def add(self, region):
+        self.regions.append(region)
 
     def merge(self):
-        rest = sorted(self, key=lambda x: x.start)
+        rest = sorted(self.regions, key=lambda x: x.start)
         merged = []
         while rest:
             x = rest.pop(0)
@@ -115,6 +148,10 @@ class Regions(list):
             else:
                 merged.append(x)
         return merged
+
+    def print_test_repr(self):
+        for x in self.regions:
+            print(x)
 
 class Source(namedtuple("Source", "name")):
 
@@ -158,10 +195,10 @@ class Clip(namedtuple("Clip", "source,in_out,position")):
         """
         return self.region.get_overlap(clip.region)
 
-    def extract_region(self, region):
+    def cut_region(self, region):
         """
         >>> clip = Clip(source=Source("A"), in_out=Region(start=10, end=20), position=2)
-        >>> clip.extract_region(Region(start=5, end=10))
+        >>> clip.cut_region(Region(start=5, end=10))
         Clip(source=Source(name='A'), in_out=Region(start=13, end=18), position=5)
         """
         overlap = self.region.get_overlap(region)
@@ -239,11 +276,3 @@ class Region(namedtuple("Region", "start,end")):
                 start=max(self.start, region.start),
                 end=min(self.end, region.end)
             )
-
-class Groups(list):
-
-    def print_test_repr(self):
-        for clips in self:
-            print(f"Group")
-            for clip in clips:
-                print(f"  {clip}")
