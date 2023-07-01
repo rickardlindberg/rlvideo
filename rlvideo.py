@@ -140,42 +140,6 @@ class Sections:
                 canvas.add_text("|", line, y)
         return canvas
 
-class AsciiCanvas:
-
-    def __init__(self):
-        self.chars = {}
-
-    def get_max_x(self):
-        return max(x for (x, y) in self.chars.keys())
-
-    def get_max_y(self):
-        return max(y for (x, y) in self.chars.keys())
-
-    def add_text(self, text, x, y):
-        for index, char in enumerate(text):
-            self.chars[(x+index, y)] = char
-
-    def add_canvas(self, canvas, dx=0, dy=0):
-        for (x, y), value in canvas.chars.items():
-            self.chars[(x+dx, y+dy)] = value
-
-    def render(self):
-        if self.chars:
-            max_y = max(y for (x, y) in self.chars.keys())
-            for y in range(max_y+1):
-                chars_for_y = {}
-                for (x2, y2), char in self.chars.items():
-                    if y2 == y:
-                        chars_for_y[x2] = char
-                if chars_for_y:
-                    max_x = max(x for x in chars_for_y.keys())
-                    print("".join([
-                        chars_for_y.get(x, " ")
-                        for x in range(max_x+1)
-                    ]))
-                else:
-                    print()
-
 class Section:
 
     def __init__(self, clips):
@@ -356,3 +320,39 @@ class Region(namedtuple("Region", "start,end")):
                 start=max(self.start, region.start),
                 end=min(self.end, region.end)
             )
+
+class AsciiCanvas:
+
+    def __init__(self):
+        self.chars = {}
+
+    def get_max_x(self):
+        return max(x for (x, y) in self.chars.keys())
+
+    def get_max_y(self):
+        return max(y for (x, y) in self.chars.keys())
+
+    def add_text(self, text, x, y):
+        for index, char in enumerate(text):
+            self.chars[(x+index, y)] = char
+
+    def add_canvas(self, canvas, dx=0, dy=0):
+        for (x, y), value in canvas.chars.items():
+            self.chars[(x+dx, y+dy)] = value
+
+    def render(self):
+        if self.chars:
+            max_y = max(y for (x, y) in self.chars.keys())
+            for y in range(max_y+1):
+                chars_for_y = {}
+                for (x2, y2), char in self.chars.items():
+                    if y2 == y:
+                        chars_for_y[x2] = char
+                if chars_for_y:
+                    max_x = max(x for x in chars_for_y.keys())
+                    print("".join([
+                        chars_for_y.get(x, " ")
+                        for x in range(max_x+1)
+                    ]))
+                else:
+                    print()
