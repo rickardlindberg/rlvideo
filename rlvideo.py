@@ -180,7 +180,7 @@ class Section:
     def render_ascii(self):
         canvas = AsciiCanvas()
         for y, clip in enumerate(self.clips):
-            canvas.add_canvas(clip.render_ascii(), dx=clip.start, dy=y)
+            canvas.add_canvas(clip.render_ascii(), dy=y)
         return canvas
 
     def print_test_repr(self):
@@ -244,7 +244,7 @@ class Clip(namedtuple("Clip", "source,in_out,position")):
         AAAA
         """
         canvas = AsciiCanvas()
-        canvas.add_text(self.source.name[0]*self.length, 0, 0)
+        canvas.add_text(self.source.name[0]*self.length, self.start, 0)
         return canvas
 
     @property
