@@ -52,8 +52,8 @@ class Timeline:
       Clip(source=Source(name='B'), in_out=Region(start=5, end=10), position=10)
 
     >>> timeline.flatten().render_ascii().render()
-    |AAAAA|AAAAA|BBBBB|
-    |     |BBBBB|     |
+    |A0-->|A5-->|B5-->|
+    |     |B0-->|     |
     """
 
     def __init__(self):
@@ -125,8 +125,8 @@ class Sections:
         ...     Source("A").create_clip(0, 10),
         ...     Source("b").create_clip(0, 10).at(5),
         ... ]).flatten().render_ascii().render()
-        |AAAAA|AAAAA|bbbbb|
-        |     |bbbbb|     |
+        |A0-->|A5-->|b5-->|
+        |     |b0-->|     |
         """
         canvas = AsciiCanvas()
         offset = 1
@@ -209,10 +209,14 @@ class Clip(namedtuple("Clip", "source,in_out,position")):
     def render_ascii(self):
         """
         >>> Source("A").create_clip(0, 4).render_ascii().render()
-        AAAA
+        A0->
         """
         canvas = AsciiCanvas()
-        canvas.add_text(self.source.name[0]*self.length, self.start, 0)
+        text = self.source.name[0]+str(self.in_out.start)
+        text = text+"-"*(self.length-len(text)-1)
+        text = text+">"
+        assert len(text) == self.length
+        canvas.add_text(text, self.start, 0)
         return canvas
 
     @property
