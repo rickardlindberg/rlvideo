@@ -57,13 +57,91 @@ class Timeline:
     """
 
     def __init__(self):
-        self.clips = Cuts()
+        self.cuts = Cuts()
 
     def add(self, position, clip):
-        self.clips.append(clip.at(position))
+        self.cuts.append(clip.at(position))
 
     def flatten(self):
-        return self.clips.flatten()
+        return self.cuts.flatten()
+
+class Source(namedtuple("Source", "name")):
+
+    def create_cut(self, start, end):
+        return Cut.create(
+            source=self,
+            in_out=Region(start=start, end=end)
+        )
+
+class Cut(namedtuple("Cut", "source,in_out,position")):
+
+    @staticmethod
+    def create(source, in_out, position=0):
+        return Cut(source=source, in_out=in_out, position=position)
+
+    @property
+    def length(self):
+        return self.in_out.length
+
+    @property
+    def start(self):
+        return self.position
+
+    def render_ascii(self):
+        """
+        >>> Source("A").create_cut(0, 4).render_ascii().render()
+        A0->
+        """
+        canvas = AsciiCanvas()
+        text = self.source.name[0]+str(self.in_out.start)
+        text = text+"-"*(self.length-len(text)-1)
+        text = text+">"
+        assert len(text) == self.length
+        canvas.add_text(text, self.start, 0)
+        return canvas
+
+    @property
+    def region(self):
+        """
+        >>> Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10).region
+        Region(start=10, end=20)
+        """
+        return Region(start=self.position, end=self.position+self.length)
+
+    def at(self, position):
+        """
+        >>> Cut.create(source=Source("A"), in_out=Region(start=0, end=10)).at(10)
+        Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=10)
+        """
+        return self._replace(position=position)
+
+    def get_overlap(self, clip):
+        """
+        >>> a = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=5)
+        >>> b = Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10)
+        >>> a.get_overlap(b)
+        Region(start=10, end=15)
+        """
+        return self.region.get_overlap(clip.region)
+
+    def cut_region(self, region):
+        """
+        >>> clip = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
+        >>> clip.cut_region(Region(start=5, end=10))
+        Cut(source=Source(name='A'), in_out=Region(start=13, end=18), position=5)
+        """
+        overlap = self.region.get_overlap(region)
+        if overlap:
+            new_start = self.in_out.start+overlap.start-self.position
+            return self._replace(
+                position=overlap.start,
+                in_out=Region(
+                    start=new_start,
+                    end=new_start+overlap.length,
+                )
+            )
+        else:
+            return None
 
 class Cuts(list):
 
@@ -183,84 +261,6 @@ class Regions:
     def print_test_repr(self):
         for x in self.regions:
             print(x)
-
-class Source(namedtuple("Source", "name")):
-
-    def create_cut(self, start, end):
-        return Cut.create(
-            source=self,
-            in_out=Region(start=start, end=end)
-        )
-
-class Cut(namedtuple("Cut", "source,in_out,position")):
-
-    @staticmethod
-    def create(source, in_out, position=0):
-        return Cut(source=source, in_out=in_out, position=position)
-
-    @property
-    def length(self):
-        return self.in_out.length
-
-    @property
-    def start(self):
-        return self.position
-
-    def render_ascii(self):
-        """
-        >>> Source("A").create_cut(0, 4).render_ascii().render()
-        A0->
-        """
-        canvas = AsciiCanvas()
-        text = self.source.name[0]+str(self.in_out.start)
-        text = text+"-"*(self.length-len(text)-1)
-        text = text+">"
-        assert len(text) == self.length
-        canvas.add_text(text, self.start, 0)
-        return canvas
-
-    @property
-    def region(self):
-        """
-        >>> Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10).region
-        Region(start=10, end=20)
-        """
-        return Region(start=self.position, end=self.position+self.length)
-
-    def at(self, position):
-        """
-        >>> Cut.create(source=Source("A"), in_out=Region(start=0, end=10)).at(10)
-        Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=10)
-        """
-        return self._replace(position=position)
-
-    def get_overlap(self, clip):
-        """
-        >>> a = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=5)
-        >>> b = Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10)
-        >>> a.get_overlap(b)
-        Region(start=10, end=15)
-        """
-        return self.region.get_overlap(clip.region)
-
-    def cut_region(self, region):
-        """
-        >>> clip = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
-        >>> clip.cut_region(Region(start=5, end=10))
-        Cut(source=Source(name='A'), in_out=Region(start=13, end=18), position=5)
-        """
-        overlap = self.region.get_overlap(region)
-        if overlap:
-            new_start = self.in_out.start+overlap.start-self.position
-            return self._replace(
-                position=overlap.start,
-                in_out=Region(
-                    start=new_start,
-                    end=new_start+overlap.length,
-                )
-            )
-        else:
-            return None
 
 class Region(namedtuple("Region", "start,end")):
 
