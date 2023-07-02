@@ -176,14 +176,6 @@ class Sections:
             self.sections.append(Section(c))
 
     def to_ascii_canvas(self):
-        """
-        >>> Cuts([
-        ...     Source("A").create_cut(0, 10),
-        ...     Source("b").create_cut(0, 10).at(5),
-        ... ]).flatten().to_ascii_canvas()
-        |A0-->|A5-->|b5-->|
-        |     |b0-->|     |
-        """
         canvas = AsciiCanvas()
         offset = 1
         lines = [0]
