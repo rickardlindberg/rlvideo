@@ -241,14 +241,31 @@ class Region(namedtuple("Region", "start,end")):
 
     def merge(self, region):
         """
-        >>> Region(start=0, end=5).merge(Region(start=6, end=7)) is None
+        No adjacent regions:
+
+        >>> a = Region(start=0, end=5)
+        >>> b = Region(start=6, end=7)
+        >>> a.merge(b) is None
         True
 
-        >>> Region(start=2, end=3).merge(Region(start=0, end=1)) is None
+        >>> a = Region(start=2, end=3)
+        >>> b = Region(start=0, end=1)
+        >>> a.merge(b) is None
         True
 
-        >>> Region(start=2, end=3).merge(Region(start=3, end=4))
+        Adjacent regions:
+
+        >>> a = Region(start=2, end=3)
+        >>> b = Region(start=3, end=4)
+        >>> a.merge(b)
         Region(start=2, end=4)
+
+        Overlapping regions:
+
+        >>> a = Region(start=0, end=2)
+        >>> b = Region(start=1, end=3)
+        >>> a.merge(b)
+        Region(start=0, end=3)
         """
         if region.end < self.end or region.start > self.end:
             return None
@@ -260,22 +277,23 @@ class Region(namedtuple("Region", "start,end")):
 
     def get_overlap(self, region):
         """
-        xxxx
-            yyyy
+        No overlapping regions:
 
-        >>> Region(0, 4).get_overlap(Region(4, 8)) is None
+        >>> a = Region(0, 4)
+        >>> b = Region(4, 8)
+        >>> a.get_overlap(b) is None
         True
 
-        xxxx
-          yyyy
+        Overlapping regions:
 
-        >>> Region(0, 4).get_overlap(Region(2, 6))
+        >>> a = Region(0, 4)
+        >>> b = Region(2, 6)
+        >>> a.get_overlap(b)
         Region(start=2, end=4)
 
-          xxxx
-        yyyy
-
-        >>> Region(2, 6).get_overlap(Region(0, 4))
+        >>> a = Region(2, 6)
+        >>> b = Region(0, 4)
+        >>> a.get_overlap(b)
         Region(start=2, end=4)
         """
         if region.end <= self.start or region.start >= self.end:
