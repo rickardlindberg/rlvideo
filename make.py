@@ -22,6 +22,8 @@ if __name__ == "__main__":
             "rlvideo",
             "rlvideolib",
             "rlvideolib.asciicanvas",
+            "rlvideolib.domain",
+            "rlvideolib.domain.region",
         ]:
             suite.addTest(doctest.DocTestSuite(
                 importlib.import_module(module),
