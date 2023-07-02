@@ -8,7 +8,7 @@ class Timeline:
     ...     5,
     ...     Source(name="A").create_cut(0, 10)
     ... )
-    >>> timeline.flatten().render_ascii().render()
+    >>> timeline.flatten().render_ascii()
     |     A0------->|
     """
 
@@ -45,7 +45,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
     def render_ascii(self):
         """
-        >>> Source("A").create_cut(0, 4).render_ascii().render()
+        >>> Source("A").create_cut(0, 4).render_ascii()
         A0->
         """
         canvas = AsciiCanvas()
@@ -107,7 +107,7 @@ class Cuts(list):
 
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0)
-        ... ]).flatten().render_ascii().render()
+        ... ]).flatten().render_ascii()
         |A0------->|
 
         Two non-overlapping clips returns two groups with each clip in each:
@@ -115,7 +115,7 @@ class Cuts(list):
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0),
         ...     Source(name="B").create_cut(0, 10).at(10),
-        ... ]).flatten().render_ascii().render()
+        ... ]).flatten().render_ascii()
         |A0------->|B0------->|
 
         Overlap:
@@ -123,7 +123,7 @@ class Cuts(list):
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0),
         ...     Source(name="B").create_cut(0, 10).at(5),
-        ... ]).flatten().render_ascii().render()
+        ... ]).flatten().render_ascii()
         |A0-->|A5-->|B5-->|
         |     |B0-->|     |
         """
@@ -179,7 +179,7 @@ class Sections:
         >>> Cuts([
         ...     Source("A").create_cut(0, 10),
         ...     Source("b").create_cut(0, 10).at(5),
-        ... ]).flatten().render_ascii().render()
+        ... ]).flatten().render_ascii()
         |A0-->|A5-->|b5-->|
         |     |b0-->|     |
         """
@@ -306,13 +306,32 @@ class AsciiCanvas:
 
     def add_text(self, text, x, y):
         for index, char in enumerate(text):
-            self.chars[(x+index, y)] = char
+            self.add_char(x+index, y, char)
 
     def add_canvas(self, canvas, dx=0, dy=0):
         for (x, y), value in canvas.chars.items():
-            self.chars[(x+dx, y+dy)] = value
+            self.add_char(x+dx, y+dy, value)
 
-    def render(self):
+    def add_char(self, x, y, char):
+        """
+        >>> AsciiCanvas().add_char(-1, 5, 'h')
+        Traceback (most recent call last):
+          ...
+        ValueError: Invalid ascii char 'h' at (-1, 5): position is outside grid.
+
+        >>> AsciiCanvas().add_char(0, 0, 'hello')
+        Traceback (most recent call last):
+          ...
+        ValueError: Invalid ascii char 'hello' at (0, 0): length is not 1.
+        """
+        if x < 0 or y < 0:
+            raise ValueError(f"Invalid ascii char {char!r} at ({x}, {y}): position is outside grid.")
+        if len(char) != 1:
+            raise ValueError(f"Invalid ascii char {char!r} at ({x}, {y}): length is not 1.")
+        self.chars[(x, y)] = char
+
+    def __repr__(self):
+        lines = []
         if self.chars:
             max_y = max(y for (x, y) in self.chars.keys())
             for y in range(max_y+1):
@@ -322,9 +341,10 @@ class AsciiCanvas:
                         chars_for_y[x2] = char
                 if chars_for_y:
                     max_x = max(x for x in chars_for_y.keys())
-                    print("".join([
+                    lines.append("".join([
                         chars_for_y.get(x, " ")
                         for x in range(max_x+1)
                     ]))
                 else:
-                    print()
+                    lines.append("")
+        return "\n".join(lines)
