@@ -10,9 +10,8 @@ class Timeline:
     ...     0,
     ...     Source(name="A").create_cut(0, 10)
     ... )
-    >>> timeline.flatten().print_test_repr()
-    Section
-      Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=0)
+    >>> timeline.flatten().render_ascii().render()
+    |A0------->|
 
     Two non-overlapping clips returns two groups with each clip in each:
 
@@ -25,32 +24,20 @@ class Timeline:
     ...     10,
     ...     Source(name="B").create_cut(0, 10)
     ... )
-    >>> timeline.flatten().print_test_repr()
-    Section
-      Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=0)
-    Section
-      Cut(source=Source(name='B'), in_out=Region(start=0, end=10), position=10)
+    >>> timeline.flatten().render_ascii().render()
+    |A0------->|B0------->|
 
     Overlap:
 
-    >>> timeline = Timeline()                   # 01234|56789|.....
+    >>> timeline = Timeline()
     >>> timeline.add(
     ...     0,
-    ...     Source(name="A").create_cut(0, 10) # xxxxx|xxxxx|
+    ...     Source(name="A").create_cut(0, 10)
     ... )
     >>> timeline.add(
     ...     5,
-    ...     Source(name="B").create_cut(0, 10) #      |xxxxx|xxxxx
+    ...     Source(name="B").create_cut(0, 10)
     ... )
-    >>> timeline.flatten().print_test_repr()
-    Section
-      Cut(source=Source(name='A'), in_out=Region(start=0, end=5), position=0)
-    Section
-      Cut(source=Source(name='A'), in_out=Region(start=5, end=10), position=5)
-      Cut(source=Source(name='B'), in_out=Region(start=0, end=5), position=5)
-    Section
-      Cut(source=Source(name='B'), in_out=Region(start=5, end=10), position=10)
-
     >>> timeline.flatten().render_ascii().render()
     |A0-->|A5-->|B5-->|
     |     |B0-->|     |
@@ -193,10 +180,6 @@ class Sections:
         for c in clips:
             self.sections.append(Section(c))
 
-    def print_test_repr(self):
-        for section in self.sections:
-            section.print_test_repr()
-
     def render_ascii(self):
         """
         >>> Cuts([
@@ -229,11 +212,6 @@ class Section:
             canvas.add_canvas(clip.render_ascii(), dy=y)
         return canvas
 
-    def print_test_repr(self):
-        print(f"Section")
-        for clip in self.clips:
-            print(f"  {clip}")
-
 class Regions:
 
     def __init__(self):
@@ -257,10 +235,6 @@ class Regions:
             else:
                 merged.append(x)
         return merged
-
-    def print_test_repr(self):
-        for x in self.regions:
-            print(x)
 
 class Region(namedtuple("Region", "start,end")):
 
