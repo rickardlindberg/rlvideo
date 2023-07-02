@@ -3,44 +3,13 @@ from collections import namedtuple
 class Timeline:
 
     """
-    A single clip returns a single group with that clip:
-
     >>> timeline = Timeline()
-    >>> timeline.add(
-    ...     0,
-    ...     Source(name="A").create_cut(0, 10)
-    ... )
-    >>> timeline.flatten().render_ascii().render()
-    |A0------->|
-
-    Two non-overlapping clips returns two groups with each clip in each:
-
-    >>> timeline = Timeline()
-    >>> timeline.add(
-    ...     0,
-    ...     Source(name="A").create_cut(0, 10)
-    ... )
-    >>> timeline.add(
-    ...     10,
-    ...     Source(name="B").create_cut(0, 10)
-    ... )
-    >>> timeline.flatten().render_ascii().render()
-    |A0------->|B0------->|
-
-    Overlap:
-
-    >>> timeline = Timeline()
-    >>> timeline.add(
-    ...     0,
-    ...     Source(name="A").create_cut(0, 10)
-    ... )
     >>> timeline.add(
     ...     5,
-    ...     Source(name="B").create_cut(0, 10)
+    ...     Source(name="A").create_cut(0, 10)
     ... )
     >>> timeline.flatten().render_ascii().render()
-    |A0-->|A5-->|B5-->|
-    |     |B0-->|     |
+    |     A0------->|
     """
 
     def __init__(self):
@@ -133,6 +102,31 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 class Cuts(list):
 
     def flatten(self):
+        """
+        A single clip returns a single group with that clip:
+
+        >>> Cuts([
+        ...     Source(name="A").create_cut(0, 10).at(0)
+        ... ]).flatten().render_ascii().render()
+        |A0------->|
+
+        Two non-overlapping clips returns two groups with each clip in each:
+
+        >>> Cuts([
+        ...     Source(name="A").create_cut(0, 10).at(0),
+        ...     Source(name="B").create_cut(0, 10).at(10),
+        ... ]).flatten().render_ascii().render()
+        |A0------->|B0------->|
+
+        Overlap:
+
+        >>> Cuts([
+        ...     Source(name="A").create_cut(0, 10).at(0),
+        ...     Source(name="B").create_cut(0, 10).at(5),
+        ... ]).flatten().render_ascii().render()
+        |A0-->|A5-->|B5-->|
+        |     |B0-->|     |
+        """
         sections = Sections()
         start = self.start
         for overlap in self.get_regions_with_overlap():
