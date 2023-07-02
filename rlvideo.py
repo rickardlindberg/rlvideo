@@ -8,48 +8,48 @@ class Timeline:
     >>> timeline = Timeline()
     >>> timeline.add(
     ...     0,
-    ...     Source(name="A").create_clip(0, 10)
+    ...     Source(name="A").create_cut(0, 10)
     ... )
     >>> timeline.flatten().print_test_repr()
     Section
-      Clip(source=Source(name='A'), in_out=Region(start=0, end=10), position=0)
+      Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=0)
 
     Two non-overlapping clips returns two groups with each clip in each:
 
     >>> timeline = Timeline()
     >>> timeline.add(
     ...     0,
-    ...     Source(name="A").create_clip(0, 10)
+    ...     Source(name="A").create_cut(0, 10)
     ... )
     >>> timeline.add(
     ...     10,
-    ...     Source(name="B").create_clip(0, 10)
+    ...     Source(name="B").create_cut(0, 10)
     ... )
     >>> timeline.flatten().print_test_repr()
     Section
-      Clip(source=Source(name='A'), in_out=Region(start=0, end=10), position=0)
+      Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=0)
     Section
-      Clip(source=Source(name='B'), in_out=Region(start=0, end=10), position=10)
+      Cut(source=Source(name='B'), in_out=Region(start=0, end=10), position=10)
 
     Overlap:
 
     >>> timeline = Timeline()                   # 01234|56789|.....
     >>> timeline.add(
     ...     0,
-    ...     Source(name="A").create_clip(0, 10) # xxxxx|xxxxx|
+    ...     Source(name="A").create_cut(0, 10) # xxxxx|xxxxx|
     ... )
     >>> timeline.add(
     ...     5,
-    ...     Source(name="B").create_clip(0, 10) #      |xxxxx|xxxxx
+    ...     Source(name="B").create_cut(0, 10) #      |xxxxx|xxxxx
     ... )
     >>> timeline.flatten().print_test_repr()
     Section
-      Clip(source=Source(name='A'), in_out=Region(start=0, end=5), position=0)
+      Cut(source=Source(name='A'), in_out=Region(start=0, end=5), position=0)
     Section
-      Clip(source=Source(name='A'), in_out=Region(start=5, end=10), position=5)
-      Clip(source=Source(name='B'), in_out=Region(start=0, end=5), position=5)
+      Cut(source=Source(name='A'), in_out=Region(start=5, end=10), position=5)
+      Cut(source=Source(name='B'), in_out=Region(start=0, end=5), position=5)
     Section
-      Clip(source=Source(name='B'), in_out=Region(start=5, end=10), position=10)
+      Cut(source=Source(name='B'), in_out=Region(start=5, end=10), position=10)
 
     >>> timeline.flatten().render_ascii().render()
     |A0-->|A5-->|B5-->|
@@ -57,7 +57,7 @@ class Timeline:
     """
 
     def __init__(self):
-        self.clips = Clips()
+        self.clips = Cuts()
 
     def add(self, position, clip):
         self.clips.append(clip.at(position))
@@ -65,18 +65,18 @@ class Timeline:
     def flatten(self):
         return self.clips.flatten()
 
-class Clips(list):
+class Cuts(list):
 
     def flatten(self):
         sections = Sections()
         start = self.start
         for overlap in self.get_regions_with_overlap():
             for clip in self.cut_region(Region(start=start, end=overlap.start)):
-                sections.add(Clips([clip]))
+                sections.add(Cuts([clip]))
             sections.add(self.cut_region(overlap))
             start = overlap.end
         for clip in self.cut_region(Region(start=start, end=self.end)):
-            sections.add(Clips([clip]))
+            sections.add(Cuts([clip]))
         return sections
 
     def get_regions_with_overlap(self):
@@ -91,7 +91,7 @@ class Clips(list):
         return overlaps.merge()
 
     def cut_region(self, region):
-        clips = Clips()
+        clips = Cuts()
         for clip in self:
             cut = clip.cut_region(region)
             if cut:
@@ -121,9 +121,9 @@ class Sections:
 
     def render_ascii(self):
         """
-        >>> Clips([
-        ...     Source("A").create_clip(0, 10),
-        ...     Source("b").create_clip(0, 10).at(5),
+        >>> Cuts([
+        ...     Source("A").create_cut(0, 10),
+        ...     Source("b").create_cut(0, 10).at(5),
         ... ]).flatten().render_ascii().render()
         |A0-->|A5-->|b5-->|
         |     |b0-->|     |
@@ -186,17 +186,17 @@ class Regions:
 
 class Source(namedtuple("Source", "name")):
 
-    def create_clip(self, start, end):
-        return Clip.create(
+    def create_cut(self, start, end):
+        return Cut.create(
             source=self,
             in_out=Region(start=start, end=end)
         )
 
-class Clip(namedtuple("Clip", "source,in_out,position")):
+class Cut(namedtuple("Cut", "source,in_out,position")):
 
     @staticmethod
     def create(source, in_out, position=0):
-        return Clip(source=source, in_out=in_out, position=position)
+        return Cut(source=source, in_out=in_out, position=position)
 
     @property
     def length(self):
@@ -208,7 +208,7 @@ class Clip(namedtuple("Clip", "source,in_out,position")):
 
     def render_ascii(self):
         """
-        >>> Source("A").create_clip(0, 4).render_ascii().render()
+        >>> Source("A").create_cut(0, 4).render_ascii().render()
         A0->
         """
         canvas = AsciiCanvas()
@@ -222,22 +222,22 @@ class Clip(namedtuple("Clip", "source,in_out,position")):
     @property
     def region(self):
         """
-        >>> Clip(source=Source("B"), in_out=Region(start=10, end=20), position=10).region
+        >>> Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10).region
         Region(start=10, end=20)
         """
         return Region(start=self.position, end=self.position+self.length)
 
     def at(self, position):
         """
-        >>> Clip.create(source=Source("A"), in_out=Region(start=0, end=10)).at(10)
-        Clip(source=Source(name='A'), in_out=Region(start=0, end=10), position=10)
+        >>> Cut.create(source=Source("A"), in_out=Region(start=0, end=10)).at(10)
+        Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=10)
         """
         return self._replace(position=position)
 
     def get_overlap(self, clip):
         """
-        >>> a = Clip(source=Source("A"), in_out=Region(start=10, end=20), position=5)
-        >>> b = Clip(source=Source("B"), in_out=Region(start=10, end=20), position=10)
+        >>> a = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=5)
+        >>> b = Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10)
         >>> a.get_overlap(b)
         Region(start=10, end=15)
         """
@@ -245,9 +245,9 @@ class Clip(namedtuple("Clip", "source,in_out,position")):
 
     def cut_region(self, region):
         """
-        >>> clip = Clip(source=Source("A"), in_out=Region(start=10, end=20), position=2)
+        >>> clip = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
         >>> clip.cut_region(Region(start=5, end=10))
-        Clip(source=Source(name='A'), in_out=Region(start=13, end=18), position=5)
+        Cut(source=Source(name='A'), in_out=Region(start=13, end=18), position=5)
         """
         overlap = self.region.get_overlap(region)
         if overlap:
