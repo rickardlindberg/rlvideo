@@ -9,7 +9,7 @@ class Timeline:
     ...     5,
     ...     Source(name="A").create_cut(0, 10)
     ... )
-    >>> timeline.flatten().render_ascii()
+    >>> timeline.flatten().to_ascii_canvas()
     |     A0------->|
     """
 
@@ -44,9 +44,9 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
     def start(self):
         return self.position
 
-    def render_ascii(self):
+    def to_ascii_canvas(self):
         """
-        >>> Source("A").create_cut(0, 4).render_ascii()
+        >>> Source("A").create_cut(0, 4).to_ascii_canvas()
         A0->
         """
         canvas = AsciiCanvas()
@@ -108,7 +108,7 @@ class Cuts(list):
 
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0)
-        ... ]).flatten().render_ascii()
+        ... ]).flatten().to_ascii_canvas()
         |A0------->|
 
         Two non-overlapping clips returns two groups with each clip in each:
@@ -116,7 +116,7 @@ class Cuts(list):
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0),
         ...     Source(name="B").create_cut(0, 10).at(10),
-        ... ]).flatten().render_ascii()
+        ... ]).flatten().to_ascii_canvas()
         |A0------->|B0------->|
 
         Overlap:
@@ -124,7 +124,7 @@ class Cuts(list):
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0),
         ...     Source(name="B").create_cut(0, 10).at(5),
-        ... ]).flatten().render_ascii()
+        ... ]).flatten().to_ascii_canvas()
         |A0-->|A5-->|B5-->|
         |     |B0-->|     |
         """
@@ -175,12 +175,12 @@ class Sections:
         for c in clips:
             self.sections.append(Section(c))
 
-    def render_ascii(self):
+    def to_ascii_canvas(self):
         """
         >>> Cuts([
         ...     Source("A").create_cut(0, 10),
         ...     Source("b").create_cut(0, 10).at(5),
-        ... ]).flatten().render_ascii()
+        ... ]).flatten().to_ascii_canvas()
         |A0-->|A5-->|b5-->|
         |     |b0-->|     |
         """
@@ -188,7 +188,7 @@ class Sections:
         offset = 1
         lines = [0]
         for section in self.sections:
-            canvas.add_canvas(section.render_ascii(), dx=offset)
+            canvas.add_canvas(section.to_ascii_canvas(), dx=offset)
             lines.append(canvas.get_max_x()+1)
             offset += 1
         for line in lines:
@@ -201,10 +201,10 @@ class Section:
     def __init__(self, clips):
         self.clips = clips
 
-    def render_ascii(self):
+    def to_ascii_canvas(self):
         canvas = AsciiCanvas()
         for y, clip in enumerate(self.clips):
-            canvas.add_canvas(clip.render_ascii(), dy=y)
+            canvas.add_canvas(clip.to_ascii_canvas(), dy=y)
         return canvas
 
 class Regions:
