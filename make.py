@@ -20,6 +20,8 @@ if __name__ == "__main__":
         suite = unittest.TestSuite()
         for module in [
             "rlvideo",
+            "rlvideolib",
+            "rlvideolib.asciicanvas",
         ]:
             suite.addTest(doctest.DocTestSuite(
                 importlib.import_module(module),
