@@ -106,14 +106,14 @@ class Cuts(list):
 
     def flatten(self):
         """
-        A single clip returns a single group with that clip:
+        A single cut returns a single section with that cut:
 
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0)
         ... ]).flatten().to_ascii_canvas()
         |A0------->|
 
-        Two non-overlapping clips returns two groups with each clip in each:
+        Two non-overlapping cuts returns two sections with each cut in each:
 
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0),
