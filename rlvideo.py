@@ -532,6 +532,8 @@ class Section:
             for clip_index in reversed(range(len(self.section_cuts))):
                 if clip_index > 0:
                     transition = mlt.Transition(profile, "luma")
+                    transition.set("in", 0)
+                    transition.set("out", self.section_cuts[clip_index].cut.length-1)
                     tractor.plant_transition(transition, clip_index, clip_index-1)
             return tractor
 
