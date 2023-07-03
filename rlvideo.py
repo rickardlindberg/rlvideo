@@ -3,10 +3,10 @@ from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.region import Regions
 
-class Timeline:
+class App:
 
     """
-    >>> timeline = Timeline()
+    >>> timeline = App()
     >>> timeline.add(
     ...     5,
     ...     Source(name="A").create_cut(0, 10)
@@ -16,13 +16,13 @@ class Timeline:
     """
 
     def __init__(self):
-        self.cuts = Cuts()
+        self.timeline = Cuts()
 
     def add(self, position, clip):
-        self.cuts.append(clip.at(position))
+        self.timeline.append(clip.at(position))
 
     def flatten(self):
-        return self.cuts.flatten()
+        return self.timeline.flatten()
 
 class Source(namedtuple("Source", "name")):
 
