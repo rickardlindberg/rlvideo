@@ -43,12 +43,7 @@ class App:
         box.pack_start(preview, True, True, 0)
 
         def timeline_draw(widget, context):
-            self.timeline.draw(
-                widget.get_allocated_width(),
-                widget.get_allocated_height(),
-                context,
-                producer.position()
-            )
+            self.timeline.draw(context, producer.position())
         timeline = Gtk.DrawingArea()
         timeline.connect("draw", timeline_draw)
         def redraw():
@@ -87,10 +82,21 @@ class Timeline:
     def to_mlt_producer(self, profile):
         return self.cuts.flatten().to_mlt_producer(profile)
 
-    def draw(self, width, height, context, position):
-        context.set_source_rgb(1, 0, 0)
-        context.rectangle(position, 10, 10, 10)
-        context.fill()
+    def draw(self, context, position):
+        """
+        >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 300, 100)
+        >>> context = cairo.Context(surface)
+        >>> Timeline.with_test_clips().draw(context, 0)
+        """
+        offset = 10
+        context.save()
+        context.translate(offset, offset)
+        self.cuts.flatten().draw(context)
+        context.set_source_rgb(0.1, 0.1, 0.1)
+        context.move_to(position, -10)
+        context.line_to(position, 100)
+        context.stroke()
+        context.restore()
 
 class Source(namedtuple("Source", "name")):
 
@@ -302,6 +308,10 @@ class Sections:
             playlist.append(section.to_mlt_producer(profile))
         return playlist
 
+    def draw(self, context):
+        for section in self.sections:
+            section.draw(context)
+
     def __repr__(self):
         return f"Sections({self.sections})"
 
@@ -329,6 +339,20 @@ class Section:
             return tractor
         else:
             raise ValueError("Only 1 and 2 tracks supported.")
+
+    def draw(self, context):
+        H = 30
+        for index, cut in enumerate(self.cuts):
+            x = cut.start
+            w = cut.length
+            h = H
+            y = index * H
+            context.set_source_rgb(1, 0, 0)
+            context.rectangle(x, y, w, h)
+            context.fill()
+            context.set_source_rgb(0, 0, 0)
+            context.rectangle(x, y, w, h)
+            context.stroke()
 
 if __name__ == "__main__":
     App().run()
