@@ -108,13 +108,18 @@ class Timeline:
         timeline.add(Source("video").create_cut(0, 75).at(50))
         timeline.add(Source("world").create_cut(0, 75).at(100))
         timeline.add(Source("overlay").create_cut(0, 50).at(75))
+        timeline.set_zoom_factor(4)
         return timeline
 
     def __init__(self):
         self.cuts = Cuts()
+        self.zoom_factor = 1
 
     def add(self, cut):
         self.cuts.append(cut)
+
+    def set_zoom_factor(self, zoom_factor):
+        self.zoom_factor = zoom_factor
 
     def to_mlt_producer(self, profile):
         return self.cuts.flatten().to_mlt_producer(profile)
@@ -134,10 +139,14 @@ class Timeline:
         offset = 10
         context.save()
         context.translate(offset, offset)
-        self.cuts.flatten().draw(context=context, height=height-2*offset)
+        self.cuts.flatten().draw(
+            context=context,
+            height=height-2*offset,
+            x_factor=self.zoom_factor
+        )
         context.set_source_rgb(0.1, 0.1, 0.1)
-        context.move_to(position, -10)
-        context.line_to(position, height-10)
+        context.move_to(position*self.zoom_factor, -10)
+        context.line_to(position*self.zoom_factor, height-10)
         context.stroke()
         context.restore()
 
@@ -343,9 +352,9 @@ class Sections:
             playlist.append(section.to_mlt_producer(profile))
         return playlist
 
-    def draw(self, context, height):
+    def draw(self, context, height, x_factor):
         for section in self.sections:
-            section.draw(context=context, height=height)
+            section.draw(context=context, height=height, x_factor=x_factor)
 
     def __repr__(self):
         return f"Sections({self.sections})"
@@ -373,7 +382,7 @@ class Section:
                 tractor.plant_transition(transition, clip_index, clip_index+1)
             return tractor
 
-    def draw(self, context, height):
+    def draw(self, context, height, x_factor):
         sub_height = height // len(self.section_cuts)
         rest = height % len(self.section_cuts)
         y = 0
@@ -383,7 +392,7 @@ class Section:
                 h = sub_height + 1
             else:
                 h = sub_height
-            section_cut.draw(context, y, h)
+            section_cut.draw(context, y, h, x_factor)
             y += h
 
 class SectionCut(namedtuple("SectionCut", "cut,source")):
@@ -421,9 +430,9 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
     def end(self):
         return self.cut.end == self.source.end
 
-    def draw(self, context, y, height):
-        x = self.cut.start
-        w = self.cut.length
+    def draw(self, context, y, height, x_factor):
+        x = self.cut.start * x_factor
+        w = self.cut.length * x_factor
         h = height
 
         context.set_source_rgb(1, 0, 0)
