@@ -43,8 +43,15 @@ class Region(namedtuple("Region", "start,end")):
         >>> b = Region(start=1, end=3)
         >>> a.merge(b)
         Region(start=0, end=3)
+
+        Containing regions:
+
+        >>> a = Region(start=0, end=10)
+        >>> b = Region(start=2, end=3)
+        >>> a.merge(b)
+        Region(start=0, end=10)
         """
-        if region.end < self.end or region.start > self.end:
+        if region.end < self.start or region.start > self.end:
             return None
         else:
             return Region(
@@ -90,6 +97,13 @@ class Regions:
         self.regions.append(region)
 
     def merge(self):
+        """
+        >>> r = Regions()
+        >>> r.add(Region(start=0, end=100))
+        >>> r.add(Region(start=5, end=10))
+        >>> r.merge()
+        [Region(start=0, end=100)]
+        """
         rest = sorted(self.regions, key=lambda x: x.start)
         merged = []
         while rest:
