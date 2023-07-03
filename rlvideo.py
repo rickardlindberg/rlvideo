@@ -66,11 +66,19 @@ class App:
                 height=widget.get_allocated_height(),
             )
         def timeline_motion(widget, event):
-            print(event)
+            self.timeline.mouse_move(*timeline.translate_coordinates(
+                main_window,
+                event.x,
+                event.y
+            ))
         def timeline_button(widget, event):
-            print(event)
+            self.timeline.mouse_down(*timeline.translate_coordinates(
+                main_window,
+                event.x,
+                event.y
+            ))
         def timeline_button_up(widget, event):
-            print(event)
+            self.timeline.mouse_up()
         timeline = Gtk.DrawingArea()
         timeline.connect("draw", timeline_draw)
         timeline.connect("button-press-event", timeline_button)
@@ -101,6 +109,34 @@ class App:
 
 class Timeline:
 
+    """
+    >>> cut = Source("hello").create_cut(0, 10)
+    >>> timeline = Timeline()
+    >>> timeline.add(cut)
+    >>> width, height = 300, 100
+    >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+    >>> context = cairo.Context(surface)
+    >>> timeline.draw(
+    ...     context=context,
+    ...     position=0,
+    ...     width=width,
+    ...     height=height
+    ... )
+    >>> timeline.rectangle_map
+    Rectangle(x=10, y=10, width=10, height=80):
+      Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
+    >>> timeline.split_into_sections().to_ascii_canvas()
+    |<-h0----->|
+    >>> timeline.mouse_down(15, 15)
+    >>> timeline.mouse_move(16, 16)
+    >>> timeline.mouse_up()
+    >>> timeline.split_into_sections().to_ascii_canvas()
+    | <-h0----->|
+    >>> timeline.mouse_move(17, 17)
+    >>> timeline.split_into_sections().to_ascii_canvas()
+    | <-h0----->|
+    """
+
     @staticmethod
     def with_test_clips():
         timeline = Timeline()
@@ -115,6 +151,23 @@ class Timeline:
         self.cuts = Cuts()
         self.zoom_factor = 1
         self.rectangle_map = RectangleMap()
+        self.mouse_up()
+
+    def mouse_down(self, x, y):
+        self.tmp_xy = (x, y)
+        self.tmp_cuts = self.cuts
+        self.tmp_cut = self.rectangle_map.get(x, y)
+
+    def mouse_move(self, x, y):
+        if self.tmp_cut:
+            delta = x-self.tmp_xy[0]
+            self.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
+                x.move(int(delta/self.zoom_factor)))
+
+    def mouse_up(self):
+        self.tmp_xy = None
+        self.tmp_cuts = None
+        self.tmp_cut = None
 
     def add(self, cut):
         self.cuts = self.cuts.add(cut)
@@ -122,8 +175,11 @@ class Timeline:
     def set_zoom_factor(self, zoom_factor):
         self.zoom_factor = zoom_factor
 
+    def split_into_sections(self):
+        return self.cuts.split_into_sections()
+
     def to_mlt_producer(self, profile):
-        return self.cuts.split_into_sections().to_mlt_producer(profile)
+        return self.split_into_sections().to_mlt_producer(profile)
 
     def draw(self, context, position, width, height):
         """
@@ -145,14 +201,14 @@ class Timeline:
         ...     height=height
         ... )
         >>> timeline.rectangle_map
-        Rectangle(x=0, y=0, width=10, height=80):
+        Rectangle(x=10, y=10, width=10, height=80):
           Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
         """
         self.rectangle_map.clear()
         offset = 10
         context.save()
         context.translate(offset, offset)
-        self.cuts.split_into_sections().draw(
+        self.split_into_sections().draw(
             context=context,
             height=height-2*offset,
             x_factor=self.zoom_factor,
@@ -195,6 +251,9 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
     @property
     def end(self):
         return self.position+self.length
+
+    def move(self, delta):
+        return self._replace(position=self.position+delta)
 
     @property
     def region(self):
@@ -252,11 +311,31 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
 class Cuts:
 
+    """
+    >>> a = Source("A").create_cut(0, 20).at(0)
+    >>> b = Source("b").create_cut(0, 20).at(10)
+    >>> cuts = Cuts()
+    >>> cuts = cuts.add(a)
+    >>> cuts = cuts.add(b)
+    >>> cuts.split_into_sections().to_ascii_canvas()
+    |<-A0------|--A10---->|--b10---->|
+    |          |<-b0------|          |
+    >>> cuts.modify(b, lambda cut: cut.move(1)).split_into_sections().to_ascii_canvas()
+    |<-A0-------|--A11--->|--b9------>|
+    |           |<-b0-----|           |
+    """
+
     def __init__(self, cuts=[]):
         self.cuts = list(cuts)
 
     def add(self, cut):
         return Cuts(self.cuts+[cut])
+
+    def modify(self, cut_to_modify, fn):
+        return Cuts([
+            fn(cut) if cut is cut_to_modify else cut
+            for cut in self.cuts
+        ])
 
     def split_into_sections(self):
         """
@@ -479,7 +558,14 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
         w = self.cut.length * x_factor
         h = height
 
-        rectangle_map.add(Rectangle(x, y, w, h), self.source)
+        rect_x, rect_y = context.user_to_device(x, y)
+        rect_w, rect_h = context.user_to_device_distance(w, h)
+        rectangle_map.add(Rectangle(
+            x=int(rect_x),
+            y=int(rect_y),
+            width=int(rect_w),
+            height=int(rect_h)
+        ), self.source)
 
         context.set_source_rgb(1, 0, 0)
         context.rectangle(x, y, w, h)
