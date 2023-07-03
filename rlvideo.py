@@ -349,22 +349,23 @@ class Sections:
 class Section:
 
     def __init__(self, cuts):
-        self.cuts = cuts
+        self.section_cuts = [SectionCut(cut=cut) for cut in cuts]
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
-        for y, cut in enumerate(self.cuts):
+        for y, section_cut in enumerate(self.section_cuts):
+            cut = section_cut.cut
             canvas.add_canvas(cut.to_ascii_canvas(), dy=y)
         return canvas
 
     def to_mlt_producer(self, profile):
-        if len(self.cuts) == 1:
-            return self.cuts[0].to_mlt_producer(profile)
-        elif len(self.cuts) == 2:
-            a, b = self.cuts
+        if len(self.section_cuts) == 1:
+            return self.section_cuts[0].cut.to_mlt_producer(profile)
+        elif len(self.section_cuts) == 2:
+            a, b = self.section_cuts
             tractor = mlt.Tractor()
-            tractor.insert_track(a.to_mlt_producer(profile), 0)
-            tractor.insert_track(b.to_mlt_producer(profile), 1)
+            tractor.insert_track(a.cut.to_mlt_producer(profile), 0)
+            tractor.insert_track(b.cut.to_mlt_producer(profile), 1)
             transition = mlt.Transition(profile, "luma")
             tractor.plant_transition(transition, 0, 1)
             return tractor
@@ -373,7 +374,8 @@ class Section:
 
     def draw(self, context):
         H = 30
-        for index, cut in enumerate(self.cuts):
+        for index, section_cut in enumerate(self.section_cuts):
+            cut = section_cut.cut
             x = cut.start
             w = cut.length
             h = H
@@ -384,6 +386,9 @@ class Section:
             context.set_source_rgb(0, 0, 0)
             context.rectangle(x, y, w, h)
             context.stroke()
+
+class SectionCut(namedtuple("SectionCut", "cut")):
+    pass
 
 if __name__ == "__main__":
     App().run()
