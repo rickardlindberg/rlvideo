@@ -107,6 +107,7 @@ class Timeline:
         timeline.add(Source("hello").create_cut(0, 75).at(0))
         timeline.add(Source("video").create_cut(0, 75).at(50))
         timeline.add(Source("world").create_cut(0, 75).at(100))
+        timeline.add(Source("overlay").create_cut(0, 50).at(75))
         return timeline
 
     def __init__(self):
@@ -363,16 +364,14 @@ class Section:
     def to_mlt_producer(self, profile):
         if len(self.section_cuts) == 1:
             return self.section_cuts[0].cut.to_mlt_producer(profile)
-        elif len(self.section_cuts) == 2:
-            a, b = self.section_cuts
-            tractor = mlt.Tractor()
-            tractor.insert_track(a.cut.to_mlt_producer(profile), 0)
-            tractor.insert_track(b.cut.to_mlt_producer(profile), 1)
-            transition = mlt.Transition(profile, "luma")
-            tractor.plant_transition(transition, 0, 1)
-            return tractor
         else:
-            raise ValueError("Only 1 and 2 tracks supported.")
+            tractor = mlt.Tractor()
+            for section_cut in self.section_cuts:
+                tractor.insert_track(section_cut.cut.to_mlt_producer(profile), 0)
+            for clip_index in range(len(self.section_cuts)-1):
+                transition = mlt.Transition(profile, "luma")
+                tractor.plant_transition(transition, clip_index, clip_index+1)
+            return tractor
 
     def draw(self, context, height):
         sub_height = height // len(self.section_cuts)
