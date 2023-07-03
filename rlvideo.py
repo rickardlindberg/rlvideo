@@ -122,7 +122,7 @@ class Timeline:
         self.zoom_factor = zoom_factor
 
     def to_mlt_producer(self, profile):
-        return self.cuts.flatten().to_mlt_producer(profile)
+        return self.cuts.split_into_sections().to_mlt_producer(profile)
 
     def draw(self, context, position, width, height):
         """
@@ -139,7 +139,7 @@ class Timeline:
         offset = 10
         context.save()
         context.translate(offset, offset)
-        self.cuts.flatten().draw(
+        self.cuts.split_into_sections().draw(
             context=context,
             height=height-2*offset,
             x_factor=self.zoom_factor
@@ -242,13 +242,13 @@ class Cuts:
     def add(self, cut):
         return Cuts(self.cuts+[cut])
 
-    def flatten(self):
+    def split_into_sections(self):
         """
         A single cut returns a single section with that cut:
 
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0)
-        ... ]).flatten().to_ascii_canvas()
+        ... ]).split_into_sections().to_ascii_canvas()
         |<-A0----->|
 
         Two non-overlapping cuts returns two sections with each cut in each:
@@ -256,7 +256,7 @@ class Cuts:
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0),
         ...     Source(name="B").create_cut(0, 10).at(10),
-        ... ]).flatten().to_ascii_canvas()
+        ... ]).split_into_sections().to_ascii_canvas()
         |<-A0----->|<-B0----->|
 
         Overlap:
@@ -264,13 +264,13 @@ class Cuts:
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 20).at(0),
         ...     Source(name="B").create_cut(0, 20).at(10),
-        ... ]).flatten().to_ascii_canvas()
+        ... ]).split_into_sections().to_ascii_canvas()
         |<-A0------|--A10---->|--B10---->|
         |          |<-B0------|          |
 
         No cuts:
 
-        >>> Cuts().flatten()
+        >>> Cuts().split_into_sections()
         Sections([])
         """
         sections = Sections()
