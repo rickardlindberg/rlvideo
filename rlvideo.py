@@ -20,9 +20,9 @@ class App:
         True
         """
         cuts = Cuts()
-        cuts.append(Source("Hello").create_cut(0, 50).at(0))
-        cuts.append(Source("video").create_cut(0, 50).at(50))
-        cuts.append(Source("world").create_cut(0, 50).at(100))
+        cuts.append(Source("hello").create_cut(0, 75).at(0))
+        cuts.append(Source("video").create_cut(0, 75).at(50))
+        cuts.append(Source("world").create_cut(0, 75).at(100))
         sections = cuts.flatten()
         return sections.to_mlt_producer(self.profile)
 
@@ -46,6 +46,7 @@ class Source(namedtuple("Source", "name")):
     def to_mlt_producer(self, profile):
         producer = mlt.Producer(profile, "pango")
         producer.set("text", self.name)
+        producer.set("bgcolour", "red")
         return producer
 
 class Cut(namedtuple("Cut", "source,in_out,position")):
@@ -259,8 +260,18 @@ class Section:
         return canvas
 
     def to_mlt_producer(self, profile):
-        assert len(self.cuts) == 1
-        return self.cuts[0].to_mlt_producer(profile)
+        if len(self.cuts) == 1:
+            return self.cuts[0].to_mlt_producer(profile)
+        elif len(self.cuts) == 2:
+            a, b = self.cuts
+            tractor = mlt.Tractor()
+            tractor.insert_track(a.to_mlt_producer(profile), 0)
+            tractor.insert_track(b.to_mlt_producer(profile), 1)
+            transition = mlt.Transition(profile, "luma")
+            tractor.plant_transition(transition, 0, 1)
+            return tractor
+        else:
+            raise ValueError("Only 1 and 2 tracks supported.")
 
 if __name__ == "__main__":
     App().run()
