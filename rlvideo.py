@@ -257,11 +257,11 @@ class Cuts(list):
         start = self.start
         for overlap in self.get_regions_with_overlap():
             for cut in self.cut_region(Region(start=start, end=overlap.start)):
-                sections.add(Cuts([cut]))
-            sections.add(self.cut_region(overlap))
+                sections.add(Section(Cuts([cut])))
+            sections.add(Section(self.cut_region(overlap)))
             start = overlap.end
         for cut in self.cut_region(Region(start=start, end=self.end)):
-            sections.add(Cuts([cut]))
+            sections.add(Section(Cuts([cut])))
         return sections
 
     def get_regions_with_overlap(self):
@@ -316,9 +316,8 @@ class Sections:
     def __init__(self):
         self.sections = []
 
-    def add(self, *cuts):
-        for cut in cuts:
-            self.sections.append(Section(cut))
+    def add(self, section):
+        self.sections.append(section)
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
