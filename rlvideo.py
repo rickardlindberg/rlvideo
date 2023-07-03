@@ -452,5 +452,11 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
             context.line_to(x+w, y+height)
             context.stroke()
 
+        if self.start:
+            context.move_to(x+2, y+10)
+            context.set_source_rgb(0, 0, 0)
+            context.text_path(self.source.source.name)
+            context.fill()
+
 if __name__ == "__main__":
     App().run()
