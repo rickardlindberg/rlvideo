@@ -4,13 +4,13 @@ class Region(namedtuple("Region", "start,end")):
 
     def __init__(self, start, end):
         """
-        >>> Region(start=0, end=0)
+        >>> Region(start=1, end=0)
         Traceback (most recent call last):
           ...
-        ValueError: Invalid region: start (0) >= end (0).
+        ValueError: Invalid region: start (1) > end (0).
         """
-        if start >= end:
-            raise ValueError(f"Invalid region: start ({start}) >= end ({end}).")
+        if start > end:
+            raise ValueError(f"Invalid region: start ({start}) > end ({end}).")
 
     @property
     def length(self):

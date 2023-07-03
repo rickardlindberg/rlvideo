@@ -135,6 +135,11 @@ class Cuts(list):
         ... ]).flatten().to_ascii_canvas()
         |A0-->|A5-->|B5-->|
         |     |B0-->|     |
+
+        No clips:
+
+        >>> Cuts().flatten()
+        Sections([])
         """
         sections = Sections()
         start = self.start
@@ -168,11 +173,31 @@ class Cuts(list):
 
     @property
     def start(self):
-        return min(clip.region.start for clip in self)
+        """
+        >>> Cuts().start
+        0
+
+        >>> Cuts([Source("A").create_cut(0, 5).at(5)]).start
+        5
+        """
+        if self:
+            return min(clip.region.start for clip in self)
+        else:
+            return 0
 
     @property
     def end(self):
-        return max(clip.region.end for clip in self)
+        """
+        >>> Cuts().end
+        0
+
+        >>> Cuts([Source("A").create_cut(0, 5).at(5)]).end
+        10
+        """
+        if self:
+            return max(clip.region.end for clip in self)
+        else:
+            return 0
 
 class Sections:
 
@@ -195,6 +220,9 @@ class Sections:
             for y in range(canvas.get_max_y()+1):
                 canvas.add_text("|", line, y)
         return canvas
+
+    def __repr__(self):
+        return f"Sections({self.sections})"
 
 class Section:
 
