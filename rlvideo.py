@@ -270,8 +270,8 @@ class Cuts:
 
         No cuts:
 
-        >>> Cuts().split_into_sections()
-        Sections([])
+        >>> Cuts().split_into_sections().to_ascii_canvas()
+        <BLANKLINE>
         """
         sections = Sections()
         start = self.start
@@ -345,15 +345,16 @@ class Sections:
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
-        offset = 1
-        lines = [0]
-        for section in self.sections:
-            canvas.add_canvas(section.to_ascii_canvas(), dx=offset)
-            lines.append(canvas.get_max_x()+1)
-            offset += 1
-        for line in lines:
-            for y in range(canvas.get_max_y()+1):
-                canvas.add_text("|", line, y)
+        if self.sections:
+            offset = 1
+            lines = [0]
+            for section in self.sections:
+                canvas.add_canvas(section.to_ascii_canvas(), dx=offset)
+                lines.append(canvas.get_max_x()+1)
+                offset += 1
+            for line in lines:
+                for y in range(canvas.get_max_y()+1):
+                    canvas.add_text("|", line, y)
         return canvas
 
     def to_mlt_producer(self, profile):
@@ -365,9 +366,6 @@ class Sections:
     def draw(self, context, height, x_factor):
         for section in self.sections:
             section.draw(context=context, height=height, x_factor=x_factor)
-
-    def __repr__(self):
-        return f"Sections({self.sections})"
 
 class Section:
 

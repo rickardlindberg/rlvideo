@@ -14,7 +14,10 @@ class AsciiCanvas:
             return 0
 
     def get_max_y(self):
-        return max(y for (x, y) in self.chars.keys())
+        if self.chars:
+            return max(y for (x, y) in self.chars.keys())
+        else:
+            return 0
 
     def add_text(self, text, x, y):
         for index, char in enumerate(text):
