@@ -157,19 +157,9 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
     def start(self):
         return self.position
 
-    def to_ascii_canvas(self):
-        """
-        >>> Source("A").create_cut(0, 4).to_ascii_canvas()
-        A0->
-        """
-        canvas = AsciiCanvas()
-        text = self.source.name[0]+str(self.in_out.start)
-        text = text+"-"*(self.length-len(text)-1)
-        text = text+">"
-        if len(text) != self.length:
-            raise ValueError(f"Could not represent cut {self} as ascii.")
-        canvas.add_text(text, self.start, 0)
-        return canvas
+    @property
+    def end(self):
+        return self.position+self.length
 
     @property
     def region(self):
@@ -198,18 +188,21 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
     def cut_region(self, region):
         """
         >>> cut = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
-        >>> cut.cut_region(Region(start=5, end=10))
+        >>> cut.cut_region(Region(start=5, end=10)).cut
         Cut(source=Source(name='A'), in_out=Region(start=13, end=18), position=5)
         """
         overlap = self.region.get_overlap(region)
         if overlap:
             new_start = self.in_out.start+overlap.start-self.position
-            return self._replace(
-                position=overlap.start,
-                in_out=Region(
-                    start=new_start,
-                    end=new_start+overlap.length,
-                )
+            return SectionCut(
+                cut=self._replace(
+                    position=overlap.start,
+                    in_out=Region(
+                        start=new_start,
+                        end=new_start+overlap.length,
+                    )
+                ),
+                source=self
             )
         else:
             return None
@@ -229,7 +222,7 @@ class Cuts(list):
         >>> Cuts([
         ...     Source(name="A").create_cut(0, 10).at(0)
         ... ]).flatten().to_ascii_canvas()
-        |A0------->|
+        |<-A0----->|
 
         Two non-overlapping cuts returns two sections with each cut in each:
 
@@ -237,16 +230,16 @@ class Cuts(list):
         ...     Source(name="A").create_cut(0, 10).at(0),
         ...     Source(name="B").create_cut(0, 10).at(10),
         ... ]).flatten().to_ascii_canvas()
-        |A0------->|B0------->|
+        |<-A0----->|<-B0----->|
 
         Overlap:
 
         >>> Cuts([
-        ...     Source(name="A").create_cut(0, 10).at(0),
-        ...     Source(name="B").create_cut(0, 10).at(5),
+        ...     Source(name="A").create_cut(0, 20).at(0),
+        ...     Source(name="B").create_cut(0, 20).at(10),
         ... ]).flatten().to_ascii_canvas()
-        |A0-->|A5-->|B5-->|
-        |     |B0-->|     |
+        |<-A0------|--A10---->|--B10---->|
+        |          |<-B0------|          |
 
         No cuts:
 
@@ -256,12 +249,12 @@ class Cuts(list):
         sections = Sections()
         start = self.start
         for overlap in self.get_regions_with_overlap():
-            for cut in self.cut_region(Region(start=start, end=overlap.start)):
-                sections.add(Section(Cuts([cut])))
+            for section_cut in self.cut_region(Region(start=start, end=overlap.start)):
+                sections.add(Section([section_cut]))
             sections.add(Section(self.cut_region(overlap)))
             start = overlap.end
-        for cut in self.cut_region(Region(start=start, end=self.end)):
-            sections.add(Section(Cuts([cut])))
+        for section_cut in self.cut_region(Region(start=start, end=self.end)):
+            sections.add(Section([section_cut]))
         return sections
 
     def get_regions_with_overlap(self):
@@ -276,7 +269,7 @@ class Cuts(list):
         return overlaps.merge()
 
     def cut_region(self, region):
-        cuts = Cuts()
+        cuts = []
         for cut in self:
             sub_cut = cut.cut_region(region)
             if sub_cut:
@@ -347,14 +340,13 @@ class Sections:
 
 class Section:
 
-    def __init__(self, cuts):
-        self.section_cuts = [SectionCut(cut=cut) for cut in cuts]
+    def __init__(self, section_cuts):
+        self.section_cuts = section_cuts
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
         for y, section_cut in enumerate(self.section_cuts):
-            cut = section_cut.cut
-            canvas.add_canvas(cut.to_ascii_canvas(), dy=y)
+            canvas.add_canvas(section_cut.to_ascii_canvas(), dy=y)
         return canvas
 
     def to_mlt_producer(self, profile):
@@ -386,8 +378,40 @@ class Section:
             context.rectangle(x, y, w, h)
             context.stroke()
 
-class SectionCut(namedtuple("SectionCut", "cut")):
-    pass
+class SectionCut(namedtuple("SectionCut", "cut,source")):
+
+    def to_ascii_canvas(self):
+        """
+        >>> cut = Source("A").create_cut(0, 6)
+
+        >>> cut.cut_region(Region(start=0, end=6)).to_ascii_canvas()
+        <-A0->
+        """
+        canvas = AsciiCanvas()
+        label = self.cut.source.name[0]+str(self.cut.in_out.start)
+        text = ""
+        if self.start:
+            text += "<-"
+        else:
+            text += "--"
+        text += label
+        text += "-"*(self.cut.length-len(label)-4)
+        if self.end:
+            text += "->"
+        else:
+            text += "--"
+        if len(text) != self.cut.length:
+            raise ValueError(f"Could not represent cut {self} as ascii.")
+        canvas.add_text(text, self.cut.start, 0)
+        return canvas
+
+    @property
+    def start(self):
+        return self.cut.start == self.source.start
+
+    @property
+    def end(self):
+        return self.cut.end == self.source.end
 
 if __name__ == "__main__":
     App().run()
