@@ -206,16 +206,16 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         """
         return self.region.get_overlap(cut.region)
 
-    def cut_region(self, region):
+    def extract_section(self, region):
         """
         >>> cut = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
-        >>> cut.cut_region(Region(start=5, end=10)).cut
-        Cut(source=Source(name='A'), in_out=Region(start=13, end=18), position=5)
+        >>> cut.extract_section(Region(start=5, end=12)).to_ascii_canvas()
+             --A13->
         """
         overlap = self.region.get_overlap(region)
         if overlap:
             new_start = self.in_out.start+overlap.start-self.position
-            return SectionCut(
+            return Section([SectionCut(
                 cut=self._replace(
                     position=overlap.start,
                     in_out=Region(
@@ -224,7 +224,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
                     )
                 ),
                 source=self
-            )
+            )])
         else:
             return None
 
@@ -276,12 +276,16 @@ class Cuts:
         sections = Sections()
         start = self.start
         for overlap in self.get_regions_with_overlap():
-            for section_cut in self.cut_region(Region(start=start, end=overlap.start)):
-                sections.add(Section([section_cut]))
-            sections.add(Section(self.cut_region(overlap)))
+            self.extract_section(Region(
+                start=start,
+                end=overlap.start
+            )).add_to_sections_as_separate(sections)
+            sections.add(self.extract_section(overlap))
             start = overlap.end
-        for section_cut in self.cut_region(Region(start=start, end=self.end)):
-            sections.add(Section([section_cut]))
+        self.extract_section(Region(
+            start=start,
+            end=self.end
+        )).add_to_sections_as_separate(sections)
         return sections
 
     def get_regions_with_overlap(self):
@@ -295,13 +299,13 @@ class Cuts:
                     overlaps.add(overlap)
         return overlaps.merge()
 
-    def cut_region(self, region):
-        cuts = []
+    def extract_section(self, region):
+        section = Section()
         for cut in self.cuts:
-            sub_cut = cut.cut_region(region)
-            if sub_cut:
-                cuts.append(sub_cut)
-        return cuts
+            inner_section = cut.extract_section(region)
+            if inner_section:
+                section.merge(inner_section)
+        return section
 
     @property
     def start(self):
@@ -333,8 +337,8 @@ class Cuts:
 
 class Sections:
 
-    def __init__(self):
-        self.sections = []
+    def __init__(self, sections=[]):
+        self.sections = list(sections)
 
     def add(self, section):
         self.sections.append(section)
@@ -367,8 +371,16 @@ class Sections:
 
 class Section:
 
-    def __init__(self, section_cuts):
-        self.section_cuts = section_cuts
+    def __init__(self, section_cuts=[]):
+        self.section_cuts = list(section_cuts)
+
+    def merge(self, other):
+        for section_cut in other.section_cuts:
+            self.section_cuts.append(section_cut)
+
+    def add_to_sections_as_separate(self, sections):
+        for section_cut in self.section_cuts:
+            sections.add(Section([section_cut]))
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
@@ -411,7 +423,7 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
         """
         >>> cut = Source("A").create_cut(0, 6)
 
-        >>> cut.cut_region(Region(start=0, end=6)).to_ascii_canvas()
+        >>> cut.extract_section(Region(start=0, end=6)).to_ascii_canvas()
         <-A0->
         """
         canvas = AsciiCanvas()
@@ -428,7 +440,7 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
         else:
             text += "--"
         if len(text) != self.cut.length:
-            raise ValueError(f"Could not represent cut {self} as ascii.")
+            raise ValueError(f"Could represent section cut ({self.cut}) as ascii because its length ({self.cut.length}) was too short (< {len(text)}).")
         canvas.add_text(text, self.cut.start, 0)
         return canvas
 
