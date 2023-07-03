@@ -114,6 +114,7 @@ class Timeline:
     def __init__(self):
         self.cuts = Cuts()
         self.zoom_factor = 1
+        self.rectangle_map = RectangleMap()
 
     def add(self, cut):
         self.cuts = self.cuts.add(cut)
@@ -129,20 +130,33 @@ class Timeline:
         >>> width, height = 300, 100
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
-        >>> Timeline.with_test_clips().draw(
+        >>> timeline = Timeline()
+        >>> timeline.add(Source("hello").create_cut(0, 10).at(0))
+        >>> timeline.draw(
         ...     context=context,
         ...     position=0,
         ...     width=width,
         ...     height=height
         ... )
+        >>> timeline.draw(
+        ...     context=context,
+        ...     position=0,
+        ...     width=width,
+        ...     height=height
+        ... )
+        >>> timeline.rectangle_map
+        Rectangle(x=0, y=0, width=10, height=80):
+          Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
         """
+        self.rectangle_map.clear()
         offset = 10
         context.save()
         context.translate(offset, offset)
         self.cuts.split_into_sections().draw(
             context=context,
             height=height-2*offset,
-            x_factor=self.zoom_factor
+            x_factor=self.zoom_factor,
+            rectangle_map=self.rectangle_map
         )
         context.set_source_rgb(0.1, 0.1, 0.1)
         context.move_to(position*self.zoom_factor, -10)
@@ -363,9 +377,14 @@ class Sections:
             playlist.append(section.to_mlt_producer(profile))
         return playlist
 
-    def draw(self, context, height, x_factor):
+    def draw(self, context, height, x_factor, rectangle_map):
         for section in self.sections:
-            section.draw(context=context, height=height, x_factor=x_factor)
+            section.draw(
+                context=context,
+                height=height,
+                x_factor=x_factor,
+                rectangle_map=rectangle_map
+            )
 
 class Section:
 
@@ -407,7 +426,7 @@ class Section:
                     tractor.plant_transition(transition, clip_index, clip_index-1)
             return tractor
 
-    def draw(self, context, height, x_factor):
+    def draw(self, context, height, x_factor, rectangle_map):
         sub_height = height // len(self.section_cuts)
         rest = height % len(self.section_cuts)
         y = 0
@@ -417,7 +436,7 @@ class Section:
                 h = sub_height + 1
             else:
                 h = sub_height
-            section_cut.draw(context, y, h, x_factor)
+            section_cut.draw(context, y, h, x_factor, rectangle_map)
             y += h
 
 class SectionCut(namedtuple("SectionCut", "cut,source")):
@@ -455,10 +474,12 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
         canvas.add_text(text, self.cut.start, 0)
         return canvas
 
-    def draw(self, context, y, height, x_factor):
+    def draw(self, context, y, height, x_factor, rectangle_map):
         x = self.cut.start * x_factor
         w = self.cut.length * x_factor
         h = height
+
+        rectangle_map.add(Rectangle(x, y, w, h), self.source)
 
         context.set_source_rgb(1, 0, 0)
         context.rectangle(x, y, w, h)
@@ -491,6 +512,48 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
             context.set_source_rgb(0, 0, 0)
             context.text_path(self.source.source.name)
             context.fill()
+
+class RectangleMap:
+
+    """
+    >>> r = RectangleMap()
+    >>> r.add(Rectangle(x=0, y=0, width=10, height=10), "item")
+    >>> r.get(5, 5)
+    'item'
+    >>> r.get(100, 100) is None
+    True
+    """
+
+    def __init__(self):
+        self.map = []
+
+    def clear(self):
+        self.map.clear()
+
+    def add(self, rectangle, item):
+        self.map.append((rectangle, item))
+
+    def get(self, x, y):
+        for rectangle, item in self.map:
+            if rectangle.contains(x, y):
+                return item
+
+    def __repr__(self):
+        return "\n".join(f"{rectangle}:\n  {item}" for rectangle, item in self.map)
+
+class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
+
+    def contains(self, x, y):
+        if x < self.x:
+            return False
+        elif x > self.x+self.width:
+            return False
+        elif y < self.y:
+            return False
+        elif y > self.y+self.height:
+            return False
+        else:
+            return True
 
 if __name__ == "__main__":
     App().run()
