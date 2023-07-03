@@ -3,32 +3,37 @@ from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.region import Regions
 import mlt
+import time
 
 class App:
 
-    """
-    >>> timeline = App()
-    >>> timeline.add(
-    ...     5,
-    ...     Source(name="A").create_cut(0, 10)
-    ... )
-    >>> timeline.flatten().to_ascii_canvas()
-    |     A0------->|
-    """
-
     def __init__(self):
-        self.timeline = Cuts()
         self.init_mlt()
 
     def init_mlt(self):
         mlt.Factory().init()
         self.profile = mlt.Profile()
 
-    def add(self, position, cut):
-        self.timeline.append(cut.at(position))
+    def generate_mlt_producer(self):
+        """
+        >>> isinstance(App().generate_mlt_producer(), mlt.Playlist)
+        True
+        """
+        cuts = Cuts()
+        cuts.append(Source("Hello").create_cut(0, 50).at(0))
+        cuts.append(Source("video").create_cut(0, 50).at(50))
+        cuts.append(Source("world").create_cut(0, 50).at(100))
+        sections = cuts.flatten()
+        return sections.to_mlt_producer(self.profile)
 
-    def flatten(self):
-        return self.timeline.flatten()
+    def run(self):
+        producer = self.generate_mlt_producer()
+        producer.set("eof", "loop")
+        consumer = mlt.Consumer(self.profile, "sdl")
+        consumer.connect(producer)
+        consumer.start()
+        while consumer.is_stopped() == 0:
+            time.sleep(1)
 
 class Source(namedtuple("Source", "name")):
 
@@ -37,6 +42,11 @@ class Source(namedtuple("Source", "name")):
             source=self,
             in_out=Region(start=start, end=end)
         )
+
+    def to_mlt_producer(self, profile):
+        producer = mlt.Producer(profile, "pango")
+        producer.set("text", self.name)
+        return producer
 
 class Cut(namedtuple("Cut", "source,in_out,position")):
 
@@ -108,6 +118,12 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             )
         else:
             return None
+
+    def to_mlt_producer(self, profile):
+        return self.source.to_mlt_producer(profile).cut(
+            self.in_out.start,
+            self.in_out.end-1
+        )
 
 class Cuts(list):
 
@@ -222,6 +238,12 @@ class Sections:
                 canvas.add_text("|", line, y)
         return canvas
 
+    def to_mlt_producer(self, profile):
+        playlist = mlt.Playlist()
+        for section in self.sections:
+            playlist.append(section.to_mlt_producer(profile))
+        return playlist
+
     def __repr__(self):
         return f"Sections({self.sections})"
 
@@ -235,3 +257,10 @@ class Section:
         for y, cut in enumerate(self.cuts):
             canvas.add_canvas(cut.to_ascii_canvas(), dy=y)
         return canvas
+
+    def to_mlt_producer(self, profile):
+        assert len(self.cuts) == 1
+        return self.cuts[0].to_mlt_producer(profile)
+
+if __name__ == "__main__":
+    App().run()
