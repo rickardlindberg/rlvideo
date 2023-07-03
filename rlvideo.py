@@ -61,7 +61,8 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         text = self.source.name[0]+str(self.in_out.start)
         text = text+"-"*(self.length-len(text)-1)
         text = text+">"
-        assert len(text) == self.length
+        if len(text) != self.length:
+            raise ValueError(f"Could not represent cut {self} as ascii.")
         canvas.add_text(text, self.start, 0)
         return canvas
 
