@@ -116,7 +116,7 @@ class Timeline:
         self.zoom_factor = 1
 
     def add(self, cut):
-        self.cuts.append(cut)
+        self.cuts = self.cuts.add(cut)
 
     def set_zoom_factor(self, zoom_factor):
         self.zoom_factor = zoom_factor
@@ -234,7 +234,13 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             self.in_out.end-1
         )
 
-class Cuts(list):
+class Cuts:
+
+    def __init__(self, cuts=[]):
+        self.cuts = list(cuts)
+
+    def add(self, cut):
+        return Cuts(self.cuts+[cut])
 
     def flatten(self):
         """
@@ -280,7 +286,7 @@ class Cuts(list):
 
     def get_regions_with_overlap(self):
         overlaps = Regions()
-        cuts = list(self)
+        cuts = list(self.cuts)
         while cuts:
             cut = cuts.pop(0)
             for other in cuts:
@@ -291,7 +297,7 @@ class Cuts(list):
 
     def cut_region(self, region):
         cuts = []
-        for cut in self:
+        for cut in self.cuts:
             sub_cut = cut.cut_region(region)
             if sub_cut:
                 cuts.append(sub_cut)
@@ -306,8 +312,8 @@ class Cuts(list):
         >>> Cuts([Source("A").create_cut(0, 5).at(5)]).start
         5
         """
-        if self:
-            return min(cut.region.start for cut in self)
+        if self.cuts:
+            return min(cut.region.start for cut in self.cuts)
         else:
             return 0
 
@@ -320,8 +326,8 @@ class Cuts(list):
         >>> Cuts([Source("A").create_cut(0, 5).at(5)]).end
         10
         """
-        if self:
-            return max(cut.region.end for cut in self)
+        if self.cuts:
+            return max(cut.region.end for cut in self.cuts)
         else:
             return 0
 
