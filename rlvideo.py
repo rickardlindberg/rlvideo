@@ -59,7 +59,12 @@ class App:
         box.pack_start(preview, True, True, 0)
 
         def timeline_draw(widget, context):
-            self.timeline.draw(context, producer.position())
+            self.timeline.draw(
+                context=context,
+                position=producer.position(),
+                width=widget.get_allocated_width(),
+                height=widget.get_allocated_height(),
+            )
         def timeline_motion(widget, event):
             print(event)
         def timeline_button(widget, event):
@@ -113,19 +118,25 @@ class Timeline:
     def to_mlt_producer(self, profile):
         return self.cuts.flatten().to_mlt_producer(profile)
 
-    def draw(self, context, position):
+    def draw(self, context, position, width, height):
         """
-        >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 300, 100)
+        >>> width, height = 300, 100
+        >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
-        >>> Timeline.with_test_clips().draw(context, 0)
+        >>> Timeline.with_test_clips().draw(
+        ...     context=context,
+        ...     position=0,
+        ...     width=width,
+        ...     height=height
+        ... )
         """
         offset = 10
         context.save()
         context.translate(offset, offset)
-        self.cuts.flatten().draw(context)
+        self.cuts.flatten().draw(context=context, height=height-2*offset)
         context.set_source_rgb(0.1, 0.1, 0.1)
         context.move_to(position, -10)
-        context.line_to(position, 100)
+        context.line_to(position, height-10)
         context.stroke()
         context.restore()
 
@@ -331,9 +342,9 @@ class Sections:
             playlist.append(section.to_mlt_producer(profile))
         return playlist
 
-    def draw(self, context):
+    def draw(self, context, height):
         for section in self.sections:
-            section.draw(context)
+            section.draw(context=context, height=height)
 
     def __repr__(self):
         return f"Sections({self.sections})"
@@ -363,9 +374,18 @@ class Section:
         else:
             raise ValueError("Only 1 and 2 tracks supported.")
 
-    def draw(self, context):
+    def draw(self, context, height):
+        sub_height = height // len(self.section_cuts)
+        rest = height % len(self.section_cuts)
+        y = 0
         for index, section_cut in enumerate(self.section_cuts):
-            section_cut.draw(context, index)
+            if rest:
+                rest -= 1
+                h = sub_height + 1
+            else:
+                h = sub_height
+            section_cut.draw(context, y, h)
+            y += h
 
 class SectionCut(namedtuple("SectionCut", "cut,source")):
 
@@ -402,35 +422,35 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
     def end(self):
         return self.cut.end == self.source.end
 
-    def draw(self, context, index):
-        H = 30
-        cut = self.cut
-        x = cut.start
-        w = cut.length
-        h = H
-        y = index * H
+    def draw(self, context, y, height):
+        x = self.cut.start
+        w = self.cut.length
+        h = height
+
         context.set_source_rgb(1, 0, 0)
         context.rectangle(x, y, w, h)
         context.fill()
+
         context.set_source_rgb(0, 0, 0)
 
         context.move_to(x, y)
         context.line_to(x+w, y)
         context.stroke()
 
-        context.move_to(x, y+H)
-        context.line_to(x+w, y+H)
+        context.move_to(x, y+height)
+        context.line_to(x+w, y+height)
         context.stroke()
 
         if self.start:
-            context.set_source_rgb(0, 0, 1)
+            context.set_source_rgb(0, 0, 0)
             context.move_to(x, y)
-            context.line_to(x, y+H)
+            context.line_to(x, y+height)
             context.stroke()
+
         if self.end:
-            context.set_source_rgb(0, 1, 0)
+            context.set_source_rgb(0, 0, 0)
             context.move_to(x+w, y)
-            context.line_to(x+w, y+H)
+            context.line_to(x+w, y+height)
             context.stroke()
 
 if __name__ == "__main__":
