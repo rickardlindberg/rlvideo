@@ -60,8 +60,23 @@ class App:
 
         def timeline_draw(widget, context):
             self.timeline.draw(context, producer.position())
+        def timeline_motion(widget, event):
+            print(event)
+        def timeline_button(widget, event):
+            print(event)
+        def timeline_button_up(widget, event):
+            print(event)
         timeline = Gtk.DrawingArea()
         timeline.connect("draw", timeline_draw)
+        timeline.connect("button-press-event", timeline_button)
+        timeline.connect("button-release-event", timeline_button_up)
+        timeline.connect("motion-notify-event", timeline_motion)
+        timeline.add_events(
+            timeline.get_events() |
+            Gdk.EventMask.BUTTON_PRESS_MASK |
+            Gdk.EventMask.BUTTON_RELEASE_MASK |
+            Gdk.EventMask.POINTER_MOTION_MASK
+        )
         def redraw():
             timeline.queue_draw()
             return True
