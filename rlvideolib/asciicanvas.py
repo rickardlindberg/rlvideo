@@ -4,7 +4,14 @@ class AsciiCanvas:
         self.chars = {}
 
     def get_max_x(self):
-        return max(x for (x, y) in self.chars.keys())
+        """
+        >>> AsciiCanvas().get_max_x()
+        0
+        """
+        if self.chars:
+            return max(x for (x, y) in self.chars.keys())
+        else:
+            return 0
 
     def get_max_y(self):
         return max(y for (x, y) in self.chars.keys())
