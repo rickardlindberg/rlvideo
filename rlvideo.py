@@ -8,23 +8,16 @@ import time
 class App:
 
     def __init__(self):
-        self.init_mlt()
-
-    def init_mlt(self):
         mlt.Factory().init()
         self.profile = mlt.Profile()
+        self.timeline = Timeline.with_test_clips()
 
     def generate_mlt_producer(self):
         """
         >>> isinstance(App().generate_mlt_producer(), mlt.Playlist)
         True
         """
-        cuts = Cuts()
-        cuts.append(Source("hello").create_cut(0, 75).at(0))
-        cuts.append(Source("video").create_cut(0, 75).at(50))
-        cuts.append(Source("world").create_cut(0, 75).at(100))
-        sections = cuts.flatten()
-        return sections.to_mlt_producer(self.profile)
+        return self.timeline.to_mlt_producer(self.profile)
 
     def run(self):
         producer = self.generate_mlt_producer()
@@ -34,6 +27,25 @@ class App:
         consumer.start()
         while consumer.is_stopped() == 0:
             time.sleep(1)
+
+class Timeline:
+
+    @staticmethod
+    def with_test_clips():
+        timeline = Timeline()
+        timeline.add(Source("hello").create_cut(0, 75).at(0))
+        timeline.add(Source("video").create_cut(0, 75).at(50))
+        timeline.add(Source("world").create_cut(0, 75).at(100))
+        return timeline
+
+    def __init__(self):
+        self.cuts = Cuts()
+
+    def add(self, cut):
+        self.cuts.append(cut)
+
+    def to_mlt_producer(self, profile):
+        return self.cuts.flatten().to_mlt_producer(profile)
 
 class Source(namedtuple("Source", "name")):
 
