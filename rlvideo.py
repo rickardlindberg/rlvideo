@@ -105,9 +105,9 @@ class Timeline:
     def with_test_clips():
         timeline = Timeline()
         timeline.add(Source("hello").create_cut(0, 75).at(0))
-        timeline.add(Source("video").create_cut(0, 75).at(50))
+        timeline.add(Source("video").create_cut(0, 100).at(50))
         timeline.add(Source("world").create_cut(0, 75).at(100))
-        timeline.add(Source("overlay").create_cut(0, 50).at(75))
+        timeline.add(Source("loooong overlay").create_cut(0, 50).at(100))
         timeline.set_zoom_factor(4)
         return timeline
 
@@ -376,10 +376,14 @@ class Section:
         else:
             tractor = mlt.Tractor()
             for section_cut in self.section_cuts:
-                tractor.insert_track(section_cut.cut.to_mlt_producer(profile), 0)
-            for clip_index in range(len(self.section_cuts)-1):
-                transition = mlt.Transition(profile, "luma")
-                tractor.plant_transition(transition, clip_index, clip_index+1)
+                tractor.insert_track(
+                    section_cut.cut.to_mlt_producer(profile),
+                    0
+                )
+            for clip_index in reversed(range(len(self.section_cuts))):
+                if clip_index > 0:
+                    transition = mlt.Transition(profile, "luma")
+                    tractor.plant_transition(transition, clip_index, clip_index-1)
             return tractor
 
     def draw(self, context, height, x_factor):
