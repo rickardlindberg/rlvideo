@@ -2,6 +2,7 @@ from collections import namedtuple
 from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.region import Regions
+import mlt
 
 class App:
 
@@ -17,6 +18,11 @@ class App:
 
     def __init__(self):
         self.timeline = Cuts()
+        self.init_mlt()
+
+    def init_mlt(self):
+        mlt.Factory().init()
+        self.profile = mlt.Profile()
 
     def add(self, position, clip):
         self.timeline.append(clip.at(position))
