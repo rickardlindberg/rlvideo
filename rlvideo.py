@@ -364,19 +364,8 @@ class Section:
             raise ValueError("Only 1 and 2 tracks supported.")
 
     def draw(self, context):
-        H = 30
         for index, section_cut in enumerate(self.section_cuts):
-            cut = section_cut.cut
-            x = cut.start
-            w = cut.length
-            h = H
-            y = index * H
-            context.set_source_rgb(1, 0, 0)
-            context.rectangle(x, y, w, h)
-            context.fill()
-            context.set_source_rgb(0, 0, 0)
-            context.rectangle(x, y, w, h)
-            context.stroke()
+            section_cut.draw(context, index)
 
 class SectionCut(namedtuple("SectionCut", "cut,source")):
 
@@ -412,6 +401,37 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
     @property
     def end(self):
         return self.cut.end == self.source.end
+
+    def draw(self, context, index):
+        H = 30
+        cut = self.cut
+        x = cut.start
+        w = cut.length
+        h = H
+        y = index * H
+        context.set_source_rgb(1, 0, 0)
+        context.rectangle(x, y, w, h)
+        context.fill()
+        context.set_source_rgb(0, 0, 0)
+
+        context.move_to(x, y)
+        context.line_to(x+w, y)
+        context.stroke()
+
+        context.move_to(x, y+H)
+        context.line_to(x+w, y+H)
+        context.stroke()
+
+        if self.start:
+            context.set_source_rgb(0, 0, 1)
+            context.move_to(x, y)
+            context.line_to(x, y+H)
+            context.stroke()
+        if self.end:
+            context.set_source_rgb(0, 1, 0)
+            context.move_to(x+w, y)
+            context.line_to(x+w, y+H)
+            context.stroke()
 
 if __name__ == "__main__":
     App().run()
