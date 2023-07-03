@@ -279,7 +279,11 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         return self.position+self.length
 
     def move(self, delta):
-        return self._replace(position=self.position+delta)
+        """
+        >>> Cut(source=None, in_out=None, position=5).move(-10).position
+        0
+        """
+        return self._replace(position=max(0, self.position+delta))
 
     @property
     def region(self):
