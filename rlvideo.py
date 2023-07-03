@@ -8,7 +8,7 @@ import mlt
 import time
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, GLib
 
 class App:
 
@@ -39,9 +39,24 @@ class App:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         main_window.add(box)
 
-        box.pack_start(Gtk.Button(label="hello"), True, True, 0)
         preview = Gtk.DrawingArea()
         box.pack_start(preview, True, True, 0)
+
+        def timeline_draw(widget, context):
+            self.timeline.draw(
+                widget.get_allocated_width(),
+                widget.get_allocated_height(),
+                context,
+                producer.position()
+            )
+        timeline = Gtk.DrawingArea()
+        timeline.connect("draw", timeline_draw)
+        def redraw():
+            timeline.queue_draw()
+            return True
+        refresh_id = GLib.timeout_add(100, redraw)
+        box.pack_start(timeline, True, True, 0)
+
         main_window.show_all()
 
         os.putenv("SDL_WINDOWID", str(preview.get_window().get_xid()))
@@ -71,6 +86,11 @@ class Timeline:
 
     def to_mlt_producer(self, profile):
         return self.cuts.flatten().to_mlt_producer(profile)
+
+    def draw(self, width, height, context, position):
+        context.set_source_rgb(1, 0, 0)
+        context.rectangle(position, 10, 10, 10)
+        context.fill()
 
 class Source(namedtuple("Source", "name")):
 
