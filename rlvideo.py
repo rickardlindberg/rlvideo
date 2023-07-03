@@ -211,11 +211,14 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         >>> cut = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
         >>> cut.extract_section(Region(start=5, end=12)).to_ascii_canvas()
              --A13->
+        >>> cut.extract_section(Region(start=0, end=1)).to_ascii_canvas()
+        <BLANKLINE>
         """
+        section = Section()
         overlap = self.region.get_overlap(region)
         if overlap:
             new_start = self.in_out.start+overlap.start-self.position
-            return Section([SectionCut(
+            section.add(SectionCut(
                 cut=self._replace(
                     position=overlap.start,
                     in_out=Region(
@@ -224,9 +227,8 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
                     )
                 ),
                 source=self
-            )])
-        else:
-            return None
+            ))
+        return section
 
     def to_mlt_producer(self, profile):
         return self.source.to_mlt_producer(profile).cut(
@@ -276,16 +278,16 @@ class Cuts:
         sections = Sections()
         start = self.start
         for overlap in self.get_regions_with_overlap():
-            self.extract_section(Region(
+            sections.add(*self.extract_section(Region(
                 start=start,
                 end=overlap.start
-            )).add_to_sections_as_separate(sections)
+            )).split())
             sections.add(self.extract_section(overlap))
             start = overlap.end
-        self.extract_section(Region(
+        sections.add(*self.extract_section(Region(
             start=start,
             end=self.end
-        )).add_to_sections_as_separate(sections)
+        )).split())
         return sections
 
     def get_regions_with_overlap(self):
@@ -302,9 +304,7 @@ class Cuts:
     def extract_section(self, region):
         section = Section()
         for cut in self.cuts:
-            inner_section = cut.extract_section(region)
-            if inner_section:
-                section.merge(inner_section)
+            section.merge(cut.extract_section(region))
         return section
 
     @property
@@ -337,11 +337,11 @@ class Cuts:
 
 class Sections:
 
-    def __init__(self, sections=[]):
-        self.sections = list(sections)
+    def __init__(self):
+        self.sections = []
 
-    def add(self, section):
-        self.sections.append(section)
+    def add(self, *sections):
+        self.sections.extend(sections)
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
@@ -369,16 +369,21 @@ class Sections:
 
 class Section:
 
-    def __init__(self, section_cuts=[]):
-        self.section_cuts = list(section_cuts)
+    def __init__(self):
+        self.section_cuts = []
+
+    def add(self, section_cut):
+        self.section_cuts.append(section_cut)
 
     def merge(self, other):
         for section_cut in other.section_cuts:
             self.section_cuts.append(section_cut)
 
-    def add_to_sections_as_separate(self, sections):
+    def split(self):
         for section_cut in self.section_cuts:
-            sections.add(Section([section_cut]))
+            section = Section()
+            section.add(section_cut)
+            yield section
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
@@ -417,6 +422,14 @@ class Section:
 
 class SectionCut(namedtuple("SectionCut", "cut,source")):
 
+    @property
+    def start(self):
+        return self.cut.start == self.source.start
+
+    @property
+    def end(self):
+        return self.cut.end == self.source.end
+
     def to_ascii_canvas(self):
         """
         >>> cut = Source("A").create_cut(0, 6)
@@ -441,14 +454,6 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
             raise ValueError(f"Could represent section cut ({self.cut}) as ascii because its length ({self.cut.length}) was too short (< {len(text)}).")
         canvas.add_text(text, self.cut.start, 0)
         return canvas
-
-    @property
-    def start(self):
-        return self.cut.start == self.source.start
-
-    @property
-    def end(self):
-        return self.cut.end == self.source.end
 
     def draw(self, context, y, height, x_factor):
         x = self.cut.start * x_factor
