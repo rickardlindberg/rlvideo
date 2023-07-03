@@ -3,9 +3,12 @@ from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.region import Regions
 import cairo
+import os
 import mlt
-import pygame
 import time
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, Gdk
 
 class App:
 
@@ -23,44 +26,32 @@ class App:
 
     def run(self):
 
-        SIZE = (400, 400)
+        def key_press_handler(window, event):
+            if event.get_keyval().keyval == Gdk.keyval_from_name("0"):
+                print("Seek 0")
+                producer.seek(0)
+                consumer.purge()
 
-        def draw_frame(cairo_context, position):
-            cairo_context.set_source_rgb(1, 0, 0)
-            cairo_context.rectangle(position, position, 10, 10)
-            cairo_context.fill()
+        main_window = Gtk.Window()
+        main_window.connect("destroy", Gtk.main_quit)
+        main_window.connect("key_press_event", key_press_handler)
 
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        main_window.add(box)
+
+        box.pack_start(Gtk.Button(label="hello"), True, True, 0)
+        preview = Gtk.DrawingArea()
+        box.pack_start(preview, True, True, 0)
+        main_window.show_all()
+
+        os.putenv("SDL_WINDOWID", str(preview.get_window().get_xid()))
         producer = self.generate_mlt_producer()
         producer.set("eof", "loop")
-        consumer = mlt.Consumer(self.profile, "sdl2")
+        consumer = mlt.Consumer(self.profile, "sdl")
         consumer.connect(producer)
         consumer.start()
 
-        pygame.init()
-        screen = pygame.display.set_mode(SIZE)
-        clock = pygame.time.Clock()
-        position = 0
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    consumer.purge()
-                    consumer.stop()
-                    return
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_0:
-                    print("Reset")
-                    producer.seek(0)
-                    consumer.purge()
-            cairo_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, *SIZE)
-            draw_frame(cairo.Context(cairo_surface), position)
-            screen.fill("black")
-            screen.blit(
-                pygame.image.frombuffer(cairo_surface.get_data(), SIZE, "BGRA"),
-                (0, 0)
-            )
-            pygame.display.flip()
-            clock.tick(60)
-            position = (position + 1) % (SIZE[0]-10)
+        Gtk.main()
 
 class Timeline:
 
