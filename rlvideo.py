@@ -24,8 +24,8 @@ class App:
         mlt.Factory().init()
         self.profile = mlt.Profile()
 
-    def add(self, position, clip):
-        self.timeline.append(clip.at(position))
+    def add(self, position, cut):
+        self.timeline.append(cut.at(position))
 
     def flatten(self):
         return self.timeline.flatten()
@@ -81,19 +81,19 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         """
         return self._replace(position=position)
 
-    def get_overlap(self, clip):
+    def get_overlap(self, cut):
         """
         >>> a = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=5)
         >>> b = Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10)
         >>> a.get_overlap(b)
         Region(start=10, end=15)
         """
-        return self.region.get_overlap(clip.region)
+        return self.region.get_overlap(cut.region)
 
     def cut_region(self, region):
         """
-        >>> clip = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
-        >>> clip.cut_region(Region(start=5, end=10))
+        >>> cut = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
+        >>> cut.cut_region(Region(start=5, end=10))
         Cut(source=Source(name='A'), in_out=Region(start=13, end=18), position=5)
         """
         overlap = self.region.get_overlap(region)
@@ -137,7 +137,7 @@ class Cuts(list):
         |A0-->|A5-->|B5-->|
         |     |B0-->|     |
 
-        No clips:
+        No cuts:
 
         >>> Cuts().flatten()
         Sections([])
@@ -145,32 +145,32 @@ class Cuts(list):
         sections = Sections()
         start = self.start
         for overlap in self.get_regions_with_overlap():
-            for clip in self.cut_region(Region(start=start, end=overlap.start)):
-                sections.add(Cuts([clip]))
+            for cut in self.cut_region(Region(start=start, end=overlap.start)):
+                sections.add(Cuts([cut]))
             sections.add(self.cut_region(overlap))
             start = overlap.end
-        for clip in self.cut_region(Region(start=start, end=self.end)):
-            sections.add(Cuts([clip]))
+        for cut in self.cut_region(Region(start=start, end=self.end)):
+            sections.add(Cuts([cut]))
         return sections
 
     def get_regions_with_overlap(self):
         overlaps = Regions()
-        clips = list(self)
-        while clips:
-            clip = clips.pop(0)
-            for other in clips:
-                overlap = clip.get_overlap(other)
+        cuts = list(self)
+        while cuts:
+            cut = cuts.pop(0)
+            for other in cuts:
+                overlap = cut.get_overlap(other)
                 if overlap:
                     overlaps.add(overlap)
         return overlaps.merge()
 
     def cut_region(self, region):
-        clips = Cuts()
-        for clip in self:
-            cut = clip.cut_region(region)
-            if cut:
-                clips.append(cut)
-        return clips
+        cuts = Cuts()
+        for cut in self:
+            sub_cut = cut.cut_region(region)
+            if sub_cut:
+                cuts.append(sub_cut)
+        return cuts
 
     @property
     def start(self):
@@ -182,7 +182,7 @@ class Cuts(list):
         5
         """
         if self:
-            return min(clip.region.start for clip in self)
+            return min(cut.region.start for cut in self)
         else:
             return 0
 
@@ -196,7 +196,7 @@ class Cuts(list):
         10
         """
         if self:
-            return max(clip.region.end for clip in self)
+            return max(cut.region.end for cut in self)
         else:
             return 0
 
@@ -205,9 +205,9 @@ class Sections:
     def __init__(self):
         self.sections = []
 
-    def add(self, *clips):
-        for c in clips:
-            self.sections.append(Section(c))
+    def add(self, *cuts):
+        for cut in cuts:
+            self.sections.append(Section(cut))
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
@@ -227,11 +227,11 @@ class Sections:
 
 class Section:
 
-    def __init__(self, clips):
-        self.clips = clips
+    def __init__(self, cuts):
+        self.cuts = cuts
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
-        for y, clip in enumerate(self.clips):
-            canvas.add_canvas(clip.to_ascii_canvas(), dy=y)
+        for y, cut in enumerate(self.cuts):
+            canvas.add_canvas(cut.to_ascii_canvas(), dy=y)
         return canvas
