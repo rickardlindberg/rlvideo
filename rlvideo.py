@@ -432,10 +432,10 @@ class SectionCut(namedtuple("SectionCut", "cut,source")):
 
     def to_ascii_canvas(self):
         """
-        >>> cut = Source("A").create_cut(0, 6)
+        >>> cut = Source("A").create_cut(0, 10).at(10)
 
-        >>> cut.extract_section(Region(start=0, end=6)).to_ascii_canvas()
-        <-A0->
+        >>> cut.extract_section(Region(start=10, end=20)).to_ascii_canvas()
+                  <-A0----->
         """
         canvas = AsciiCanvas()
         label = self.cut.source.name[0]+str(self.cut.in_out.start)
