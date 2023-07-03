@@ -28,25 +28,13 @@ class App:
 
         def key_press_handler(window, event):
             if event.get_keyval().keyval == Gdk.keyval_from_name("0"):
-                print("Seek 0")
-                producer.seek(0)
-                consumer.purge()
+                mlt_player.seek_beginning()
             elif event.get_keyval().keyval == Gdk.keyval_from_name("space"):
-                if producer.get_speed() == 0:
-                    print("Play")
-                    producer.set_speed(1)
-                else:
-                    print("Pause")
-                    producer.set_speed(0)
-                consumer.purge()
+                mlt_player.play_pause()
             elif event.get_keyval().keyval == Gdk.keyval_from_name("Left"):
-                print("Left")
-                producer.seek(producer.position()-1)
-                consumer.purge()
+                mlt_player.seek_left_one_frame()
             elif event.get_keyval().keyval == Gdk.keyval_from_name("Right"):
-                print("Right")
-                producer.seek(producer.position()+1)
-                consumer.purge()
+                mlt_player.seek_right_one_frame()
 
         main_window = Gtk.Window()
         main_window.connect("destroy", Gtk.main_quit)
@@ -61,7 +49,7 @@ class App:
         def timeline_draw(widget, context):
             self.timeline.draw(
                 context=context,
-                position=producer.position(),
+                position=mlt_player.position(),
                 width=widget.get_allocated_width(),
                 height=widget.get_allocated_height(),
             )
@@ -79,6 +67,7 @@ class App:
             ))
         def timeline_button_up(widget, event):
             self.timeline.mouse_up()
+            mlt_player.set_producer(self.generate_mlt_producer())
         timeline = Gtk.DrawingArea()
         timeline.connect("draw", timeline_draw)
         timeline.connect("button-press-event", timeline_button)
@@ -98,14 +87,51 @@ class App:
 
         main_window.show_all()
 
-        os.putenv("SDL_WINDOWID", str(preview.get_window().get_xid()))
-        producer = self.generate_mlt_producer()
-        producer.set("eof", "loop")
-        consumer = mlt.Consumer(self.profile, "sdl")
-        consumer.connect(producer)
-        consumer.start()
+        mlt_player = MltPlayer(self.profile, preview.get_window().get_xid())
+        mlt_player.set_producer(self.generate_mlt_producer())
 
         Gtk.main()
+
+class MltPlayer:
+
+    def __init__(self, profile, window_id):
+        self.profile = profile
+        os.putenv("SDL_WINDOWID", str(window_id))
+        self.consumer = mlt.Consumer(self.profile, "sdl")
+        self.consumer.start()
+        self.producer = None
+
+    def position(self):
+        return self.producer.position()
+
+    def play_pause(self):
+        if self.producer.get_speed() == 0:
+            print("Play")
+            self.producer.set_speed(1)
+        else:
+            print("Pause")
+            self.producer.set_speed(0)
+
+    def seek_left_one_frame(self):
+        print("Left")
+        self.producer.seek(self.producer.position()-1)
+
+    def seek_right_one_frame(self):
+        print("Right")
+        self.producer.seek(self.producer.position()+1)
+
+    def seek_beginning(self):
+        print("Seek 0")
+        self.producer.seek(0)
+
+    def set_producer(self, producer):
+        if self.producer:
+            producer.seek(self.position())
+            producer.set_speed(self.producer.get_speed())
+        producer.set("eof", "loop")
+        self.producer = producer
+        self.consumer.disconnect_all_producers()
+        self.consumer.connect(self.producer)
 
 class Timeline:
 
