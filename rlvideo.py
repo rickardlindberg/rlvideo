@@ -31,6 +31,22 @@ class App:
                 print("Seek 0")
                 producer.seek(0)
                 consumer.purge()
+            elif event.get_keyval().keyval == Gdk.keyval_from_name("space"):
+                if producer.get_speed() == 0:
+                    print("Play")
+                    producer.set_speed(1)
+                else:
+                    print("Pause")
+                    producer.set_speed(0)
+                consumer.purge()
+            elif event.get_keyval().keyval == Gdk.keyval_from_name("Left"):
+                print("Left")
+                producer.seek(producer.position()-1)
+                consumer.purge()
+            elif event.get_keyval().keyval == Gdk.keyval_from_name("Right"):
+                print("Right")
+                producer.seek(producer.position()+1)
+                consumer.purge()
 
         main_window = Gtk.Window()
         main_window.connect("destroy", Gtk.main_quit)
