@@ -351,11 +351,11 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         """
         >>> cut = Source("A").create_cut(0, 10).at(10)
 
-        >>> cut.extract_playlist_cut(Region(start=10, end=20))
-        PlaylistCut(source=Source(name='A'), in_out=Region(start=0, end=10), start=True, end=True)
+        >>> cut.extract_playlist_cut(Region(start=10, end=20)).to_ascii_canvas()
+        <-A0----->
 
-        >>> cut.extract_playlist_cut(Region(start=11, end=19))
-        PlaylistCut(source=Source(name='A'), in_out=Region(start=1, end=9), start=False, end=False)
+        >>> cut.extract_playlist_cut(Region(start=11, end=19)).to_ascii_canvas()
+        --A1----
 
         >>> cut.extract_playlist_cut(Region(start=0, end=10)) is None
         True
