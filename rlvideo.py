@@ -22,7 +22,6 @@ class App:
         >>> isinstance(App().generate_mlt_producer(), mlt.Playlist)
         True
         """
-        print(self.timeline.split_into_sections().to_ascii_canvas())
         return self.timeline.to_mlt_producer(self.profile)
 
     def run(self):
@@ -69,6 +68,7 @@ class App:
         def timeline_button_up(widget, event):
             self.timeline.mouse_up()
             mlt_player.set_producer(self.generate_mlt_producer())
+            print(self.timeline.split_into_sections().to_ascii_canvas())
         timeline = Gtk.DrawingArea()
         timeline.connect("draw", timeline_draw)
         timeline.connect("button-press-event", timeline_button)
@@ -90,6 +90,7 @@ class App:
 
         mlt_player = MltPlayer(self.profile, preview.get_window().get_xid())
         mlt_player.set_producer(self.generate_mlt_producer())
+        print(self.timeline.split_into_sections().to_ascii_canvas())
 
         Gtk.main()
 
@@ -167,11 +168,11 @@ class Timeline:
     @staticmethod
     def with_test_clips():
         timeline = Timeline()
-        timeline.add(Source("hello").create_cut(0, 75).at(0))
-        timeline.add(Source("video").create_cut(0, 100).at(50))
-        timeline.add(Source("world").create_cut(0, 75).at(100))
-        timeline.add(Source("loooong overlay").create_cut(0, 50).at(100))
-        timeline.set_zoom_factor(4)
+        timeline.add(Source("resources/one-to-five.mp4").create_cut(0, 5).at(0))
+        timeline.add(Source("resources/one.mp4").create_cut(0, 15).at(10))
+        timeline.add(Source("resources/two.mp4").create_cut(0, 15).at(20))
+        timeline.add(Source("resources/three.mp4").create_cut(0, 15).at(30))
+        timeline.set_zoom_factor(50)
         return timeline
 
     def __init__(self):
@@ -256,10 +257,13 @@ class Source(namedtuple("Source", "name")):
         )
 
     def to_mlt_producer(self, profile):
-        producer = mlt.Producer(profile, "pango")
-        producer.set("text", self.name)
-        producer.set("bgcolour", "red")
-        return producer
+        if os.path.exists(self.name):
+            return mlt.Producer(profile, self.name)
+        else:
+            producer = mlt.Producer(profile, "pango")
+            producer.set("text", self.name)
+            producer.set("bgcolour", "red")
+            return producer
 
 class Cut(namedtuple("Cut", "source,in_out,position")):
 
@@ -623,7 +627,10 @@ class SectionCut(namedtuple("SectionCut", "cut,source,region")):
             text += "--"
         text += "%"*self.space_after
         if len(text) != self.region.length:
-            raise ValueError(f"Could represent section cut ({self.cut}) as ascii because its length ({self.cut.length}) was too short (< {len(text)}).")
+            text = ""
+            text += "%"*self.space_before
+            text += "@"*self.cut.length
+            text += "%"*self.space_after
         canvas.add_text(text, 0, 0)
         return canvas
 
