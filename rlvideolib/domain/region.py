@@ -104,17 +104,17 @@ class Regions:
         >>> r.merge()
         [Region(start=0, end=100)]
         """
-        rest = sorted(self.regions, key=lambda x: x.start)
         merged = []
+        rest = sorted(self.regions, key=lambda region: region.start)
         while rest:
-            x = rest.pop(0)
+            region = rest.pop(0)
             if merged:
-                merge = merged[-1].merge(x)
+                merge = merged[-1].merge(region)
                 if merge:
                     merged.pop(-1)
                     merged.append(merge)
                 else:
-                    merged.append(x)
+                    merged.append(region)
             else:
-                merged.append(x)
+                merged.append(region)
         return merged
