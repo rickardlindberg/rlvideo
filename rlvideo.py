@@ -320,7 +320,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         >>> cut.extract_section(Region(start=5, end=12)).to_ascii_canvas()
         --A13->
         >>> cut.extract_section(Region(start=0, end=1)).to_ascii_canvas()
-        <BLANKLINE>
+        @
 
         >>> cut = Source("A").create_cut(0, 10).at(10)
         >>> cut.extract_section(Region(start=9, end=21)).to_ascii_canvas()
@@ -409,6 +409,14 @@ class Cuts:
         ... ]).split_into_sections().to_ascii_canvas()
         |%%%%%<-A0----->|
 
+        BUG:
+
+        >>> Cuts([
+        ...     Source(name="A").create_cut(0, 10).at(5),
+        ...     Source(name="B").create_cut(0, 10).at(5),
+        ... ]).split_into_sections().to_ascii_canvas()
+        |@@@@@|<-A0----->|
+        |     |<-B0----->|
         """
         sections = Sections()
         start = 0
@@ -419,10 +427,12 @@ class Cuts:
             )).split())
             sections.add(self.extract_section(overlap))
             start = overlap.end
-        sections.add(*self.extract_section(Region(
+        r = Region(
             start=start,
             end=self.end
-        )).split())
+        )
+        if r.length > 0:
+            sections.add(*self.extract_section(r).split())
         return sections
 
     def get_regions_with_overlap(self):
@@ -553,16 +563,25 @@ class Section:
             section = Section(r)
             section.add(last.section_cuts[0]._replace(region=r))
             sections.append(section)
+        else:
+            return [self]
         return sections
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
-        for y, section_cut in enumerate(self.section_cuts):
-            canvas.add_canvas(section_cut.to_ascii_canvas(), dy=y)
+        if self.section_cuts:
+            for y, section_cut in enumerate(self.section_cuts):
+                canvas.add_canvas(section_cut.to_ascii_canvas(), dy=y)
+        else:
+            canvas.add_text("@"*self.region.length, 0, 0)
         return canvas
 
     def to_mlt_producer(self, profile):
-        if len(self.section_cuts) == 1:
+        if len(self.section_cuts) == 0:
+            playlist = mlt.Playlist()
+            playlist.blank(self.region.length-1)
+            return playlist
+        elif len(self.section_cuts) == 1:
             return self.section_cuts[0].to_mlt_producer(profile)
         else:
             tractor = mlt.Tractor()
@@ -580,17 +599,18 @@ class Section:
             return tractor
 
     def draw(self, context, height, x_factor, rectangle_map):
-        sub_height = height // len(self.section_cuts)
-        rest = height % len(self.section_cuts)
-        y = 0
-        for index, section_cut in enumerate(self.section_cuts):
-            if rest:
-                rest -= 1
-                h = sub_height + 1
-            else:
-                h = sub_height
-            section_cut.draw(context, y, h, x_factor, rectangle_map)
-            y += h
+        if self.section_cuts:
+            sub_height = height // len(self.section_cuts)
+            rest = height % len(self.section_cuts)
+            y = 0
+            for index, section_cut in enumerate(self.section_cuts):
+                if rest:
+                    rest -= 1
+                    h = sub_height + 1
+                else:
+                    h = sub_height
+                section_cut.draw(context, y, h, x_factor, rectangle_map)
+                y += h
 
 class SectionCut(namedtuple("SectionCut", "cut,source,region")):
 
