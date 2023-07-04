@@ -347,6 +347,32 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             ))
         return section
 
+    def extract_playlist_cut(self, region):
+        """
+        >>> cut = Source("A").create_cut(0, 10).at(10)
+
+        >>> cut.extract_playlist_cut(Region(start=10, end=20))
+        PlaylistCut(source=Source(name='A'), in_out=Region(start=0, end=10), start=True, end=True)
+
+        >>> cut.extract_playlist_cut(Region(start=11, end=19))
+        PlaylistCut(source=Source(name='A'), in_out=Region(start=1, end=9), start=False, end=False)
+
+        >>> cut.extract_playlist_cut(Region(start=0, end=10)) is None
+        True
+        """
+        overlap = self.region.get_overlap(region)
+        if overlap:
+            new_start = self.in_out.start+overlap.start-self.position
+            return PlaylistCut(
+                source=self.source,
+                in_out=Region(
+                    start=new_start,
+                    end=new_start+overlap.length
+                ),
+                start=overlap.start == self.start,
+                end=overlap.end == self.end
+            )
+
 class Cuts:
 
     """
