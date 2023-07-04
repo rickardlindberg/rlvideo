@@ -508,20 +508,18 @@ class Cuts:
         sections = Sections()
         start = 0
         for overlap in self.get_regions_with_overlap():
-            r = Region(
-                start=start,
-                end=overlap.start
-            )
-            if r.length > 0:
-                sections.add(*self.extract_section(r).split())
+            if overlap.start > start:
+                sections.add(*self.extract_section(Region(
+                    start=start,
+                    end=overlap.start
+                )).split())
             sections.add(self.extract_section(overlap))
             start = overlap.end
-        r = Region(
-            start=start,
-            end=self.end
-        )
-        if r.length > 0:
-            sections.add(*self.extract_section(r).split())
+        if self.end > start:
+            sections.add(*self.extract_section(Region(
+                start=start,
+                end=self.end
+            )).split())
         return sections
 
     def get_regions_with_overlap(self):
