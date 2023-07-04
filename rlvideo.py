@@ -598,9 +598,9 @@ class Section:
         if len(self.section_cuts) == 0:
             playlist = mlt.Playlist()
             playlist.blank(self.region.length-1)
-            return playlist
+            producer = playlist
         elif len(self.section_cuts) == 1:
-            return self.section_cuts[0].to_mlt_producer(profile)
+            producer = self.section_cuts[0].to_mlt_producer(profile)
         else:
             tractor = mlt.Tractor()
             for section_cut in self.section_cuts:
@@ -614,7 +614,9 @@ class Section:
                     transition.set("in", 0)
                     transition.set("out", self.section_cuts[clip_index].cut.length-1)
                     tractor.plant_transition(transition, clip_index, clip_index-1)
-            return tractor
+            producer = tractor
+        assert producer.get_playtime() == self.length
+        return producer
 
     def draw(self, context, height, x_factor, rectangle_map):
         if self.section_cuts:
