@@ -338,12 +338,6 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             ))
         return section
 
-    def to_mlt_producer(self, profile):
-        return self.source.to_mlt_producer(profile).cut(
-            self.in_out.start,
-            self.in_out.end-1
-        )
-
 class Cuts:
 
     """
@@ -564,12 +558,12 @@ class Section:
 
     def to_mlt_producer(self, profile):
         if len(self.section_cuts) == 1:
-            return self.section_cuts[0].cut.to_mlt_producer(profile)
+            return self.section_cuts[0].to_mlt_producer(profile)
         else:
             tractor = mlt.Tractor()
             for section_cut in self.section_cuts:
                 tractor.insert_track(
-                    section_cut.cut.to_mlt_producer(profile),
+                    section_cut.to_mlt_producer(profile),
                     0
                 )
             for clip_index in reversed(range(len(self.section_cuts))):
@@ -623,6 +617,12 @@ class SectionCut(namedtuple("SectionCut", "cut,source,region")):
             raise ValueError(f"Could represent section cut ({self.cut}) as ascii because its length ({self.cut.length}) was too short (< {len(text)}).")
         canvas.add_text(text, 0, 0)
         return canvas
+
+    def to_mlt_producer(self, profile):
+        return self.cut.source.to_mlt_producer(profile).cut(
+            self.cut.in_out.start,
+            self.cut.in_out.end-1
+        )
 
     def draw(self, context, y, height, x_factor, rectangle_map):
         x = self.cut.start * x_factor
