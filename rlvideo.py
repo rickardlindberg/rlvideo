@@ -401,6 +401,36 @@ class Cuts:
             for cut in self.cuts
         ])
 
+    def extract_playlist_cuts(self, region):
+        """
+        >>> Cuts().extract_playlist_cuts(Region(start=0, end=10)).to_ascii_canvas()
+        <BLANKLINE>
+
+        >>> cut_a = Source("A").create_cut(0, 10).at(0)
+        >>> cut_b = Source("B").create_cut(0, 10).at(10)
+        >>> Cuts([
+        ...     cut_a,
+        ...     cut_b,
+        ... ]).extract_playlist_cuts(Region(
+        ...     start=0,
+        ...     end=20
+        ... )).to_ascii_canvas()
+        <-A0-----><-B0----->
+
+        >>> Cuts([
+        ...     cut_b,
+        ...     cut_a,
+        ... ]).extract_playlist_cuts(Region(
+        ...     start=0,
+        ...     end=20
+        ... )).to_ascii_canvas()
+        <-A0-----><-B0----->
+        """
+        playlist_cuts = PlaylistCuts()
+        for cut in sorted(self.cuts, key=lambda cut: cut.start):
+            playlist_cuts.add(cut.extract_playlist_cut(region))
+        return playlist_cuts
+
     def split_into_sections(self):
         """
         A single cut returns a single section with that cut:
@@ -757,6 +787,22 @@ class SectionCut(namedtuple("SectionCut", "cut,source,region")):
             context.set_source_rgb(0, 0, 0)
             context.text_path(self.source.source.name)
             context.fill()
+
+class PlaylistCuts:
+
+    def __init__(self):
+        self.cuts = []
+
+    def add(self, cut):
+        self.cuts.append(cut)
+
+    def to_ascii_canvas(self):
+        canvas = AsciiCanvas()
+        dx = 0
+        for cut in self.cuts:
+            canvas.add_canvas(cut.to_ascii_canvas(), dx=dx)
+            dx = canvas.get_max_x() + 1
+        return canvas
 
 class PlaylistCut(namedtuple("PlaylistCut", "source,in_out,start,end")):
 
