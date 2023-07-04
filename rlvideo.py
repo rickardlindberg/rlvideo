@@ -732,6 +732,42 @@ class SectionCut(namedtuple("SectionCut", "cut,source,region")):
             context.text_path(self.source.source.name)
             context.fill()
 
+class PlaylistCut(namedtuple("PlaylistCut", "source,in_out,start,end")):
+
+    def to_ascii_canvas(self):
+        """
+        >>> PlaylistCut(
+        ...     source=Source("A"),
+        ...     in_out=Region(start=0, end=10),
+        ...     start=True,
+        ...     end=True
+        ... ).to_ascii_canvas()
+        <-A0----->
+
+        >>> PlaylistCut(
+        ...     source=Source("A"),
+        ...     in_out=Region(start=10, end=20),
+        ...     start=False,
+        ...     end=False
+        ... ).to_ascii_canvas()
+        --A10-----
+        """
+        text = ""
+        if self.start:
+            text += "<-"
+        else:
+            text += "--"
+        text += self.source.name[0]
+        text += str(self.in_out.start)
+        text += "-"*(self.in_out.length-len(text)-2)
+        if self.end:
+            text += "->"
+        else:
+            text += "--"
+        canvas = AsciiCanvas()
+        canvas.add_text(text, 0, 0)
+        return canvas
+
 class RectangleMap:
 
     """
