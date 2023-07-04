@@ -22,6 +22,7 @@ class App:
         >>> isinstance(App().generate_mlt_producer(), mlt.Playlist)
         True
         """
+        print(self.timeline.split_into_sections().to_ascii_canvas())
         return self.timeline.to_mlt_producer(self.profile)
 
     def run(self):
@@ -597,11 +598,19 @@ class SectionCut(namedtuple("SectionCut", "cut,source,region")):
     def end(self):
         return self.cut.end == self.source.end
 
+    @property
+    def space_before(self):
+        return self.cut.start - self.region.start
+
+    @property
+    def space_after(self):
+        return self.region.end - self.cut.end
+
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
         label = self.cut.source.name[0]+str(self.cut.in_out.start)
         text = ""
-        text += "%"*(self.cut.start-self.region.start)
+        text += "%"*self.space_before
         if self.start:
             text += "<-"
         else:
@@ -612,17 +621,23 @@ class SectionCut(namedtuple("SectionCut", "cut,source,region")):
             text += "->"
         else:
             text += "--"
-        text += "%"*(self.region.end-self.cut.end)
+        text += "%"*self.space_after
         if len(text) != self.region.length:
             raise ValueError(f"Could represent section cut ({self.cut}) as ascii because its length ({self.cut.length}) was too short (< {len(text)}).")
         canvas.add_text(text, 0, 0)
         return canvas
 
     def to_mlt_producer(self, profile):
-        return self.cut.source.to_mlt_producer(profile).cut(
+        playlist = mlt.Playlist(profile)
+        if self.space_before > 0:
+            playlist.blank(self.space_before-1)
+        playlist.append(self.cut.source.to_mlt_producer(profile).cut(
             self.cut.in_out.start,
             self.cut.in_out.end-1
-        )
+        ))
+        if self.space_after > 0:
+            playlist.blank(self.space_after-1)
+        return playlist
 
     def draw(self, context, y, height, x_factor, rectangle_map):
         x = self.cut.start * x_factor
