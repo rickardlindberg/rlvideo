@@ -425,10 +425,26 @@ class Cuts:
         ...     end=20
         ... )).to_ascii_canvas()
         <-A0-----><-B0----->
+
+        >>> Cuts([
+        ...     cut_a,
+        ...     cut_a,
+        ... ]).extract_playlist_cuts(Region(
+        ...     start=0,
+        ...     end=20
+        ... )).to_ascii_canvas()
+        Traceback (most recent call last):
+          ...
+        ValueError: overlap not allowed
         """
         playlist_cuts = PlaylistCuts()
+        pos = 0
         for cut in sorted(self.cuts, key=lambda cut: cut.start):
-            playlist_cuts.add(cut.extract_playlist_cut(region))
+            if cut.start < pos:
+                raise ValueError("overlap not allowed")
+            playlist_cut = cut.extract_playlist_cut(region)
+            playlist_cuts.add(playlist_cut)
+            pos += playlist_cut.length
         return playlist_cuts
 
     def split_into_sections(self):
@@ -806,6 +822,10 @@ class PlaylistCuts:
 
 class PlaylistCut(namedtuple("PlaylistCut", "source,in_out,start,end")):
 
+    @property
+    def length(self):
+        return self.in_out.length
+
     def to_ascii_canvas(self):
         """
         >>> PlaylistCut(
@@ -831,7 +851,7 @@ class PlaylistCut(namedtuple("PlaylistCut", "source,in_out,start,end")):
             text += "--"
         text += self.source.name[0]
         text += str(self.in_out.start)
-        text += "-"*(self.in_out.length-len(text)-2)
+        text += "-"*(self.length-len(text)-2)
         if self.end:
             text += "->"
         else:
