@@ -320,11 +320,15 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         >>> cut.extract_section(Region(start=5, end=12)).to_ascii_canvas()
         --A13->
         >>> cut.extract_section(Region(start=0, end=1)).to_ascii_canvas()
-        @
+        %
 
         >>> cut = Source("A").create_cut(0, 10).at(10)
         >>> cut.extract_section(Region(start=9, end=21)).to_ascii_canvas()
         %<-A0----->%
+
+        >>> cut = Source("A").create_cut(0, 10).at(10)
+        >>> cut.extract_section(Region(start=20, end=30)).to_ascii_canvas()
+        %%%%%%%%%%
         """
         section = Section(region)
         overlap = self.region.get_overlap(region)
@@ -415,16 +419,29 @@ class Cuts:
         ...     Source(name="A").create_cut(0, 10).at(5),
         ...     Source(name="B").create_cut(0, 10).at(5),
         ... ]).split_into_sections().to_ascii_canvas()
-        |@@@@@|<-A0----->|
+        |%%%%%|<-A0----->|
         |     |<-B0----->|
+
+        BUG:
+
+        >>> cuts = Cuts([
+        ...     Source(name="A").create_cut(0, 20).at(30),
+        ...     Source(name="B").create_cut(0, 20).at(0),
+        ...     Source(name="C").create_cut(0, 20).at(10),
+        ... ])
+        >>> cuts.split_into_sections().to_ascii_canvas()
+        |<-B0------|--B10---->|--C10---->|<-A0--------------->|
+        |          |<-C0------|          |                    |
         """
         sections = Sections()
         start = 0
         for overlap in self.get_regions_with_overlap():
-            sections.add(*self.extract_section(Region(
+            r = Region(
                 start=start,
                 end=overlap.start
-            )).split())
+            )
+            if r.length > 0:
+                sections.add(*self.extract_section(r).split())
             sections.add(self.extract_section(overlap))
             start = overlap.end
         r = Region(
@@ -462,7 +479,7 @@ class Cuts:
         5
         """
         if self.cuts:
-            return min(cut.region.start for cut in self.cuts)
+            return min(cut.start for cut in self.cuts)
         else:
             return 0
 
@@ -476,7 +493,7 @@ class Cuts:
         10
         """
         if self.cuts:
-            return max(cut.region.end for cut in self.cuts)
+            return max(cut.end for cut in self.cuts)
         else:
             return 0
 
@@ -534,6 +551,7 @@ class Section:
         self.section_cuts.append(section_cut)
 
     def merge(self, other):
+        assert self.region == other.region
         for section_cut in other.section_cuts:
             self.section_cuts.append(section_cut)
 
@@ -551,7 +569,7 @@ class Section:
         """
         sections = []
         start = self.region.start
-        for section_cut in self.section_cuts:
+        for section_cut in sorted(self.section_cuts, key=lambda x: x.start):
             new_region = Region(start=start, end=section_cut.cut.end)
             section = Section(new_region)
             section.add(section_cut._replace(region=new_region))
@@ -573,7 +591,7 @@ class Section:
             for y, section_cut in enumerate(self.section_cuts):
                 canvas.add_canvas(section_cut.to_ascii_canvas(), dy=y)
         else:
-            canvas.add_text("@"*self.region.length, 0, 0)
+            canvas.add_text("%"*self.region.length, 0, 0)
         return canvas
 
     def to_mlt_producer(self, profile):
