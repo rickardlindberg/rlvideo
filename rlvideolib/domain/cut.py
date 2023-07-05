@@ -2,6 +2,9 @@ from collections import namedtuple
 from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.region import Regions
+from rlvideolib.domain.section import MixSection
+from rlvideolib.domain.section import PlaylistSection
+from rlvideolib.domain.section import Sections
 from rlvideolib.domain.source import Source
 from rlvideolib.graphics.rectangle import Rectangle
 
@@ -332,8 +335,6 @@ class Cuts:
         |<-B0------|-B10----->|-C10-----><-A0--------------->|
         |          |<-C0------|                              |
         """
-        # TODO: fix circular import?
-        from rlvideo import Sections
         sections = Sections()
         start = 0
         for overlap in self.get_regions_with_overlap():
@@ -363,8 +364,6 @@ class Cuts:
         >>> cuts.extract_playlist_section(Region(start=0, end=20)).to_ascii_canvas()
         %<-A0--->%<-B0--->%%
         """
-        # TODO: fix circular import?
-        from rlvideo import PlaylistSection
         return PlaylistSection(region=region, cuts=self.create_cut(region))
 
     def extract_mix_section(self, region):
@@ -380,8 +379,6 @@ class Cuts:
         %<-A0--->%%%%%%
         %%%%%<-B0--->%%
         """
-        # TODO: fix circular import?
-        from rlvideo import MixSection
         return MixSection(region=region, cuts=self.create_cut(region))
 
     def get_regions_with_overlap(self):
