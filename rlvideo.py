@@ -174,7 +174,7 @@ class Timeline:
         timeline.add(Source("resources/one.mp4").create_cut(0, 15).move(10))
         timeline.add(Source("resources/two.mp4").create_cut(0, 15).move(20))
         timeline.add(Source("resources/three.mp4").create_cut(0, 15).move(30))
-        timeline.set_zoom_factor(50)
+        timeline.set_zoom_factor(25)
         return timeline
 
     def __init__(self):
