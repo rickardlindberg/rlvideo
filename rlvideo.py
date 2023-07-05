@@ -347,6 +347,51 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             ))
         return section
 
+    def create_cut(self, region):
+        """
+        >>> cut = Source("A").create_cut(0, 20).at(10)
+        >>> cut
+        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10)
+
+        Contains all:
+
+        >>> cut.create_cut(Region(start=0, end=40))
+        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10)
+
+        >>> cut.create_cut(Region(start=10, end=30))
+        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10)
+
+        Subcut left:
+
+        >>> sub = cut.create_cut(Region(start=15, end=30))
+        >>> sub.source is cut
+        True
+        >>> sub.in_out
+        Region(start=5, end=20)
+        >>> sub.position
+        15
+
+        No overlap:
+
+        >>> cut.create_cut(Region(start=0, end=10)) is None
+        True
+        """
+        overlap = self.region.get_overlap(region)
+        if overlap:
+            if overlap.start == self.start and overlap.end == self.end:
+                return self
+            else:
+                return self._replace(
+                    source=self,
+                    in_out=Region(
+                        start=overlap.start-self.start,
+                        end=overlap.start-self.start+overlap.length
+                    ),
+                    position=overlap.start
+                )
+        else:
+            return None
+
     def to_mlt_producer(self, profile):
         return self.source.to_mlt_producer(profile).cut(
             self.in_out.start,
