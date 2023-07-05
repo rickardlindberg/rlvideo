@@ -41,24 +41,9 @@ class Sections:
 
 class PlaylistSection:
 
-    def __init__(self, region, cuts):
-        # TODO: fix circular import?
-        from rlvideolib.domain.cut import SpaceCut
-        # TODO: test value errors
-        self.parts = []
-        self.length = region.length
-        start = region.start
-        for cut in sorted(cuts.cuts, key=lambda cut: cut.start):
-            if cut.start > start:
-                self.parts.append(SpaceCut(cut.start-start))
-            elif cut.start < start:
-                raise ValueError("Cut overlaps start")
-            self.parts.append(cut)
-            start = cut.end
-        if region.end > start:
-            self.parts.append(SpaceCut(region.end-start))
-        elif region.end < start:
-            raise ValueError("Cut overlaps end")
+    def __init__(self, length, parts):
+        self.length = length
+        self.parts = parts
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
@@ -87,7 +72,7 @@ class MixSection:
         for cut in cuts.cuts:
             # TODO: fix circular import?
             from rlvideolib.domain.cut import Cuts
-            self.playlists.append(PlaylistSection(region, Cuts([cut])))
+            self.playlists.append(Cuts([cut]).extract_playlist_section(region))
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()

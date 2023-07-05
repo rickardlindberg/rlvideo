@@ -368,7 +368,21 @@ class Cuts:
         >>> cuts.extract_playlist_section(Region(start=0, end=20)).to_ascii_canvas()
         %<-A0--->%<-B0--->%%
         """
-        return PlaylistSection(region=region, cuts=self.create_cut(region))
+        # TODO: test value errors
+        parts = []
+        start = region.start
+        for cut in sorted(self.create_cut(region).cuts, key=lambda cut: cut.start):
+            if cut.start > start:
+                parts.append(SpaceCut(cut.start-start))
+            elif cut.start < start:
+                raise ValueError("Cut overlaps start")
+            parts.append(cut)
+            start = cut.end
+        if region.end > start:
+            parts.append(SpaceCut(region.end-start))
+        elif region.end < start:
+            raise ValueError("Cut overlaps end")
+        return PlaylistSection(length=region.length, parts=parts)
 
     def extract_mix_section(self, region):
         """
