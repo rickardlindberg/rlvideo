@@ -347,6 +347,12 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             ))
         return section
 
+    def to_mlt_producer(self, profile):
+        return self.source.to_mlt_producer(profile).cut(
+            self.in_out.start,
+            self.in_out.end-1
+        )
+
 class Cuts:
 
     """
@@ -687,10 +693,7 @@ class SectionCut(namedtuple("SectionCut", "cut,source,region")):
         playlist = mlt.Playlist(profile)
         if self.space_before > 0:
             playlist.blank(self.space_before-1)
-        playlist.append(self.cut.source.to_mlt_producer(profile).cut(
-            self.cut.in_out.start,
-            self.cut.in_out.end-1
-        ))
+        playlist.append(self.cut.to_mlt_producer(profile))
         if self.space_after > 0:
             playlist.blank(self.space_after-1)
         return playlist
