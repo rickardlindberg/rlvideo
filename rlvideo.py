@@ -1,14 +1,16 @@
-from rlvideolib.domain.region import Region
-from rlvideolib.domain.source import Source
-from rlvideolib.domain.cut import Cuts
-from rlvideolib.graphics.rectangle import RectangleMap
-from rlvideolib.graphics.rectangle import Rectangle
-import cairo
 import os
-import mlt
+
+import cairo
 import gi
+import mlt
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
+
+from rlvideolib.domain.cut import Cuts
+from rlvideolib.domain.region import Region
+from rlvideolib.domain.source import Source
+from rlvideolib.graphics.rectangle import Rectangle
+from rlvideolib.graphics.rectangle import RectangleMap
 
 class App:
 

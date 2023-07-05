@@ -1,5 +1,6 @@
-from rlvideolib.asciicanvas import AsciiCanvas
 import mlt
+
+from rlvideolib.asciicanvas import AsciiCanvas
 
 class Sections:
 

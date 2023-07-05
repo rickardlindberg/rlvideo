@@ -1,4 +1,5 @@
 from collections import namedtuple
+
 from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.region import Regions

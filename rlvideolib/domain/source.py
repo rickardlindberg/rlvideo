@@ -1,8 +1,10 @@
 from collections import namedtuple
+import os
+
+import mlt
+
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.region import Region
-import mlt
-import os
 
 class Source(namedtuple("Source", "name")):
 
