@@ -42,6 +42,7 @@ class Sections:
 class PlaylistSection:
 
     def __init__(self, length, parts):
+        assert length == sum(part.length for part in parts)
         self.length = length
         self.parts = parts
 
@@ -67,6 +68,8 @@ class PlaylistSection:
 class MixSection:
 
     def __init__(self, length, playlists):
+        for playlist in playlists:
+            assert playlist.length == length
         self.length = length
         self.playlists = playlists
 
