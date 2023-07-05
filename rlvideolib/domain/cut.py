@@ -46,13 +46,6 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         """
         return Region(start=self.position, end=self.position+self.length)
 
-    def at(self, position):
-        """
-        >>> Cut.test_instance(name="A", start=0, end=10, position=10)
-        Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=10)
-        """
-        return self._replace(position=position)
-
     def get_overlap(self, cut):
         """
         >>> a = Cut.test_instance(start=10, end=20, position=5)

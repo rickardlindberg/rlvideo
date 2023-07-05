@@ -170,10 +170,10 @@ class Timeline:
     @staticmethod
     def with_test_clips():
         timeline = Timeline()
-        timeline.add(Source("resources/one-to-five.mp4").create_cut(0, 5).at(0))
-        timeline.add(Source("resources/one.mp4").create_cut(0, 15).at(10))
-        timeline.add(Source("resources/two.mp4").create_cut(0, 15).at(20))
-        timeline.add(Source("resources/three.mp4").create_cut(0, 15).at(30))
+        timeline.add(Source("resources/one-to-five.mp4").create_cut(0, 5).move(0))
+        timeline.add(Source("resources/one.mp4").create_cut(0, 15).move(10))
+        timeline.add(Source("resources/two.mp4").create_cut(0, 15).move(20))
+        timeline.add(Source("resources/three.mp4").create_cut(0, 15).move(30))
         timeline.set_zoom_factor(50)
         return timeline
 
@@ -217,7 +217,7 @@ class Timeline:
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
         >>> timeline = Timeline()
-        >>> timeline.add(Source("hello").create_cut(0, 10).at(0))
+        >>> timeline.add(Source("hello").create_cut(0, 10).move(0))
         >>> timeline.draw_cairo(
         ...     context=context,
         ...     playhead_position=0,
