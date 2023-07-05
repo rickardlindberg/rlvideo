@@ -808,18 +808,16 @@ class MixSection:
     def draw(self, context, height, x_factor, rectangle_map):
         sub_height = height // len(self.playlists)
         rest = height % len(self.playlists)
-        y = 0
+        context.save()
         for index, playlist in enumerate(self.playlists):
             if rest:
                 rest -= 1
                 h = sub_height + 1
             else:
                 h = sub_height
-            context.save()
-            context.translate(0, y)
             playlist.draw(context, h, x_factor, rectangle_map)
-            context.restore()
-            y += h
+            context.translate(0, h)
+        context.restore()
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
 
