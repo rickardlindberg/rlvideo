@@ -274,7 +274,7 @@ class Source(namedtuple("Source", "name")):
     def ends_at(self, position):
         return True
 
-    def get_name(self):
+    def get_label(self):
         return self.name
 
 class Cut(namedtuple("Cut", "source,in_out,position")):
@@ -432,7 +432,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             end_marker = "-"
         text = ""
         text += start_marker
-        text += self.get_name()[0]
+        text += self.get_label()[0]
         text += str(self.in_out.start)
         text += "-"*(self.length-len(text)-len(end_marker))
         text += end_marker
@@ -442,8 +442,8 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         canvas.add_text(text, 0, 0)
         return canvas
 
-    def get_name(self):
-        return self.source.get_name()
+    def get_label(self):
+        return self.source.get_label()
 
     def get_source_cut(self):
         if isinstance(self.source, Cut):
@@ -495,7 +495,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         if self.starts_at_original_cut():
             context.move_to(x+2, y+10)
             context.set_source_rgb(0, 0, 0)
-            context.text_path(self.get_name())
+            context.text_path(self.get_label())
             context.fill()
 
 class Cuts:
