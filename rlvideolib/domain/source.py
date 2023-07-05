@@ -8,9 +8,10 @@ class Source(namedtuple("Source", "name")):
 
     def create_cut(self, start, end):
         # TODO: ensure cut is valid
-        return Cut.create(
+        return Cut(
             source=self,
-            in_out=Region(start=start, end=end)
+            in_out=Region(start=start, end=end),
+            position=0
         )
 
     def to_mlt_producer(self, profile):

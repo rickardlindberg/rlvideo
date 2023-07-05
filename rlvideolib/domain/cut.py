@@ -7,15 +7,16 @@ from rlvideolib.domain.section import PlaylistSection
 from rlvideolib.domain.section import Sections
 from rlvideolib.graphics.rectangle import Rectangle
 
-def Source(*args, **kwargs):
-    from rlvideolib.domain.source import Source
-    return Source(*args, **kwargs)
-
 class Cut(namedtuple("Cut", "source,in_out,position")):
 
     @staticmethod
-    def create(source, in_out, position=0):
-        return Cut(source=source, in_out=in_out, position=position)
+    def test_instance(name="A", start=0, end=5, position=0):
+        from rlvideolib.domain.source import Source
+        return Cut(
+            source=Source(name=name),
+            in_out=Region(start=start, end=end),
+            position=position
+        )
 
     @property
     def length(self):
@@ -31,7 +32,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
     def move(self, delta):
         """
-        >>> Cut(source=None, in_out=None, position=5).move(-10).position
+        >>> Cut.test_instance(position=5).move(-10).position
         0
         """
         return self._replace(position=max(0, self.position+delta))
@@ -39,22 +40,22 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
     @property
     def region(self):
         """
-        >>> Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10).region
+        >>> Cut.test_instance(start=10, end=20, position=10).region
         Region(start=10, end=20)
         """
         return Region(start=self.position, end=self.position+self.length)
 
     def at(self, position):
         """
-        >>> Cut.create(source=Source("A"), in_out=Region(start=0, end=10)).at(10)
+        >>> Cut.test_instance(name="A", start=0, end=10, position=10)
         Cut(source=Source(name='A'), in_out=Region(start=0, end=10), position=10)
         """
         return self._replace(position=position)
 
     def get_overlap(self, cut):
         """
-        >>> a = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=5)
-        >>> b = Cut(source=Source("B"), in_out=Region(start=10, end=20), position=10)
+        >>> a = Cut.test_instance(start=10, end=20, position=5)
+        >>> b = Cut.test_instance(start=10, end=20, position=10)
         >>> a.get_overlap(b)
         Region(start=10, end=15)
         """
@@ -62,7 +63,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
     def starts_at_original_cut(self):
         """
-        >>> cut = Source("A").create_cut(0, 10).at(0)
+        >>> cut = Cut.test_instance(start=0, end=10, position=0)
         >>> cut.starts_at_original_cut()
         True
         >>> cut.create_cut(Region(start=5, end=6)).starts_at_original_cut()
@@ -75,7 +76,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
     def ends_at_original_cut(self):
         """
-        >>> cut = Source("A").create_cut(0, 10).at(0)
+        >>> cut = Cut.test_instance(start=0, end=10, position=0)
         >>> cut.ends_at_original_cut()
         True
         >>> cut.create_cut(Region(start=5, end=6)).ends_at_original_cut()
@@ -88,7 +89,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
     def create_cut(self, region):
         """
-        >>> cut = Source("A").create_cut(0, 20).at(10)
+        >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
         Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10)
 
@@ -142,7 +143,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
     def to_ascii_canvas(self):
         """
-        >>> cut = Source("A").create_cut(0, 10).at(0)
+        >>> cut = Cut.test_instance(name="A", start=0, end=10, position=0)
 
         >>> cut.to_ascii_canvas()
         <-A0----->
@@ -150,10 +151,10 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         >>> cut.create_cut(Region(start=1, end=9)).to_ascii_canvas()
         -A1-----
 
-        >>> Source("A").create_cut(0, 6).at(0).to_ascii_canvas()
+        >>> Cut.test_instance(name="A", start=0, end=6, position=0).to_ascii_canvas()
         <-A0->
 
-        >>> Source("A").create_cut(0, 5).at(0).to_ascii_canvas()
+        >>> Cut.test_instance(name="A", start=0, end=5, position=0).to_ascii_canvas()
         #####
         """
         if self.starts_at_original_cut():
@@ -235,8 +236,8 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 class Cuts:
 
     """
-    >>> a = Source("A").create_cut(0, 20).at(0)
-    >>> b = Source("b").create_cut(0, 20).at(10)
+    >>> a = Cut.test_instance(name="A", start=0, end=20, position=0)
+    >>> b = Cut.test_instance(name="b", start=0, end=20, position=10)
     >>> cuts = Cuts()
     >>> cuts = cuts.add(a)
     >>> cuts = cuts.add(b)
@@ -263,8 +264,8 @@ class Cuts:
     def create_cut(self, period):
         """
         >>> cuts = Cuts([
-        ...     Source(name="A").create_cut(0, 8).at(0),
-        ...     Source(name="B").create_cut(0, 8).at(5),
+        ...     Cut.test_instance(name="A", start=0, end=8, position=0),
+        ...     Cut.test_instance(name="B", start=0, end=8, position=5),
         ... ])
         >>> cuts.to_ascii_canvas()
         |<-A0--->     |
@@ -285,23 +286,23 @@ class Cuts:
         A single cut returns a single section with that cut:
 
         >>> Cuts([
-        ...     Source(name="A").create_cut(0, 10).at(0)
+        ...     Cut.test_instance(name="A", start=0, end=10, position=0)
         ... ]).split_into_sections().to_ascii_canvas()
         |<-A0----->|
 
         Two non-overlapping cuts returns two sections with each cut in each:
 
         >>> Cuts([
-        ...     Source(name="A").create_cut(0, 10).at(0),
-        ...     Source(name="B").create_cut(0, 10).at(10),
+        ...     Cut.test_instance(name="A", start=0, end=10, position=0),
+        ...     Cut.test_instance(name="B", start=0, end=10, position=10),
         ... ]).split_into_sections().to_ascii_canvas()
         |<-A0-----><-B0----->|
 
         Overlap:
 
         >>> Cuts([
-        ...     Source(name="A").create_cut(0, 20).at(0),
-        ...     Source(name="B").create_cut(0, 20).at(10),
+        ...     Cut.test_instance(name="A", start=0, end=20, position=0),
+        ...     Cut.test_instance(name="B", start=0, end=20, position=10),
         ... ]).split_into_sections().to_ascii_canvas()
         |<-A0------|-A10----->|-B10----->|
         |          |<-B0------|          |
@@ -314,15 +315,15 @@ class Cuts:
         Initial space:
 
         >>> Cuts([
-        ...     Source(name="A").create_cut(0, 10).at(5)
+        ...     Cut.test_instance(name="A", start=0, end=10, position=5)
         ... ]).split_into_sections().to_ascii_canvas()
         |%%%%%<-A0----->|
 
         BUG:
 
         >>> Cuts([
-        ...     Source(name="A").create_cut(0, 10).at(5),
-        ...     Source(name="B").create_cut(0, 10).at(5),
+        ...     Cut.test_instance(name="A", start=0, end=10, position=5),
+        ...     Cut.test_instance(name="B", start=0, end=10, position=5),
         ... ]).split_into_sections().to_ascii_canvas()
         |%%%%%|<-A0----->|
         |     |<-B0----->|
@@ -330,9 +331,9 @@ class Cuts:
         BUG:
 
         >>> cuts = Cuts([
-        ...     Source(name="A").create_cut(0, 20).at(30),
-        ...     Source(name="B").create_cut(0, 20).at(0),
-        ...     Source(name="C").create_cut(0, 20).at(10),
+        ...     Cut.test_instance(name="A", start=0, end=20, position=30),
+        ...     Cut.test_instance(name="B", start=0, end=20, position=0),
+        ...     Cut.test_instance(name="C", start=0, end=20, position=10),
         ... ])
         >>> cuts.split_into_sections().to_ascii_canvas()
         |<-B0------|-B10----->|-C10-----><-A0--------------->|
@@ -358,8 +359,8 @@ class Cuts:
     def extract_playlist_section(self, region):
         """
         >>> cuts = Cuts([
-        ...     Source(name="A").create_cut(0, 8).at(1),
-        ...     Source(name="B").create_cut(0, 8).at(10),
+        ...     Cut.test_instance(name="A", start=0, end=8, position=1),
+        ...     Cut.test_instance(name="B", start=0, end=8, position=10),
         ... ])
         >>> cuts.to_ascii_canvas()
         | <-A0--->         |
@@ -372,8 +373,8 @@ class Cuts:
     def extract_mix_section(self, region):
         """
         >>> cuts = Cuts([
-        ...     Source(name="A").create_cut(0, 8).at(1),
-        ...     Source(name="B").create_cut(0, 8).at(5),
+        ...     Cut.test_instance(name="A", start=0, end=8, position=1),
+        ...     Cut.test_instance(name="B", start=0, end=8, position=5),
         ... ])
         >>> cuts.to_ascii_canvas()
         | <-A0--->    |
@@ -401,7 +402,7 @@ class Cuts:
         >>> Cuts().start
         0
 
-        >>> Cuts([Source("A").create_cut(0, 5).at(5)]).start
+        >>> Cuts([Cut.test_instance(start=0, end=5, position=5)]).start
         5
         """
         if self.cuts:
@@ -415,7 +416,7 @@ class Cuts:
         >>> Cuts().end
         0
 
-        >>> Cuts([Source("A").create_cut(0, 5).at(5)]).end
+        >>> Cuts([Cut.test_instance(start=0, end=5, position=5)]).end
         10
         """
         if self.cuts:
@@ -426,9 +427,9 @@ class Cuts:
     def to_ascii_canvas(self):
         """
         >>> Cuts([
-        ...     Source(name="A").create_cut(0, 8).at(10),
-        ...     Source(name="B").create_cut(0, 8).at(0),
-        ...     Source(name="C").create_cut(0, 8).at(5),
+        ...     Cut.test_instance(name="A", start=0, end=8, position=10),
+        ...     Cut.test_instance(name="B", start=0, end=8, position=0),
+        ...     Cut.test_instance(name="C", start=0, end=8, position=5),
         ... ]).to_ascii_canvas()
         |          <-A0--->|
         |<-B0--->          |
