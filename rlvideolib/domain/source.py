@@ -2,13 +2,14 @@ from collections import namedtuple
 from rlvideolib.domain.region import Region
 import mlt
 import os
-import rlvideo
 
 class Source(namedtuple("Source", "name")):
 
     def create_cut(self, start, end):
         # TODO: ensure cut is valid
-        return rlvideo.Cut.create(
+        # TODO: fix circular import?
+        from rlvideolib.domain.cut import Cut
+        return Cut.create(
             source=self,
             in_out=Region(start=start, end=end)
         )

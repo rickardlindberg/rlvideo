@@ -25,6 +25,7 @@ if __name__ == "__main__":
             "rlvideolib.domain",
             "rlvideolib.domain.region",
             "rlvideolib.domain.source",
+            "rlvideolib.domain.cut",
             "rlvideolib.graphics",
             "rlvideolib.graphics.rectangle",
         ]:
