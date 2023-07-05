@@ -742,13 +742,13 @@ class PlaylistSection:
         start = region.start
         for cut in sorted(cuts.cuts, key=lambda cut: cut.start):
             if cut.start > start:
-                self.parts.append(Space(cut.start-start))
+                self.parts.append(SpaceCut(cut.start-start))
             elif cut.start < start:
                 raise ValueError("Cut overlaps start")
             self.parts.append(cut)
             start = cut.end
         if region.end > start:
-            self.parts.append(Space(region.end-start))
+            self.parts.append(SpaceCut(region.end-start))
         elif region.end < start:
             raise ValueError("Cut overlaps end")
 
@@ -816,7 +816,7 @@ class MixSection:
             context.restore()
             y += h
 
-class Space(namedtuple("Space", "length")):
+class SpaceCut(namedtuple("SpaceCut", "length")):
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
