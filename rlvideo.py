@@ -275,7 +275,7 @@ class Source(namedtuple("Source", "name")):
         return True
 
     def get_label(self):
-        return self.name
+        return os.path.basename(self.name)
 
 class Cut(namedtuple("Cut", "source,in_out,position")):
 
