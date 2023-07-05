@@ -88,6 +88,15 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
     def ends_at(self, position):
         return self.end == position
 
+    def get_label(self):
+        return self.source.get_label()
+
+    def get_source_cut(self):
+        if isinstance(self.source, Cut):
+            return self.source.get_source_cut()
+        else:
+            return self
+
     def create_cut(self, region):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
@@ -133,15 +142,6 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         else:
             return None
 
-    def to_mlt_producer(self, profile):
-        return self.source.to_mlt_producer(profile).cut(
-            self.in_out.start,
-            self.in_out.end-1
-        )
-
-    def add_to_mlt_playlist(self, profile, playlist):
-        playlist.append(self.to_mlt_producer(profile))
-
     def to_ascii_canvas(self):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=10, position=0)
@@ -178,14 +178,14 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         canvas.add_text(text, 0, 0)
         return canvas
 
-    def get_label(self):
-        return self.source.get_label()
+    def add_to_mlt_playlist(self, profile, playlist):
+        playlist.append(self.to_mlt_producer(profile))
 
-    def get_source_cut(self):
-        if isinstance(self.source, Cut):
-            return self.source.get_source_cut()
-        else:
-            return self
+    def to_mlt_producer(self, profile):
+        return self.source.to_mlt_producer(profile).cut(
+            self.in_out.start,
+            self.in_out.end-1
+        )
 
     def draw_cairo(self, context, height, x_factor, rectangle_map):
         y = 0
@@ -233,6 +233,19 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             context.set_source_rgb(0, 0, 0)
             context.text_path(self.get_label())
             context.fill()
+
+class SpaceCut(namedtuple("SpaceCut", "length")):
+
+    def to_ascii_canvas(self):
+        canvas = AsciiCanvas()
+        canvas.add_text("%"*self.length, 0, 0)
+        return canvas
+
+    def add_to_mlt_playlist(self, profile, playlist):
+        playlist.blank(self.length-1)
+
+    def draw_cairo(self, context, height, x_factor, rectangle_map):
+        pass
 
 class Cuts:
 
@@ -461,16 +474,3 @@ class Cuts:
             canvas.add_text("|", 0, y)
             canvas.add_text("|", x, y)
         return canvas
-
-class SpaceCut(namedtuple("SpaceCut", "length")):
-
-    def to_ascii_canvas(self):
-        canvas = AsciiCanvas()
-        canvas.add_text("%"*self.length, 0, 0)
-        return canvas
-
-    def add_to_mlt_playlist(self, profile, playlist):
-        playlist.blank(self.length-1)
-
-    def draw_cairo(self, context, height, x_factor, rectangle_map):
-        pass

@@ -55,16 +55,16 @@ class PlaylistSection:
             x = canvas.get_max_x() + 1
         return canvas
 
-    def draw_cairo(self, context, height, x_factor, rectangle_map):
-        for part in self.parts:
-            part.draw_cairo(context, height, x_factor, rectangle_map)
-
     def to_mlt_producer(self, profile):
         playlist = mlt.Playlist()
         for part in self.parts:
             part.add_to_mlt_playlist(profile, playlist)
         assert playlist.get_playtime() == self.length
         return playlist
+
+    def draw_cairo(self, context, height, x_factor, rectangle_map):
+        for part in self.parts:
+            part.draw_cairo(context, height, x_factor, rectangle_map)
 
 class MixSection:
 
