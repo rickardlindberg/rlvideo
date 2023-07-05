@@ -604,7 +604,18 @@ class Cuts:
 
     def extract_mix_section(self, region):
         """
+        >>> cuts = Cuts([
+        ...     Source(name="A").create_cut(0, 8).at(1),
+        ...     Source(name="B").create_cut(0, 8).at(5),
+        ... ])
+        >>> cuts.to_ascii_canvas()
+        | <-A0--->    |
+        |     <-B0--->|
+        >>> cuts.extract_mix_section(Region(start=0, end=15)).to_ascii_canvas()
+        %<-A0--->%%%%%%
+        %%%%%<-B0--->%%
         """
+        return MixSection(region=region, cuts=self.create_cut(region))
 
     def get_regions_with_overlap(self):
         overlaps = Regions()
@@ -830,6 +841,19 @@ class PlaylistSection:
         for part in self.parts:
             canvas.add_canvas(part.to_ascii_canvas(), dx=x)
             x = canvas.get_max_x() + 1
+        return canvas
+
+class MixSection:
+
+    def __init__(self, region, cuts):
+        self.playlists = []
+        for cut in cuts.cuts:
+            self.playlists.append(PlaylistSection(region, Cuts([cut])))
+
+    def to_ascii_canvas(self):
+        canvas = AsciiCanvas()
+        for y, playlist in enumerate(self.playlists):
+            canvas.add_canvas(playlist.to_ascii_canvas(), dy=y)
         return canvas
 
 class Space(namedtuple("Space", "length")):
