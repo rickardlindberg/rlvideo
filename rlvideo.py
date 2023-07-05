@@ -590,7 +590,17 @@ class Cuts:
 
     def extract_playlist_section(self, region):
         """
+        >>> cuts = Cuts([
+        ...     Source(name="A").create_cut(0, 8).at(1),
+        ...     Source(name="B").create_cut(0, 8).at(10),
+        ... ])
+        >>> cuts.to_ascii_canvas()
+        | <-A0--->         |
+        |          <-B0--->|
+        >>> cuts.extract_playlist_section(Region(start=0, end=20)).to_ascii_canvas()
+        %<-A0--->%<-B0--->%%
         """
+        return PlaylistSection(region=region, cuts=self.create_cut(region))
 
     def extract_mix_section(self, region):
         """
@@ -795,6 +805,39 @@ class Section:
                     h = sub_height
                 section_cut.draw(context, y, h, x_factor, rectangle_map)
                 y += h
+
+class PlaylistSection:
+
+    def __init__(self, region, cuts):
+        # TODO: test value errors
+        self.parts = []
+        start = region.start
+        for cut in sorted(cuts.cuts, key=lambda cut: cut.start):
+            if cut.start > start:
+                self.parts.append(Space(cut.start-start))
+            elif cut.start < start:
+                raise ValueError("Cut overlaps start")
+            self.parts.append(cut)
+            start = cut.end
+        if region.end > start:
+            self.parts.append(Space(region.end-start))
+        elif region.end < start:
+            raise ValueError("Cut overlaps end")
+
+    def to_ascii_canvas(self):
+        canvas = AsciiCanvas()
+        x = 0
+        for part in self.parts:
+            canvas.add_canvas(part.to_ascii_canvas(), dx=x)
+            x = canvas.get_max_x() + 1
+        return canvas
+
+class Space(namedtuple("Space", "length")):
+
+    def to_ascii_canvas(self):
+        canvas = AsciiCanvas()
+        canvas.add_text("%"*self.length, 0, 0)
+        return canvas
 
 class SectionCut(namedtuple("SectionCut", "cut,source,region")):
 
