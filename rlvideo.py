@@ -422,9 +422,16 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         >>> Source("A").create_cut(0, 5).at(0).to_ascii_canvas()
         #####
         """
-        end_marker = self.get_end_marker()
+        if self.starts_at_original_cut():
+            start_marker = "<-"
+        else:
+            start_marker = "-"
+        if self.ends_at_original_cut():
+            end_marker = "->"
+        else:
+            end_marker = "-"
         text = ""
-        text += self.get_start_marker()
+        text += start_marker
         text += self.get_name()[0]
         text += str(self.in_out.start)
         text += "-"*(self.length-len(text)-len(end_marker))
@@ -434,18 +441,6 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         canvas = AsciiCanvas()
         canvas.add_text(text, 0, 0)
         return canvas
-
-    def get_start_marker(self):
-        if self.starts_at_original_cut():
-            return "<-"
-        else:
-            return "-"
-
-    def get_end_marker(self):
-        if self.ends_at_original_cut():
-            return "->"
-        else:
-            return "-"
 
     def get_name(self):
         return self.source.get_name()
