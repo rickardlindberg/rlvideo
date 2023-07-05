@@ -770,6 +770,7 @@ class PlaylistSection:
         playlist = mlt.Playlist()
         for part in self.parts:
             part.add_to_mlt_playlist(profile, playlist)
+        assert playlist.get_playtime() == self.length
         return playlist
 
 class MixSection:
