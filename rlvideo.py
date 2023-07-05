@@ -347,32 +347,6 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             ))
         return section
 
-    def extract_playlist_cut(self, region):
-        """
-        >>> cut = Source("A").create_cut(0, 10).at(10)
-
-        >>> cut.extract_playlist_cut(Region(start=10, end=20)).to_ascii_canvas()
-        <-A0----->
-
-        >>> cut.extract_playlist_cut(Region(start=11, end=19)).to_ascii_canvas()
-        --A1----
-
-        >>> cut.extract_playlist_cut(Region(start=0, end=10)) is None
-        True
-        """
-        overlap = self.region.get_overlap(region)
-        if overlap:
-            new_start = self.in_out.start+overlap.start-self.position
-            return PlaylistCut(
-                source=self.source,
-                in_out=Region(
-                    start=new_start,
-                    end=new_start+overlap.length
-                ),
-                start=overlap.start == self.start,
-                end=overlap.end == self.end
-            )
-
 class Cuts:
 
     """
@@ -400,52 +374,6 @@ class Cuts:
             fn(cut) if cut is cut_to_modify else cut
             for cut in self.cuts
         ])
-
-    def extract_playlist_cuts(self, region):
-        """
-        >>> Cuts().extract_playlist_cuts(Region(start=0, end=10)).to_ascii_canvas()
-        <BLANKLINE>
-
-        >>> cut_a = Source("A").create_cut(0, 10).at(0)
-        >>> cut_b = Source("B").create_cut(0, 10).at(10)
-        >>> Cuts([
-        ...     cut_a,
-        ...     cut_b,
-        ... ]).extract_playlist_cuts(Region(
-        ...     start=0,
-        ...     end=20
-        ... )).to_ascii_canvas()
-        <-A0-----><-B0----->
-
-        >>> Cuts([
-        ...     cut_b,
-        ...     cut_a,
-        ... ]).extract_playlist_cuts(Region(
-        ...     start=0,
-        ...     end=20
-        ... )).to_ascii_canvas()
-        <-A0-----><-B0----->
-
-        >>> Cuts([
-        ...     cut_a,
-        ...     cut_a,
-        ... ]).extract_playlist_cuts(Region(
-        ...     start=0,
-        ...     end=20
-        ... )).to_ascii_canvas()
-        Traceback (most recent call last):
-          ...
-        ValueError: overlap not allowed
-        """
-        playlist_cuts = PlaylistCuts()
-        pos = 0
-        for cut in sorted(self.cuts, key=lambda cut: cut.start):
-            if cut.start < pos:
-                raise ValueError("overlap not allowed")
-            playlist_cut = cut.extract_playlist_cut(region)
-            playlist_cuts.add(playlist_cut)
-            pos += playlist_cut.length
-        return playlist_cuts
 
     def split_into_sections(self):
         """
@@ -812,62 +740,6 @@ class SectionCut(namedtuple("SectionCut", "cut,source,region")):
             context.set_source_rgb(0, 0, 0)
             context.text_path(self.source.source.name)
             context.fill()
-
-class PlaylistCuts:
-
-    def __init__(self):
-        self.cuts = []
-
-    def add(self, cut):
-        self.cuts.append(cut)
-
-    def to_ascii_canvas(self):
-        canvas = AsciiCanvas()
-        dx = 0
-        for cut in self.cuts:
-            canvas.add_canvas(cut.to_ascii_canvas(), dx=dx)
-            dx = canvas.get_max_x() + 1
-        return canvas
-
-class PlaylistCut(namedtuple("PlaylistCut", "source,in_out,start,end")):
-
-    @property
-    def length(self):
-        return self.in_out.length
-
-    def to_ascii_canvas(self):
-        """
-        >>> PlaylistCut(
-        ...     source=Source("A"),
-        ...     in_out=Region(start=0, end=10),
-        ...     start=True,
-        ...     end=True
-        ... ).to_ascii_canvas()
-        <-A0----->
-
-        >>> PlaylistCut(
-        ...     source=Source("A"),
-        ...     in_out=Region(start=10, end=20),
-        ...     start=False,
-        ...     end=False
-        ... ).to_ascii_canvas()
-        --A10-----
-        """
-        text = ""
-        if self.start:
-            text += "<-"
-        else:
-            text += "--"
-        text += self.source.name[0]
-        text += str(self.in_out.start)
-        text += "-"*(self.length-len(text)-2)
-        if self.end:
-            text += "->"
-        else:
-            text += "--"
-        canvas = AsciiCanvas()
-        canvas.add_text(text, 0, 0)
-        return canvas
 
 class RectangleMap:
 
