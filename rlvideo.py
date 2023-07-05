@@ -323,39 +323,6 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         """
         return self.region.get_overlap(cut.region)
 
-    def extract_section(self, region):
-        """
-        >>> cut = Cut(source=Source("A"), in_out=Region(start=10, end=20), position=2)
-        >>> cut.extract_section(Region(start=5, end=12)).to_ascii_canvas()
-        --A13->
-        >>> cut.extract_section(Region(start=0, end=1)).to_ascii_canvas()
-        %
-
-        >>> cut = Source("A").create_cut(0, 10).at(10)
-        >>> cut.extract_section(Region(start=9, end=21)).to_ascii_canvas()
-        %<-A0----->%
-
-        >>> cut = Source("A").create_cut(0, 10).at(10)
-        >>> cut.extract_section(Region(start=20, end=30)).to_ascii_canvas()
-        %%%%%%%%%%
-        """
-        section = Section(region)
-        overlap = self.region.get_overlap(region)
-        if overlap:
-            new_start = self.in_out.start+overlap.start-self.position
-            section.add(SectionCut(
-                region=region,
-                cut=self._replace(
-                    position=overlap.start,
-                    in_out=Region(
-                        start=new_start,
-                        end=new_start+overlap.length,
-                    )
-                ),
-                source=self
-            ))
-        return section
-
     def starts_at_original_cut(self):
         """
         >>> cut = Source("A").create_cut(0, 10).at(0)
@@ -679,12 +646,6 @@ class Cuts:
                 if overlap:
                     overlaps.add(overlap)
         return overlaps.merge()
-
-    def extract_section(self, region):
-        section = Section(region)
-        for cut in self.cuts:
-            section.merge(cut.extract_section(region))
-        return section
 
     @property
     def start(self):
