@@ -49,7 +49,7 @@ class App:
         def timeline_draw(widget, context):
             self.timeline.draw(
                 context=context,
-                position=mlt_player.position(),
+                playhead_position=mlt_player.position(),
                 width=widget.get_allocated_width(),
                 height=widget.get_allocated_height(),
             )
@@ -146,7 +146,7 @@ class Timeline:
     >>> context = cairo.Context(surface)
     >>> timeline.draw(
     ...     context=context,
-    ...     position=0,
+    ...     playhead_position=0,
     ...     width=width,
     ...     height=height
     ... )
@@ -209,7 +209,7 @@ class Timeline:
     def to_mlt_producer(self, profile):
         return self.split_into_sections().to_mlt_producer(profile)
 
-    def draw(self, context, position, width, height):
+    def draw(self, context, playhead_position, width, height):
         """
         >>> width, height = 300, 100
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
@@ -218,13 +218,13 @@ class Timeline:
         >>> timeline.add(Source("hello").create_cut(0, 10).at(0))
         >>> timeline.draw(
         ...     context=context,
-        ...     position=0,
+        ...     playhead_position=0,
         ...     width=width,
         ...     height=height
         ... )
         >>> timeline.draw(
         ...     context=context,
-        ...     position=0,
+        ...     playhead_position=0,
         ...     width=width,
         ...     height=height
         ... )
@@ -243,8 +243,8 @@ class Timeline:
             rectangle_map=self.rectangle_map
         )
         context.set_source_rgb(0.1, 0.1, 0.1)
-        context.move_to(position*self.zoom_factor, -10)
-        context.line_to(position*self.zoom_factor, height-10)
+        context.move_to(playhead_position*self.zoom_factor, -10)
+        context.line_to(playhead_position*self.zoom_factor, height-10)
         context.stroke()
         context.restore()
 
