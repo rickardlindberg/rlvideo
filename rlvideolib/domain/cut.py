@@ -5,8 +5,11 @@ from rlvideolib.domain.region import Regions
 from rlvideolib.domain.section import MixSection
 from rlvideolib.domain.section import PlaylistSection
 from rlvideolib.domain.section import Sections
-from rlvideolib.domain.source import Source
 from rlvideolib.graphics.rectangle import Rectangle
+
+def Source(*args, **kwargs):
+    from rlvideolib.domain.source import Source
+    return Source(*args, **kwargs)
 
 class Cut(namedtuple("Cut", "source,in_out,position")):
 
