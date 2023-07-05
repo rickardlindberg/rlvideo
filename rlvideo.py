@@ -409,28 +409,35 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
     def to_ascii_canvas(self):
         """
         >>> cut = Source("A").create_cut(0, 10).at(0)
+
         >>> cut.to_ascii_canvas()
         <-A0----->
+
         >>> cut.create_cut(Region(start=1, end=9)).to_ascii_canvas()
-        --A1----
+        -A1-----
         """
+        end_marker = self.get_end_marker()
         text = ""
-        if self.starts_at_original_cut():
-            text += "<"
-        else:
-            text += "-"
-        text += "-"
+        text += self.get_start_marker()
         text += self.get_name()[0]
         text += str(self.in_out.start)
-        text += "-"*(self.length-len(text)-2)
-        text += "-"
-        if self.ends_at_original_cut():
-            text += ">"
-        else:
-            text += "-"
+        text += "-"*(self.length-len(text)-len(end_marker))
+        text += end_marker
         canvas = AsciiCanvas()
         canvas.add_text(text, 0, 0)
         return canvas
+
+    def get_start_marker(self):
+        if self.starts_at_original_cut():
+            return "<-"
+        else:
+            return "-"
+
+    def get_end_marker(self):
+        if self.ends_at_original_cut():
+            return "->"
+        else:
+            return "-"
 
     def get_name(self):
         return self.source.get_name()
@@ -497,10 +504,10 @@ class Cuts:
     >>> cuts = cuts.add(a)
     >>> cuts = cuts.add(b)
     >>> cuts.split_into_sections().to_ascii_canvas()
-    |<-A0------|--A10---->|--b10---->|
+    |<-A0------|-A10----->|-b10----->|
     |          |<-b0------|          |
     >>> cuts.modify(b, lambda cut: cut.move(1)).split_into_sections().to_ascii_canvas()
-    |<-A0-------|--A11--->|--b9------>|
+    |<-A0-------|-A11---->|-b9------->|
     |           |<-b0-----|           |
     """
 
@@ -526,7 +533,7 @@ class Cuts:
         |<-A0--->     |
         |     <-B0--->|
         >>> cuts.create_cut(Region(start=2, end=13)).to_ascii_canvas()
-        |  --A2->     |
+        |  -A2-->     |
         |     <-B0--->|
         """
         cuts = []
@@ -559,7 +566,7 @@ class Cuts:
         ...     Source(name="A").create_cut(0, 20).at(0),
         ...     Source(name="B").create_cut(0, 20).at(10),
         ... ]).split_into_sections().to_ascii_canvas()
-        |<-A0------|--A10---->|--B10---->|
+        |<-A0------|-A10----->|-B10----->|
         |          |<-B0------|          |
 
         No cuts:
@@ -591,7 +598,7 @@ class Cuts:
         ...     Source(name="C").create_cut(0, 20).at(10),
         ... ])
         >>> cuts.split_into_sections().to_ascii_canvas()
-        |<-B0------|--B10---->|--C10----><-A0--------------->|
+        |<-B0------|-B10----->|-C10-----><-A0--------------->|
         |          |<-C0------|                              |
         """
         sections = Sections()
