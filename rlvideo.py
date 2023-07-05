@@ -433,6 +433,9 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             self.in_out.end-1
         )
 
+    def add_to_mlt_playlist(self, profile, playlist):
+        playlist.append(self.to_mlt_producer(profile))
+
     def to_ascii_canvas(self):
         """
         >>> cut = Source("A").create_cut(0, 10).at(0)
@@ -461,6 +464,58 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
     def get_name(self):
         return self.source.get_name()
+
+    def get_source_cut(self):
+        if isinstance(self.source, Cut):
+            return self.source.get_source_cut()
+        else:
+            return self
+
+    def draw(self, context, height, x_factor, y, rectangle_map):
+        x = self.start * x_factor
+        w = self.length * x_factor
+        h = height
+
+        rect_x, rect_y = context.user_to_device(x, y)
+        rect_w, rect_h = context.user_to_device_distance(w, h)
+        rectangle_map.add(Rectangle(
+            x=int(rect_x),
+            y=int(rect_y),
+            width=int(rect_w),
+            height=int(rect_h)
+        ), self.get_source_cut())
+
+        context.set_source_rgb(1, 0, 0)
+        context.rectangle(x, y, w, h)
+        context.fill()
+
+        context.set_source_rgb(0, 0, 0)
+
+        context.move_to(x, y)
+        context.line_to(x+w, y)
+        context.stroke()
+
+        context.move_to(x, y+height)
+        context.line_to(x+w, y+height)
+        context.stroke()
+
+        if self.starts_at_original_cut():
+            context.set_source_rgb(0, 0, 0)
+            context.move_to(x, y)
+            context.line_to(x, y+height)
+            context.stroke()
+
+        if self.ends_at_original_cut():
+            context.set_source_rgb(0, 0, 0)
+            context.move_to(x+w, y)
+            context.line_to(x+w, y+height)
+            context.stroke()
+
+        if self.starts_at_original_cut():
+            context.move_to(x+2, y+10)
+            context.set_source_rgb(0, 0, 0)
+            context.text_path(self.get_name())
+            context.fill()
 
 class Cuts:
 
@@ -525,7 +580,7 @@ class Cuts:
         ...     Source(name="A").create_cut(0, 10).at(0),
         ...     Source(name="B").create_cut(0, 10).at(10),
         ... ]).split_into_sections().to_ascii_canvas()
-        |<-A0----->|<-B0----->|
+        |<-A0-----><-B0----->|
 
         Overlap:
 
@@ -565,27 +620,24 @@ class Cuts:
         ...     Source(name="C").create_cut(0, 20).at(10),
         ... ])
         >>> cuts.split_into_sections().to_ascii_canvas()
-        |<-B0------|--B10---->|--C10---->|<-A0--------------->|
-        |          |<-C0------|          |                    |
+        |<-B0------|--B10---->|--C10----><-A0--------------->|
+        |          |<-C0------|                              |
         """
         sections = Sections()
         start = 0
         for overlap in self.get_regions_with_overlap():
             if overlap.start > start:
-                #sections.add(self.extract_playlist_section(Region(
-                sections.add(*self.extract_section(Region(
+                sections.add(self.extract_playlist_section(Region(
                     start=start,
                     end=overlap.start
-                )).split())
-            #sections.add(self.extract_mix_section(overlap))
-            sections.add(self.extract_section(overlap))
+                )))
+            sections.add(self.extract_mix_section(overlap))
             start = overlap.end
         if self.end > start:
-            #sections.add(self.extract_playlist_section(Region(
-            sections.add(*self.extract_section(Region(
+            sections.add(self.extract_playlist_section(Region(
                 start=start,
                 end=self.end
-            )).split())
+            )))
         return sections
 
     def extract_playlist_section(self, region):
@@ -822,6 +874,7 @@ class PlaylistSection:
     def __init__(self, region, cuts):
         # TODO: test value errors
         self.parts = []
+        self.length = region.length
         start = region.start
         for cut in sorted(cuts.cuts, key=lambda cut: cut.start):
             if cut.start > start:
@@ -843,9 +896,20 @@ class PlaylistSection:
             x = canvas.get_max_x() + 1
         return canvas
 
+    def draw(self, context, height, x_factor, rectangle_map):
+        for part in self.parts:
+            part.draw(context, height, x_factor, 0, rectangle_map)
+
+    def to_mlt_producer(self, profile):
+        playlist = mlt.Playlist()
+        for part in self.parts:
+            part.add_to_mlt_playlist(profile, playlist)
+        return playlist
+
 class MixSection:
 
     def __init__(self, region, cuts):
+        self.length = region.length
         self.playlists = []
         for cut in cuts.cuts:
             self.playlists.append(PlaylistSection(region, Cuts([cut])))
@@ -856,12 +920,50 @@ class MixSection:
             canvas.add_canvas(playlist.to_ascii_canvas(), dy=y)
         return canvas
 
+    def to_mlt_producer(self, profile):
+        tractor = mlt.Tractor()
+        for playlist in self.playlists:
+            tractor.insert_track(
+                playlist.to_mlt_producer(profile),
+                0
+            )
+        for clip_index in reversed(range(len(self.playlists))):
+            if clip_index > 0:
+                transition = mlt.Transition(profile, "luma")
+                transition.set("in", 0)
+                transition.set("out", self.length-1)
+                tractor.plant_transition(transition, clip_index, clip_index-1)
+        assert tractor.get_playtime() == self.length
+        return tractor
+
+    def draw(self, context, height, x_factor, rectangle_map):
+        sub_height = height // len(self.playlists)
+        rest = height % len(self.playlists)
+        y = 0
+        for index, playlist in enumerate(self.playlists):
+            if rest:
+                rest -= 1
+                h = sub_height + 1
+            else:
+                h = sub_height
+            context.save()
+            context.translate(0, y)
+            playlist.draw(context, h, x_factor, rectangle_map)
+            context.restore()
+            y += h
+
 class Space(namedtuple("Space", "length")):
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()
         canvas.add_text("%"*self.length, 0, 0)
         return canvas
+
+    def add_to_mlt_playlist(self, profile, playlist):
+        playlist.blank(self.length-1)
+
+    def draw(self, context, height, x_factor, y, rectangle_map):
+        pass
 
 class SectionCut(namedtuple("SectionCut", "cut,source,region")):
 
