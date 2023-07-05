@@ -3,6 +3,7 @@ from collections import namedtuple
 class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
 
     def contains(self, x, y):
+        # TODO: test this
         if x < self.x:
             return False
         elif x > self.x+self.width:
