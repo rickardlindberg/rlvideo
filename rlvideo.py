@@ -809,6 +809,7 @@ class MixSection:
         for clip_index in reversed(range(len(self.playlists))):
             if clip_index > 0:
                 transition = mlt.Transition(profile, "luma")
+                # TODO: plant the transition only on the overlap
                 transition.set("in", 0)
                 transition.set("out", self.length-1)
                 tractor.plant_transition(transition, clip_index, clip_index-1)
