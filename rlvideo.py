@@ -364,7 +364,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         >>> cut.create_cut(Region(start=5, end=6)).starts_at_original_cut()
         False
         """
-        return self.source.starts_at(self.position)
+        return self.source.starts_at(self.start)
 
     def starts_at(self, position):
         return self.start == position
@@ -377,7 +377,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         >>> cut.create_cut(Region(start=5, end=6)).ends_at_original_cut()
         False
         """
-        return self.source.ends_at(self.position)
+        return self.source.ends_at(self.end)
 
     def ends_at(self, position):
         return self.end == position
@@ -489,6 +489,26 @@ class Cuts:
             fn(cut) if cut is cut_to_modify else cut
             for cut in self.cuts
         ])
+
+    def create_cut(self, period):
+        """
+        >>> cuts = Cuts([
+        ...     Source(name="A").create_cut(0, 8).at(0),
+        ...     Source(name="B").create_cut(0, 8).at(5),
+        ... ])
+        >>> cuts.to_ascii_canvas()
+        |<-A0--->     |
+        |     <-B0--->|
+        >>> cuts.create_cut(Region(start=2, end=13)).to_ascii_canvas()
+        |  --A2->     |
+        |     <-B0--->|
+        """
+        cuts = []
+        for cut in self.cuts:
+            sub_cut = cut.create_cut(period)
+            if sub_cut:
+                cuts.append(sub_cut)
+        return Cuts(cuts)
 
     def split_into_sections(self):
         """
