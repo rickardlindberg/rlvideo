@@ -66,13 +66,9 @@ class PlaylistSection:
 
 class MixSection:
 
-    def __init__(self, region, cuts):
-        self.length = region.length
-        self.playlists = []
-        for cut in cuts.cuts:
-            # TODO: fix circular import?
-            from rlvideolib.domain.cut import Cuts
-            self.playlists.append(Cuts([cut]).extract_playlist_section(region))
+    def __init__(self, length, playlists):
+        self.length = length
+        self.playlists = playlists
 
     def to_ascii_canvas(self):
         canvas = AsciiCanvas()

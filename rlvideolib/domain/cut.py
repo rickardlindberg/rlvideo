@@ -397,7 +397,10 @@ class Cuts:
         %<-A0--->%%%%%%
         %%%%%<-B0--->%%
         """
-        return MixSection(region=region, cuts=self.create_cut(region))
+        playlists = []
+        for cut in self.create_cut(region).cuts:
+            playlists.append(Cuts([cut]).extract_playlist_section(region))
+        return MixSection(length=region.length, playlists=playlists)
 
     def get_regions_with_overlap(self):
         overlaps = Regions()
