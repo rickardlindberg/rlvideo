@@ -271,6 +271,9 @@ class Source(namedtuple("Source", "name")):
     def ends_at(self, position):
         return True
 
+    def get_name(self):
+        return self.name
+
 class Cut(namedtuple("Cut", "source,in_out,position")):
 
     @staticmethod
@@ -430,6 +433,35 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             self.in_out.end-1
         )
 
+    def to_ascii_canvas(self):
+        """
+        >>> cut = Source("A").create_cut(0, 10).at(0)
+        >>> cut.to_ascii_canvas()
+        <-A0----->
+        >>> cut.create_cut(Region(start=1, end=9)).to_ascii_canvas()
+        --A1----
+        """
+        text = ""
+        if self.starts_at_original_cut():
+            text += "<"
+        else:
+            text += "-"
+        text += "-"
+        text += self.get_name()[0]
+        text += str(self.in_out.start)
+        text += "-"*(self.length-len(text)-2)
+        text += "-"
+        if self.ends_at_original_cut():
+            text += ">"
+        else:
+            text += "-"
+        canvas = AsciiCanvas()
+        canvas.add_text(text, 0, 0)
+        return canvas
+
+    def get_name(self):
+        return self.source.get_name()
+
 class Cuts:
 
     """
@@ -588,6 +620,26 @@ class Cuts:
             return max(cut.end for cut in self.cuts)
         else:
             return 0
+
+    def to_ascii_canvas(self):
+        """
+        >>> Cuts([
+        ...     Source(name="A").create_cut(0, 8).at(10),
+        ...     Source(name="B").create_cut(0, 8).at(0),
+        ...     Source(name="C").create_cut(0, 8).at(5),
+        ... ]).to_ascii_canvas()
+        |          <-A0--->|
+        |<-B0--->          |
+        |     <-C0--->     |
+        """
+        canvas = AsciiCanvas()
+        for y, cut in enumerate(self.cuts):
+            canvas.add_canvas(cut.to_ascii_canvas(), dy=y, dx=cut.start+1)
+        x = canvas.get_max_x()+1
+        for y in range(len(self.cuts)):
+            canvas.add_text("|", 0, y)
+            canvas.add_text("|", x, y)
+        return canvas
 
 class Sections:
 
