@@ -265,6 +265,12 @@ class Source(namedtuple("Source", "name")):
             producer.set("bgcolour", "red")
             return producer
 
+    def starts_at(self, position):
+        return True
+
+    def ends_at(self, position):
+        return True
+
 class Cut(namedtuple("Cut", "source,in_out,position")):
 
     @staticmethod
@@ -346,6 +352,32 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
                 source=self
             ))
         return section
+
+    def starts_at_original_cut(self):
+        """
+        >>> cut = Source("A").create_cut(0, 10).at(0)
+        >>> cut.starts_at_original_cut()
+        True
+        >>> cut.create_cut(Region(start=5, end=6)).starts_at_original_cut()
+        False
+        """
+        return self.source.starts_at(self.position)
+
+    def starts_at(self, position):
+        return self.start == position
+
+    def ends_at_original_cut(self):
+        """
+        >>> cut = Source("A").create_cut(0, 10).at(0)
+        >>> cut.ends_at_original_cut()
+        True
+        >>> cut.create_cut(Region(start=5, end=6)).ends_at_original_cut()
+        False
+        """
+        return self.source.ends_at(self.position)
+
+    def ends_at(self, position):
+        return self.end == position
 
     def create_cut(self, region):
         """
