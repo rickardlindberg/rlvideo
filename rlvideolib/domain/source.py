@@ -33,4 +33,3 @@ class Source(namedtuple("Source", "name")):
 
     def get_label(self):
         return os.path.basename(self.name)
-
