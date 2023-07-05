@@ -415,6 +415,12 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
 
         >>> cut.create_cut(Region(start=1, end=9)).to_ascii_canvas()
         -A1-----
+
+        >>> Source("A").create_cut(0, 6).at(0).to_ascii_canvas()
+        <-A0->
+
+        >>> Source("A").create_cut(0, 5).at(0).to_ascii_canvas()
+        #####
         """
         end_marker = self.get_end_marker()
         text = ""
@@ -423,6 +429,8 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         text += str(self.in_out.start)
         text += "-"*(self.length-len(text)-len(end_marker))
         text += end_marker
+        if len(text) != self.length:
+            text = "#"*self.length
         canvas = AsciiCanvas()
         canvas.add_text(text, 0, 0)
         return canvas
