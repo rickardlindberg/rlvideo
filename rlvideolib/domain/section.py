@@ -31,9 +31,9 @@ class Sections:
             playlist.append(section.to_mlt_producer(profile))
         return playlist
 
-    def draw(self, context, height, x_factor, rectangle_map):
+    def draw_cairo(self, context, height, x_factor, rectangle_map):
         for section in self.sections:
-            section.draw(
+            section.draw_cairo(
                 context=context,
                 height=height,
                 x_factor=x_factor,
@@ -55,9 +55,9 @@ class PlaylistSection:
             x = canvas.get_max_x() + 1
         return canvas
 
-    def draw(self, context, height, x_factor, rectangle_map):
+    def draw_cairo(self, context, height, x_factor, rectangle_map):
         for part in self.parts:
-            part.draw(context, height, x_factor, rectangle_map)
+            part.draw_cairo(context, height, x_factor, rectangle_map)
 
     def to_mlt_producer(self, profile):
         playlist = mlt.Playlist()
@@ -97,7 +97,7 @@ class MixSection:
         assert tractor.get_playtime() == self.length
         return tractor
 
-    def draw(self, context, height, x_factor, rectangle_map):
+    def draw_cairo(self, context, height, x_factor, rectangle_map):
         sub_height = height // len(self.playlists)
         rest = height % len(self.playlists)
         context.save()
@@ -107,6 +107,6 @@ class MixSection:
                 h = sub_height + 1
             else:
                 h = sub_height
-            playlist.draw(context, h, x_factor, rectangle_map)
+            playlist.draw_cairo(context, h, x_factor, rectangle_map)
             context.translate(0, h)
         context.restore()

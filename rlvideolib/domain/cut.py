@@ -187,7 +187,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         else:
             return self
 
-    def draw(self, context, height, x_factor, rectangle_map):
+    def draw_cairo(self, context, height, x_factor, rectangle_map):
         y = 0
         x = self.start * x_factor
         w = self.length * x_factor
@@ -472,5 +472,5 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
     def add_to_mlt_playlist(self, profile, playlist):
         playlist.blank(self.length-1)
 
-    def draw(self, context, height, x_factor, rectangle_map):
+    def draw_cairo(self, context, height, x_factor, rectangle_map):
         pass

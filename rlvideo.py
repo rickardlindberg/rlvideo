@@ -49,7 +49,7 @@ class App:
         box.pack_start(preview, True, True, 0)
 
         def timeline_draw(widget, context):
-            self.timeline.draw(
+            self.timeline.draw_cairo(
                 context=context,
                 playhead_position=mlt_player.position(),
                 width=widget.get_allocated_width(),
@@ -146,7 +146,7 @@ class Timeline:
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     >>> context = cairo.Context(surface)
-    >>> timeline.draw(
+    >>> timeline.draw_cairo(
     ...     context=context,
     ...     playhead_position=0,
     ...     width=width,
@@ -211,20 +211,20 @@ class Timeline:
     def to_mlt_producer(self, profile):
         return self.split_into_sections().to_mlt_producer(profile)
 
-    def draw(self, context, playhead_position, width, height):
+    def draw_cairo(self, context, playhead_position, width, height):
         """
         >>> width, height = 300, 100
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
         >>> timeline = Timeline()
         >>> timeline.add(Source("hello").create_cut(0, 10).at(0))
-        >>> timeline.draw(
+        >>> timeline.draw_cairo(
         ...     context=context,
         ...     playhead_position=0,
         ...     width=width,
         ...     height=height
         ... )
-        >>> timeline.draw(
+        >>> timeline.draw_cairo(
         ...     context=context,
         ...     playhead_position=0,
         ...     width=width,
@@ -238,7 +238,7 @@ class Timeline:
         offset = 10
         context.save()
         context.translate(offset, offset)
-        self.split_into_sections().draw(
+        self.split_into_sections().draw_cairo(
             context=context,
             height=height-2*offset,
             x_factor=self.zoom_factor,
