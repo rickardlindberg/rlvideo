@@ -251,6 +251,7 @@ class Timeline:
 class Source(namedtuple("Source", "name")):
 
     def create_cut(self, start, end):
+        # TODO: ensure cut is valid
         return Cut.create(
             source=self,
             in_out=Region(start=start, end=end)
