@@ -203,6 +203,7 @@ class Timeline:
         self.cuts = self.cuts.add(cut)
 
     def set_zoom_factor(self, zoom_factor):
+        # TODO: allow zoom factor to be set with mouse wheel
         self.zoom_factor = zoom_factor
 
     def split_into_sections(self):
