@@ -16,48 +16,48 @@ class Region(namedtuple("Region", "start,end")):
     def length(self):
         return self.end - self.start
 
-    def merge(self, region):
+    def union(self, region):
         """
         No adjacent regions:
 
         >>> a = Region(start=0, end=5)
         >>> b = Region(start=6, end=7)
-        >>> a.merge(b) is None
-        True
+        >>> a.union(b)
+        [Region(start=0, end=5), Region(start=6, end=7)]
 
         >>> a = Region(start=2, end=3)
         >>> b = Region(start=0, end=1)
-        >>> a.merge(b) is None
-        True
+        >>> a.union(b)
+        [Region(start=2, end=3), Region(start=0, end=1)]
 
         Adjacent regions:
 
         >>> a = Region(start=2, end=3)
         >>> b = Region(start=3, end=4)
-        >>> a.merge(b)
-        Region(start=2, end=4)
+        >>> a.union(b)
+        [Region(start=2, end=4)]
 
         Overlapping regions:
 
         >>> a = Region(start=0, end=2)
         >>> b = Region(start=1, end=3)
-        >>> a.merge(b)
-        Region(start=0, end=3)
+        >>> a.union(b)
+        [Region(start=0, end=3)]
 
         Containing regions:
 
         >>> a = Region(start=0, end=10)
         >>> b = Region(start=2, end=3)
-        >>> a.merge(b)
-        Region(start=0, end=10)
+        >>> a.union(b)
+        [Region(start=0, end=10)]
         """
         if region.end < self.start or region.start > self.end:
-            return None
+            return [self, region]
         else:
-            return Region(
+            return [Region(
                 start=min(self.start, region.start),
                 end=max(self.end, region.end),
-            )
+            )]
 
     def get_overlap(self, region):
         """
@@ -88,7 +88,7 @@ class Region(namedtuple("Region", "start,end")):
                 end=min(self.end, region.end)
             )
 
-class Regions:
+class UnionRegions:
 
     def __init__(self):
         self.regions = []
@@ -96,12 +96,12 @@ class Regions:
     def add(self, region):
         self.regions.append(region)
 
-    def merge(self):
+    def __iter__(self):
         """
-        >>> r = Regions()
+        >>> r = UnionRegions()
         >>> r.add(Region(start=0, end=100))
         >>> r.add(Region(start=5, end=10))
-        >>> r.merge()
+        >>> list(r)
         [Region(start=0, end=100)]
         """
         merged = []
@@ -109,12 +109,7 @@ class Regions:
         while rest:
             region = rest.pop(0)
             if merged:
-                merge = merged[-1].merge(region)
-                if merge:
-                    merged.pop(-1)
-                    merged.append(merge)
-                else:
-                    merged.append(region)
+                merged.extend(merged.pop(-1).union(region))
             else:
                 merged.append(region)
-        return merged
+        return iter(merged)
