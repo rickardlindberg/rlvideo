@@ -509,18 +509,29 @@ class Cuts:
         start = 0
         for overlap in self.get_regions_with_overlap():
             if overlap.start > start:
+                #sections.add(self.extract_playlist_section(Region(
                 sections.add(*self.extract_section(Region(
                     start=start,
                     end=overlap.start
                 )).split())
+            #sections.add(self.extract_mix_section(overlap))
             sections.add(self.extract_section(overlap))
             start = overlap.end
         if self.end > start:
+            #sections.add(self.extract_playlist_section(Region(
             sections.add(*self.extract_section(Region(
                 start=start,
                 end=self.end
             )).split())
         return sections
+
+    def extract_playlist_section(self, region):
+        """
+        """
+
+    def extract_mix_section(self, region):
+        """
+        """
 
     def get_regions_with_overlap(self):
         overlaps = Regions()
