@@ -158,6 +158,8 @@ class Timeline:
     >>> timeline.rectangle_map
     Rectangle(x=10, y=20, width=10, height=20):
       Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
+    Rectangle(x=10, y=60, width=7840, height=30):
+      position
     >>> timeline.split_into_sections().to_ascii_canvas()
     |<-h0----->|
     >>> timeline.mouse_down(15, 25)
@@ -189,18 +191,24 @@ class Timeline:
 
     def mouse_down(self, x, y):
         self.tmp_xy = (x, y)
+        self.tmp_start = self.start
         self.tmp_cuts = self.cuts
         self.tmp_cut = self.rectangle_map.get(x, y)
 
     def mouse_move(self, x, y):
         if self.tmp_cut:
             delta = x-self.tmp_xy[0]
-            self.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
-                x.move(int(delta/self.zoom_factor)))
+            if self.tmp_cut == "position":
+                # TODO: can not show anything before start
+                self.start = self.tmp_start + delta / self.zoom_factor
+            else:
+                self.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
+                    x.move(int(delta/self.zoom_factor)))
 
     def mouse_up(self):
         self.tmp_xy = None
         self.tmp_cuts = None
+        self.tmp_start = None
         self.tmp_cut = None
 
     def add(self, cut):
@@ -238,6 +246,8 @@ class Timeline:
         >>> timeline.rectangle_map
         Rectangle(x=10, y=20, width=10, height=20):
           Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
+        Rectangle(x=10, y=60, width=7840, height=30):
+          position
         """
         margin = 10
         area = Rectangle.from_size(width=width, height=height).deflate(margin)
@@ -247,7 +257,7 @@ class Timeline:
         )
         sections = self.split_into_sections()
         whole_region = Region(start=0, end=sections.length)
-        region_shown = Region(start=self.start, end=area.width/self.zoom_factor)
+        region_shown = Region(start=self.start, end=self.start+area.width/self.zoom_factor)
         with top_area.cairo_clip_translate(context) as top_area:
             context.set_source_rgb(0.9, 0.9, 0.9)
             context.rectangle(top_area.x, top_area.y, top_area.width, top_area.height)
@@ -267,8 +277,20 @@ class Timeline:
             context.stroke()
         with bottom_area.cairo_clip_translate(context) as area:
             x_start = region_shown.start * self.zoom_factor
-            x_end = (region_shown.length / whole_region.length) * area.width
-            context.rectangle(area.x+x_start, area.y, area.x+x_end-x_start, area.height)
+            x_end = x_start + (region_shown.length / whole_region.length) * area.width
+
+            # TODO: add callback mechanism in rectangle map
+            x, y, w, h = area.x+x_start, area.y, area.x+x_end-x_start, area.height
+            rect_x, rect_y = context.user_to_device(x, y)
+            rect_w, rect_h = context.user_to_device_distance(w, h)
+            self.rectangle_map.add(Rectangle(
+                x=int(rect_x),
+                y=int(rect_y),
+                width=int(rect_w),
+                height=int(rect_h)
+            ), "position")
+
+            context.rectangle(x, y, w, h)
             context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
             context.fill()
             context.rectangle(area.x, area.y, area.width, area.height)
