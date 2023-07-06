@@ -421,20 +421,6 @@ class Cuts:
         return overlaps
 
     @property
-    def start(self):
-        """
-        >>> Cuts().start
-        0
-
-        >>> Cuts([Cut.test_instance(start=0, end=5, position=5)]).start
-        5
-        """
-        if self.cuts:
-            return min(cut.start for cut in self.cuts)
-        else:
-            return 0
-
-    @property
     def end(self):
         """
         >>> Cuts().end
