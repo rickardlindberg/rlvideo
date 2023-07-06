@@ -200,7 +200,10 @@ class Timeline:
             delta = x-self.tmp_xy[0]
             if self.tmp_cut == "position":
                 # TODO: can not show anything before start
-                self.start = self.tmp_start + delta / self.zoom_factor
+                self.start = min(
+                    self.region_zoom_diff,
+                    max(0, (self.tmp_start + delta) / self.zoom_factor_small)
+                )
             else:
                 self.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
                     x.move(int(delta/self.zoom_factor)))
@@ -256,8 +259,12 @@ class Timeline:
             space=margin
         )
         sections = self.split_into_sections()
+
         whole_region = Region(start=0, end=sections.length)
         region_shown = Region(start=self.start, end=self.start+area.width/self.zoom_factor)
+        self.region_zoom_diff = whole_region.length - region_shown.length
+        self.zoom_factor_small = area.width / whole_region.length
+
         with top_area.cairo_clip_translate(context) as top_area:
             context.set_source_rgb(0.9, 0.9, 0.9)
             context.rectangle(top_area.x, top_area.y, top_area.width, top_area.height)
@@ -275,12 +282,18 @@ class Timeline:
             context.move_to(playhead_position*self.zoom_factor, 0)
             context.line_to(playhead_position*self.zoom_factor, top_area.height)
             context.stroke()
+
         with bottom_area.cairo_clip_translate(context) as area:
-            x_start = region_shown.start * self.zoom_factor
-            x_end = x_start + (region_shown.length / whole_region.length) * area.width
+            x_start = region_shown.start / whole_region.length * area.width
+            x_end = region_shown.end / whole_region.length * area.width
 
             # TODO: add callback mechanism in rectangle map
-            x, y, w, h = area.x+x_start, area.y, area.x+x_end-x_start, area.height
+            x, y, w, h = (
+                area.x+x_start,
+                area.y,
+                x_end-x_start,
+                area.height
+            )
             rect_x, rect_y = context.user_to_device(x, y)
             rect_w, rect_h = context.user_to_device_distance(w, h)
             self.rectangle_map.add(Rectangle(
@@ -293,6 +306,7 @@ class Timeline:
             context.rectangle(x, y, w, h)
             context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
             context.fill()
+
             context.rectangle(area.x, area.y, area.width, area.height)
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.stroke()
