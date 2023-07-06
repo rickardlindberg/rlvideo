@@ -2,6 +2,23 @@ from collections import namedtuple
 
 class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
 
+    def __init__(self, x, y, width, height):
+        """
+        >>> Rectangle(x=0, y=0, width=0, height=10)
+        Traceback (most recent call last):
+          ...
+        ValueError: Width must be > 0.
+
+        >>> Rectangle(x=0, y=0, width=10, height=0)
+        Traceback (most recent call last):
+          ...
+        ValueError: Height must be > 0.
+        """
+        if width <= 0:
+            raise ValueError("Width must be > 0.")
+        if height <= 0:
+            raise ValueError("Height must be > 0.")
+
     @staticmethod
     def from_size(width, height):
         """
