@@ -35,9 +35,6 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
             height=self.height-2*amount,
         )
 
-    def set_cairo_path(self, context):
-        context.rectangle(self.x, self.y, self.width, self.height)
-
 class RectangleMap:
 
     """

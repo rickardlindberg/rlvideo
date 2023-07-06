@@ -239,15 +239,14 @@ class Timeline:
           Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
         """
         area = Rectangle.from_size(width=width, height=height).deflate(10)
-        area.set_cairo_path(context)
+        context.rectangle(area.x, area.y, area.width, area.height)
         context.clip()
         self.rectangle_map.clear()
-        offset = 10
         context.save()
-        context.translate(offset, offset)
+        context.translate(area.x, area.y)
         self.split_into_sections().draw_cairo(
             context=context,
-            height=height-2*offset,
+            height=area.height,
             x_factor=self.zoom_factor,
             rectangle_map=self.rectangle_map
         )
