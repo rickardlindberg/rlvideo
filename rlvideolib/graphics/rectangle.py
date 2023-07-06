@@ -1,4 +1,5 @@
 from collections import namedtuple
+from contextlib import contextmanager
 
 class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
 
@@ -66,6 +67,15 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
                 height=bottom_height,
             ),
         ]
+
+    @contextmanager
+    def cairo_clip_translate(self, context):
+        context.save()
+        context.rectangle(self.x, self.y, self.width, self.height)
+        context.clip()
+        context.translate(self.x, self.y)
+        yield
+        context.restore()
 
 class RectangleMap:
 
