@@ -156,7 +156,7 @@ class Timeline:
     ...     height=height
     ... )
     >>> timeline.rectangle_map
-    Rectangle(x=10, y=10, width=10, height=80):
+    Rectangle(x=10, y=10, width=10, height=40):
       Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
     >>> timeline.split_into_sections().to_ascii_canvas()
     |<-h0----->|
@@ -235,18 +235,20 @@ class Timeline:
         ...     height=height
         ... )
         >>> timeline.rectangle_map
-        Rectangle(x=10, y=10, width=10, height=80):
+        Rectangle(x=10, y=10, width=10, height=40):
           Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
         """
-        area = Rectangle.from_size(width=width, height=height).deflate(10)
-        context.rectangle(area.x, area.y, area.width, area.height)
+        margin = 10
+        area = Rectangle.from_size(width=width, height=height).deflate(margin)
+        top_area, bottom_area = area.split_height_from_bottom(bottom_height=30, space=margin)
+        context.rectangle(top_area.x, top_area.y, top_area.width, top_area.height)
         context.clip()
         self.rectangle_map.clear()
         context.save()
-        context.translate(area.x, area.y)
+        context.translate(top_area.x, top_area.y)
         self.split_into_sections().draw_cairo(
             context=context,
-            height=area.height,
+            height=top_area.height,
             x_factor=self.zoom_factor,
             rectangle_map=self.rectangle_map
         )
