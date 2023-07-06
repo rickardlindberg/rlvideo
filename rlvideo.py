@@ -183,6 +183,7 @@ class Timeline:
     def __init__(self):
         self.cuts = Cuts()
         self.zoom_factor = 1
+        self.start = 0
         self.rectangle_map = RectangleMap()
         self.mouse_up()
 
@@ -244,13 +245,16 @@ class Timeline:
             bottom_height=30,
             space=margin
         )
+        sections = self.split_into_sections()
+        whole_region = Region(start=self.start, end=sections.length)
+        region_shown = Region(start=self.start, end=area.width/self.zoom_factor)
         with top_area.cairo_clip_translate(context) as top_area:
             context.set_source_rgb(0.9, 0.9, 0.9)
             context.rectangle(top_area.x, top_area.y, top_area.width, top_area.height)
             context.fill()
             with top_area.deflate_height(margin).cairo_clip_translate(context) as clip_area:
                 self.rectangle_map.clear()
-                self.split_into_sections().draw_cairo(
+                sections.draw_cairo(
                     context=context,
                     height=clip_area.height,
                     x_factor=self.zoom_factor,
@@ -261,6 +265,11 @@ class Timeline:
             context.line_to(playhead_position*self.zoom_factor, top_area.height)
             context.stroke()
         with bottom_area.cairo_clip_translate(context) as area:
+            x_start = region_shown.start * self.zoom_factor
+            x_end = (region_shown.length / whole_region.length) * area.width
+            context.rectangle(area.x+x_start, area.y, area.x+x_end-x_start, area.height)
+            context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
+            context.fill()
             context.rectangle(area.x, area.y, area.width, area.height)
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.stroke()

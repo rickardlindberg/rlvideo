@@ -7,6 +7,10 @@ class Sections:
     def __init__(self):
         self.sections = []
 
+    @property
+    def length(self):
+        return sum(section.length for section in self.sections)
+
     def add(self, *sections):
         self.sections.extend(sections)
 
