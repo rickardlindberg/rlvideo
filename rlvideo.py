@@ -156,16 +156,16 @@ class Timeline:
     ...     height=height
     ... )
     >>> timeline.rectangle_map
-    Rectangle(x=10, y=10, width=10, height=40):
+    Rectangle(x=10, y=20, width=10, height=20):
       Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
     >>> timeline.split_into_sections().to_ascii_canvas()
     |<-h0----->|
-    >>> timeline.mouse_down(15, 15)
-    >>> timeline.mouse_move(16, 16)
+    >>> timeline.mouse_down(15, 25)
+    >>> timeline.mouse_move(16, 26)
     >>> timeline.mouse_up()
     >>> timeline.split_into_sections().to_ascii_canvas()
     |%<-h0----->|
-    >>> timeline.mouse_move(17, 17)
+    >>> timeline.mouse_move(17, 27)
     >>> timeline.split_into_sections().to_ascii_canvas()
     |%<-h0----->|
     """
@@ -235,20 +235,21 @@ class Timeline:
         ...     height=height
         ... )
         >>> timeline.rectangle_map
-        Rectangle(x=10, y=10, width=10, height=40):
+        Rectangle(x=10, y=20, width=10, height=20):
           Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
         """
         margin = 10
         area = Rectangle.from_size(width=width, height=height).deflate(margin)
         top_area, bottom_area = area.split_height_from_bottom(bottom_height=30, space=margin)
-        with top_area.cairo_clip_translate(context):
-            self.rectangle_map.clear()
-            self.split_into_sections().draw_cairo(
-                context=context,
-                height=top_area.height,
-                x_factor=self.zoom_factor,
-                rectangle_map=self.rectangle_map
-            )
+        with top_area.cairo_clip_translate(context) as top_area:
+            with top_area.deflate_height(10).cairo_clip_translate(context) as clip_area:
+                self.rectangle_map.clear()
+                self.split_into_sections().draw_cairo(
+                    context=context,
+                    height=clip_area.height,
+                    x_factor=self.zoom_factor,
+                    rectangle_map=self.rectangle_map
+                )
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.move_to(playhead_position*self.zoom_factor, 0)
             context.line_to(playhead_position*self.zoom_factor, top_area.height)

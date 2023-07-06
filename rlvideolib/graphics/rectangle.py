@@ -53,6 +53,18 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
             height=self.height-2*amount,
         )
 
+    def deflate_height(self, amount):
+        """
+        >>> Rectangle(x=0, y=0, width=10, height=10).deflate_height(2)
+        Rectangle(x=0, y=2, width=10, height=6)
+        """
+        return self._replace(
+            x=self.x,
+            y=self.y+amount,
+            width=self.width,
+            height=self.height-2*amount,
+        )
+
     def split_height_from_bottom(self, bottom_height, space):
         """
         >>> Rectangle.from_size(100, 100).split_height_from_bottom(10, 5)
@@ -74,7 +86,7 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
         context.rectangle(self.x, self.y, self.width, self.height)
         context.clip()
         context.translate(self.x, self.y)
-        yield
+        yield Rectangle.from_size(width=self.width, height=self.height)
         context.restore()
 
 class RectangleMap:
