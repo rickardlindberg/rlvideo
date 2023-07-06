@@ -421,6 +421,20 @@ class Cuts:
         return overlaps
 
     @property
+    def region(self):
+        """
+        >>> Cuts().region is None
+        True
+
+        >>> Cuts([Cut.test_instance(start=0, end=5, position=5)]).region
+        Region(start=0, end=10)
+        """
+        if self.cuts:
+            return Region(start=0, end=self.end)
+        else:
+            return None
+
+    @property
     def end(self):
         """
         >>> Cuts().end
