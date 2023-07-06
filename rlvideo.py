@@ -106,6 +106,7 @@ class MltPlayer:
         self.producer = None
 
     def position(self):
+        # TODO: why is this position on the producer and not the consumer?
         return self.producer.position()
 
     def play_pause(self):
@@ -121,6 +122,8 @@ class MltPlayer:
         self.producer.seek(self.producer.position()-1)
 
     def seek_right_one_frame(self):
+        # TODO: how to seek right beyond the last frame (to position cursor for
+        # insertion for example)?
         print("Right")
         self.producer.seek(self.producer.position()+1)
 
