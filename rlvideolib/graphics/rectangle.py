@@ -67,15 +67,15 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
 
     def split_height_from_bottom(self, bottom_height, space):
         """
-        >>> Rectangle.from_size(100, 100).split_height_from_bottom(10, 5)
-        [Rectangle(x=0, y=0, width=100, height=85), Rectangle(x=0, y=90, width=100, height=10)]
+        >>> Rectangle(x=0, y=10, width=100, height=100).split_height_from_bottom(10, 5)
+        [Rectangle(x=0, y=10, width=100, height=85), Rectangle(x=0, y=100, width=100, height=10)]
         """
         return [
             self._replace(
                 height=self.height-bottom_height-space,
             ),
             self._replace(
-                y=self.height-bottom_height,
+                y=self.y+self.height-bottom_height,
                 height=bottom_height,
             ),
         ]

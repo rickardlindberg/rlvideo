@@ -240,9 +240,15 @@ class Timeline:
         """
         margin = 10
         area = Rectangle.from_size(width=width, height=height).deflate(margin)
-        top_area, bottom_area = area.split_height_from_bottom(bottom_height=30, space=margin)
+        top_area, bottom_area = area.split_height_from_bottom(
+            bottom_height=30,
+            space=margin
+        )
         with top_area.cairo_clip_translate(context) as top_area:
-            with top_area.deflate_height(10).cairo_clip_translate(context) as clip_area:
+            context.set_source_rgb(0.9, 0.9, 0.9)
+            context.rectangle(top_area.x, top_area.y, top_area.width, top_area.height)
+            context.fill()
+            with top_area.deflate_height(margin).cairo_clip_translate(context) as clip_area:
                 self.rectangle_map.clear()
                 self.split_into_sections().draw_cairo(
                     context=context,
@@ -253,6 +259,10 @@ class Timeline:
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.move_to(playhead_position*self.zoom_factor, 0)
             context.line_to(playhead_position*self.zoom_factor, top_area.height)
+            context.stroke()
+        with bottom_area.cairo_clip_translate(context) as area:
+            context.rectangle(area.x, area.y, area.width, area.height)
+            context.set_source_rgb(0.1, 0.1, 0.1)
             context.stroke()
 
 if __name__ == "__main__":
