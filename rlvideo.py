@@ -246,7 +246,7 @@ class Timeline:
             space=margin
         )
         sections = self.split_into_sections()
-        whole_region = Region(start=self.start, end=sections.length)
+        whole_region = Region(start=0, end=sections.length)
         region_shown = Region(start=self.start, end=area.width/self.zoom_factor)
         with top_area.cairo_clip_translate(context) as top_area:
             context.set_source_rgb(0.9, 0.9, 0.9)
@@ -258,7 +258,8 @@ class Timeline:
                     context=context,
                     height=clip_area.height,
                     x_factor=self.zoom_factor,
-                    rectangle_map=self.rectangle_map
+                    rectangle_map=self.rectangle_map,
+                    x_offset=-self.start
                 )
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.move_to(playhead_position*self.zoom_factor, 0)
