@@ -238,6 +238,9 @@ class Timeline:
         Rectangle(x=10, y=10, width=10, height=80):
           Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0)
         """
+        area = Rectangle.from_size(width=width, height=height).deflate(10)
+        area.set_cairo_path(context)
+        context.clip()
         self.rectangle_map.clear()
         offset = 10
         context.save()

@@ -2,6 +2,14 @@ from collections import namedtuple
 
 class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
 
+    @staticmethod
+    def from_size(width, height):
+        """
+        >>> Rectangle.from_size(width=10, height=10)
+        Rectangle(x=0, y=0, width=10, height=10)
+        """
+        return Rectangle(x=0, y=0, width=width, height=height)
+
     def contains(self, x, y):
         # TODO: test this
         if x < self.x:
@@ -14,6 +22,21 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
             return False
         else:
             return True
+
+    def deflate(self, amount):
+        """
+        >>> Rectangle(x=0, y=0, width=10, height=10).deflate(2)
+        Rectangle(x=2, y=2, width=6, height=6)
+        """
+        return self._replace(
+            x=self.x+amount,
+            y=self.y+amount,
+            width=self.width-2*amount,
+            height=self.height-2*amount,
+        )
+
+    def set_cairo_path(self, context):
+        context.rectangle(self.x, self.y, self.width, self.height)
 
 class RectangleMap:
 
