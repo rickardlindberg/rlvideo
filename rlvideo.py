@@ -378,10 +378,10 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
         ... ).move_scrollbar(1).content_desired_start
         10.0
         """
-        one_pixel_in_length = self.ui_size / self.content_length
-        delta = pixels / one_pixel_in_length
+        one_pixel_in_length = self.content_length / self.ui_size
+        delta = pixels * one_pixel_in_length
         return self._replace(
-            content_desired_start=self.content_desired_start+delta
+            content_desired_start=self.content_start+delta
         )
 
     @property
