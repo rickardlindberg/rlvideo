@@ -351,11 +351,11 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
         ...     ui_size=10,
         ...     content_desired_start=100
         ... ).content_start
-        90
+        90.0
         """
         # TODO: content_start -> x_offset | pixel_offset
         length_shown = self.ui_size / self.one_length_in_pixels
-        max_start = max(0, int(math.ceil(self.content_length - length_shown)))
+        max_start = max(0, self.content_length - length_shown)
         if self.content_desired_start < 0:
             return 0
         elif self.content_desired_start > max_start:
@@ -371,12 +371,12 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
         ...     ui_size=10,
         ...     content_desired_start=0
         ... ).move_scrollbar(1).content_desired_start
-        10
+        10.0
         """
         one_pixel_in_length = self.ui_size / self.content_length
         delta = pixels / one_pixel_in_length
         return self._replace(
-            content_desired_start=int(self.content_desired_start+delta)
+            content_desired_start=self.content_desired_start+delta
         )
 
     @property
