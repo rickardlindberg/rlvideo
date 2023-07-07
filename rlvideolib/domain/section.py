@@ -36,6 +36,7 @@ class Sections:
         return playlist
 
     def draw_cairo(self, context, height, scrollbar, rectangle_map):
+        context.save()
         for section in self.sections:
             section.draw_cairo(
                 context=context,
@@ -43,6 +44,8 @@ class Sections:
                 scrollbar=scrollbar,
                 rectangle_map=rectangle_map,
             )
+            context.translate(section.length*scrollbar.one_length_in_pixels, 0)
+        context.restore()
 
 class PlaylistSection:
 
@@ -67,8 +70,11 @@ class PlaylistSection:
         return playlist
 
     def draw_cairo(self, context, height, scrollbar, rectangle_map):
+        context.save()
         for part in self.parts:
             part.draw_cairo(context, height, scrollbar, rectangle_map)
+            context.translate(part.length*scrollbar.one_length_in_pixels, 0)
+        context.restore()
 
 class MixSection:
 

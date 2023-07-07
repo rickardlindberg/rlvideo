@@ -273,12 +273,16 @@ class Timeline:
             context.fill()
             with top_area.deflate_height(margin).cairo_clip_translate(context) as clip_area:
                 self.rectangle_map.clear()
+                start_x = -self.scrollbar.content_start*self.scrollbar.one_length_in_pixels
+                context.save()
+                context.translate(start_x, 0)
                 sections.draw_cairo(
                     context=context,
                     height=clip_area.height,
                     scrollbar=self.scrollbar,
                     rectangle_map=self.rectangle_map,
                 )
+                context.restore()
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.move_to(playhead_position*self.scrollbar.one_length_in_pixels, 0)
             context.line_to(playhead_position*self.scrollbar.one_length_in_pixels, top_area.height)

@@ -181,11 +181,9 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         )
 
     def draw_cairo(self, context, height, scrollbar, rectangle_map):
-        x_factor = scrollbar.one_length_in_pixels
-        x_offset = -scrollbar.content_start
         y = 0
-        x = x_offset * x_factor + self.start * x_factor
-        w = self.length * x_factor
+        x = 0
+        w = self.length * scrollbar.one_length_in_pixels
         h = height
 
         rect_x, rect_y = context.user_to_device(x, y)
