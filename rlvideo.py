@@ -271,20 +271,20 @@ class Timeline:
             context.set_source_rgb(0.9, 0.9, 0.9)
             context.rectangle(top_area.x, top_area.y, top_area.width, top_area.height)
             context.fill()
-            with top_area.deflate_height(margin).cairo_clip_translate(context) as clip_area:
-                self.rectangle_map.clear()
-                start_x = self.scrollbar.content_to_pixels(-self.scrollbar.content_start)
-                context.save()
-                context.translate(start_x, 0)
-                sections.draw_cairo(
-                    context=context,
-                    rectangle=Rectangle.from_size(
-                        width=self.scrollbar.content_to_pixels(sections.length),
-                        height=clip_area.height
-                    ),
-                    rectangle_map=self.rectangle_map,
-                )
-                context.restore()
+            with top_area.deflate_height(
+                amount=margin
+            ).cairo_clip_translate(context) as clip_area:
+                with clip_area.move(
+                    dx=self.scrollbar.content_to_pixels(-self.scrollbar.content_start)
+                ).resize(
+                    width=self.scrollbar.content_to_pixels(sections.length)
+                ).cairo_clip_translate(context) as sections_area:
+                    self.rectangle_map.clear()
+                    sections.draw_cairo(
+                        context=context,
+                        rectangle=sections_area,
+                        rectangle_map=self.rectangle_map,
+                    )
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.move_to(self.scrollbar.content_to_pixels(playhead_position), 0)
             context.line_to(self.scrollbar.content_to_pixels(playhead_position), top_area.height)

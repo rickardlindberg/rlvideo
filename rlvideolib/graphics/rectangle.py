@@ -28,6 +28,12 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
         """
         return Rectangle(x=0, y=0, width=width, height=height)
 
+    def move(self, dx):
+        return self._replace(x=self.x+dx)
+
+    def resize(self, width):
+        return self._replace(width=width)
+
     def contains(self, x, y):
         # TODO: test this
         if x < self.x:
