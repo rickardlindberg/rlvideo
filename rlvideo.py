@@ -212,8 +212,8 @@ class Timeline:
 
     def mouse_up(self):
         self.tmp_xy = None
+        self.tmp_scrollbar= None
         self.tmp_cuts = None
-        self.tmp_start = None
         self.tmp_cut = None
 
     def add(self, cut):
