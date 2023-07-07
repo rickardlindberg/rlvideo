@@ -1,6 +1,7 @@
 import mlt
 
 from rlvideolib.asciicanvas import AsciiCanvas
+from rlvideolib.graphics.rectangle import Rectangle
 
 class Sections:
 
@@ -72,7 +73,11 @@ class PlaylistSection:
     def draw_cairo(self, context, height, scrollbar, rectangle_map):
         context.save()
         for part in self.parts:
-            part.draw_cairo(context, height, scrollbar, rectangle_map)
+            r = Rectangle.from_size(
+                width=scrollbar.content_to_pixels(part.length),
+                height=height
+            )
+            part.draw_cairo(context, r, rectangle_map)
             context.translate(scrollbar.content_to_pixels(part.length), 0)
         context.restore()
 
