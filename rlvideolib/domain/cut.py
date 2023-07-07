@@ -181,13 +181,13 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         )
 
     def draw_cairo(self, context, height, scrollbar, rectangle_map):
-        y = 0
-        x = 0
-        w = scrollbar.content_to_pixels(self.length)
-        h = height
+        r = Rectangle.from_size(
+            width=scrollbar.content_to_pixels(self.length),
+            height=height
+        )
 
-        rect_x, rect_y = context.user_to_device(x, y)
-        rect_w, rect_h = context.user_to_device_distance(w, h)
+        rect_x, rect_y = context.user_to_device(r.x, r.y)
+        rect_w, rect_h = context.user_to_device_distance(r.width, r.height)
         rectangle_map.add(Rectangle(
             x=int(rect_x),
             y=int(rect_y),
@@ -196,33 +196,33 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         ), self.get_source_cut())
 
         context.set_source_rgb(1, 0, 0)
-        context.rectangle(x, y, w, h)
+        context.rectangle(r.x, r.y, r.width, r.height)
         context.fill()
 
         context.set_source_rgb(0, 0, 0)
 
-        context.move_to(x, y)
-        context.line_to(x+w, y)
+        context.move_to(r.x, r.y)
+        context.line_to(r.x+r.width, r.y)
         context.stroke()
 
-        context.move_to(x, y+height)
-        context.line_to(x+w, y+height)
+        context.move_to(r.x, r.y+height)
+        context.line_to(r.x+r.width, r.y+height)
         context.stroke()
 
         if self.starts_at_original_cut():
             context.set_source_rgb(0, 0, 0)
-            context.move_to(x, y)
-            context.line_to(x, y+height)
+            context.move_to(r.x, r.y)
+            context.line_to(r.x, r.y+height)
             context.stroke()
 
         if self.ends_at_original_cut():
             context.set_source_rgb(0, 0, 0)
-            context.move_to(x+w, y)
-            context.line_to(x+w, y+height)
+            context.move_to(r.x+r.width, r.y)
+            context.line_to(r.x+r.width, r.y+height)
             context.stroke()
 
         if self.starts_at_original_cut():
-            context.move_to(x+2, y+10)
+            context.move_to(r.x+2, r.y+10)
             context.set_source_rgb(0, 0, 0)
             context.text_path(self.get_label())
             context.fill()
