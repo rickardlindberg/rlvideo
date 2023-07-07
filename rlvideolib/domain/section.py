@@ -37,15 +37,22 @@ class Sections:
         return playlist
 
     def draw_cairo(self, context, height, scrollbar, rectangle_map):
+        rectangle = Rectangle.from_size(
+            width=scrollbar.content_to_pixels(self.length),
+            height=height
+        )
         context.save()
         for section in self.sections:
+            r = Rectangle.from_size(
+                width=(section.length/self.length)*rectangle.width,
+                height=rectangle.height
+            )
             section.draw_cairo(
                 context=context,
-                height=height,
-                scrollbar=scrollbar,
+                rectangle=r,
                 rectangle_map=rectangle_map,
             )
-            context.translate(scrollbar.content_to_pixels(section.length), 0)
+            context.translate(r.width, 0)
         context.restore()
 
 class PlaylistSection:
@@ -70,15 +77,15 @@ class PlaylistSection:
         assert playlist.get_playtime() == self.length
         return playlist
 
-    def draw_cairo(self, context, height, scrollbar, rectangle_map):
+    def draw_cairo(self, context, rectangle, rectangle_map):
         context.save()
         for part in self.parts:
-            rectangle = Rectangle.from_size(
-                width=scrollbar.content_to_pixels(part.length),
-                height=height
+            r = Rectangle.from_size(
+                width=(part.length/self.length)*rectangle.width,
+                height=rectangle.height
             )
-            part.draw_cairo(context, rectangle, rectangle_map)
-            context.translate(scrollbar.content_to_pixels(part.length), 0)
+            part.draw_cairo(context, r, rectangle_map)
+            context.translate(r.width, 0)
         context.restore()
 
 class MixSection:
@@ -105,9 +112,9 @@ class MixSection:
         assert tractor.get_playtime() == self.length
         return tractor
 
-    def draw_cairo(self, context, height, scrollbar, rectangle_map):
-        sub_height = height // len(self.playlists)
-        rest = height % len(self.playlists)
+    def draw_cairo(self, context, rectangle, rectangle_map):
+        sub_height = rectangle.height // len(self.playlists)
+        rest = rectangle.height % len(self.playlists)
         context.save()
         for index, playlist in enumerate(self.playlists):
             if rest:
@@ -115,6 +122,6 @@ class MixSection:
                 h = sub_height + 1
             else:
                 h = sub_height
-            playlist.draw_cairo(context, h, scrollbar, rectangle_map)
+            playlist.draw_cairo(context, rectangle, rectangle_map)
             context.translate(0, h)
         context.restore()
