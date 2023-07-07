@@ -276,9 +276,8 @@ class Timeline:
                 sections.draw_cairo(
                     context=context,
                     height=clip_area.height,
-                    x_factor=self.scrollbar.one_length_in_pixels,
+                    scrollbar=self.scrollbar,
                     rectangle_map=self.rectangle_map,
-                    x_offset=-self.scrollbar.content_start
                 )
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.move_to(playhead_position*self.scrollbar.one_length_in_pixels, 0)
