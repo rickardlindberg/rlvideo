@@ -279,7 +279,7 @@ class Timeline:
                 sections.draw_cairo(
                     context=context,
                     height=clip_area.height,
-                    scrollbar=self.scrollbar,
+                    one_length_in_pixels=self.scrollbar.one_length_in_pixels,
                     rectangle_map=self.rectangle_map,
                 )
                 context.restore()

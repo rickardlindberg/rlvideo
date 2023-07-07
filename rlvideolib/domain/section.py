@@ -35,16 +35,16 @@ class Sections:
             playlist.append(section.to_mlt_producer(profile))
         return playlist
 
-    def draw_cairo(self, context, height, scrollbar, rectangle_map):
+    def draw_cairo(self, context, height, one_length_in_pixels, rectangle_map):
         context.save()
         for section in self.sections:
             section.draw_cairo(
                 context=context,
                 height=height,
-                scrollbar=scrollbar,
+                one_length_in_pixels=one_length_in_pixels,
                 rectangle_map=rectangle_map,
             )
-            context.translate(section.length*scrollbar.one_length_in_pixels, 0)
+            context.translate(section.length*one_length_in_pixels, 0)
         context.restore()
 
 class PlaylistSection:
@@ -69,11 +69,11 @@ class PlaylistSection:
         assert playlist.get_playtime() == self.length
         return playlist
 
-    def draw_cairo(self, context, height, scrollbar, rectangle_map):
+    def draw_cairo(self, context, height, one_length_in_pixels, rectangle_map):
         context.save()
         for part in self.parts:
-            part.draw_cairo(context, height, scrollbar, rectangle_map)
-            context.translate(part.length*scrollbar.one_length_in_pixels, 0)
+            part.draw_cairo(context, height, one_length_in_pixels, rectangle_map)
+            context.translate(part.length*one_length_in_pixels, 0)
         context.restore()
 
 class MixSection:
@@ -100,7 +100,7 @@ class MixSection:
         assert tractor.get_playtime() == self.length
         return tractor
 
-    def draw_cairo(self, context, height, scrollbar, rectangle_map):
+    def draw_cairo(self, context, height, one_length_in_pixels, rectangle_map):
         sub_height = height // len(self.playlists)
         rest = height % len(self.playlists)
         context.save()
@@ -110,6 +110,6 @@ class MixSection:
                 h = sub_height + 1
             else:
                 h = sub_height
-            playlist.draw_cairo(context, h, scrollbar, rectangle_map)
+            playlist.draw_cairo(context, h, one_length_in_pixels, rectangle_map)
             context.translate(0, h)
         context.restore()
