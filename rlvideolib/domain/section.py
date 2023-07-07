@@ -36,11 +36,7 @@ class Sections:
             playlist.append(section.to_mlt_producer(profile))
         return playlist
 
-    def draw_cairo(self, context, height, scrollbar, rectangle_map):
-        rectangle = Rectangle.from_size(
-            width=scrollbar.content_to_pixels(self.length),
-            height=height
-        )
+    def draw_cairo(self, context, rectangle, rectangle_map):
         context.save()
         for section in self.sections:
             r = Rectangle.from_size(
