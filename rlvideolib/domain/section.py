@@ -44,7 +44,7 @@ class Sections:
                 scrollbar=scrollbar,
                 rectangle_map=rectangle_map,
             )
-            context.translate(section.length*scrollbar.one_length_in_pixels, 0)
+            context.translate(scrollbar.content_to_pixels(section.length), 0)
         context.restore()
 
 class PlaylistSection:
@@ -73,7 +73,7 @@ class PlaylistSection:
         context.save()
         for part in self.parts:
             part.draw_cairo(context, height, scrollbar, rectangle_map)
-            context.translate(part.length*scrollbar.one_length_in_pixels, 0)
+            context.translate(scrollbar.content_to_pixels(part.length), 0)
         context.restore()
 
 class MixSection:

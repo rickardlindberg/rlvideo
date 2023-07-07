@@ -273,7 +273,7 @@ class Timeline:
             context.fill()
             with top_area.deflate_height(margin).cairo_clip_translate(context) as clip_area:
                 self.rectangle_map.clear()
-                start_x = -self.scrollbar.content_start*self.scrollbar.one_length_in_pixels
+                start_x = self.scrollbar.content_to_pixels(-self.scrollbar.content_start)
                 context.save()
                 context.translate(start_x, 0)
                 sections.draw_cairo(
@@ -284,8 +284,8 @@ class Timeline:
                 )
                 context.restore()
             context.set_source_rgb(0.1, 0.1, 0.1)
-            context.move_to(playhead_position*self.scrollbar.one_length_in_pixels, 0)
-            context.line_to(playhead_position*self.scrollbar.one_length_in_pixels, top_area.height)
+            context.move_to(self.scrollbar.content_to_pixels(playhead_position), 0)
+            context.line_to(self.scrollbar.content_to_pixels(playhead_position), top_area.height)
             context.stroke()
 
         with bottom_area.cairo_clip_translate(context) as area:
@@ -395,6 +395,9 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
             start=self.content_start,
             end=self.content_start+self.ui_size/self.one_length_in_pixels
         )
+
+    def content_to_pixels(self, length):
+        return length * self.one_length_in_pixels
 
 if __name__ == "__main__":
     App().run()
