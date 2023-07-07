@@ -73,11 +73,11 @@ class PlaylistSection:
     def draw_cairo(self, context, height, scrollbar, rectangle_map):
         context.save()
         for part in self.parts:
-            r = Rectangle.from_size(
+            rectangle = Rectangle.from_size(
                 width=scrollbar.content_to_pixels(part.length),
                 height=height
             )
-            part.draw_cairo(context, r, rectangle_map)
+            part.draw_cairo(context, rectangle, rectangle_map)
             context.translate(scrollbar.content_to_pixels(part.length), 0)
         context.restore()
 

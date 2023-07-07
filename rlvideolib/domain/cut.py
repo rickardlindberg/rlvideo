@@ -180,9 +180,9 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
             self.in_out.end-1
         )
 
-    def draw_cairo(self, context, r, rectangle_map):
-        rect_x, rect_y = context.user_to_device(r.x, r.y)
-        rect_w, rect_h = context.user_to_device_distance(r.width, r.height)
+    def draw_cairo(self, context, rectangle, rectangle_map):
+        rect_x, rect_y = context.user_to_device(rectangle.x, rectangle.y)
+        rect_w, rect_h = context.user_to_device_distance(rectangle.width, rectangle.height)
         rectangle_map.add(Rectangle(
             x=int(rect_x),
             y=int(rect_y),
@@ -191,33 +191,33 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         ), self.get_source_cut())
 
         context.set_source_rgb(1, 0, 0)
-        context.rectangle(r.x, r.y, r.width, r.height)
+        context.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
         context.fill()
 
         context.set_source_rgb(0, 0, 0)
 
-        context.move_to(r.x, r.y)
-        context.line_to(r.x+r.width, r.y)
+        context.move_to(rectangle.x, rectangle.y)
+        context.line_to(rectangle.x+rectangle.width, rectangle.y)
         context.stroke()
 
-        context.move_to(r.x, r.y+r.height)
-        context.line_to(r.x+r.width, r.y+r.height)
+        context.move_to(rectangle.x, rectangle.y+rectangle.height)
+        context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
         context.stroke()
 
         if self.starts_at_original_cut():
             context.set_source_rgb(0, 0, 0)
-            context.move_to(r.x, r.y)
-            context.line_to(r.x, r.y+r.height)
+            context.move_to(rectangle.x, rectangle.y)
+            context.line_to(rectangle.x, rectangle.y+rectangle.height)
             context.stroke()
 
         if self.ends_at_original_cut():
             context.set_source_rgb(0, 0, 0)
-            context.move_to(r.x+r.width, r.y)
-            context.line_to(r.x+r.width, r.y+r.height)
+            context.move_to(rectangle.x+rectangle.width, rectangle.y)
+            context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
             context.stroke()
 
         if self.starts_at_original_cut():
-            context.move_to(r.x+2, r.y+10)
+            context.move_to(rectangle.x+2, rectangle.y+10)
             context.set_source_rgb(0, 0, 0)
             context.text_path(self.get_label())
             context.fill()
@@ -232,7 +232,7 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
     def add_to_mlt_playlist(self, profile, playlist):
         playlist.blank(self.length-1)
 
-    def draw_cairo(self, context, r, rectangle_map):
+    def draw_cairo(self, context, rectangle, rectangle_map):
         pass
 
 class Cuts:
