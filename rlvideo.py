@@ -1,3 +1,5 @@
+from collections import namedtuple
+import math
 import os
 
 import cairo
@@ -184,14 +186,18 @@ class Timeline:
 
     def __init__(self):
         self.cuts = Cuts()
-        self.zoom_factor = 1
-        self.start = 0
+        self.scrollbar = Scrollbar(
+            content_length=0,
+            content_desired_start=0,
+            one_length_in_pixels=1,
+            ui_size=10,
+        )
         self.rectangle_map = RectangleMap()
         self.mouse_up()
 
     def mouse_down(self, x, y):
         self.tmp_xy = (x, y)
-        self.tmp_start = self.start
+        self.tmp_scrollbar = self.scrollbar
         self.tmp_cuts = self.cuts
         self.tmp_cut = self.rectangle_map.get(x, y)
 
@@ -199,14 +205,10 @@ class Timeline:
         if self.tmp_cut:
             delta = x-self.tmp_xy[0]
             if self.tmp_cut == "position":
-                # TODO: can not show anything before start
-                self.start = min(
-                    self.region_zoom_diff,
-                    max(0, (self.tmp_start + delta) / self.zoom_factor_small)
-                )
+                self.scrollbar = self.tmp_scrollbar.move_scrollbar(delta)
             else:
                 self.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
-                    x.move(int(delta/self.zoom_factor)))
+                    x.move(int(delta/self.scrollbar.one_length_in_pixels)))
 
     def mouse_up(self):
         self.tmp_xy = None
@@ -219,7 +221,7 @@ class Timeline:
 
     def set_zoom_factor(self, zoom_factor):
         # TODO: allow zoom factor to be set with mouse wheel
-        self.zoom_factor = zoom_factor
+        self.scrollbar = self.scrollbar._replace(one_length_in_pixels=zoom_factor)
 
     def split_into_sections(self):
         return self.cuts.split_into_sections()
@@ -260,10 +262,10 @@ class Timeline:
         )
         sections = self.split_into_sections()
 
-        whole_region = Region(start=0, end=sections.length)
-        region_shown = Region(start=self.start, end=self.start+area.width/self.zoom_factor)
-        self.region_zoom_diff = whole_region.length - region_shown.length
-        self.zoom_factor_small = area.width / whole_region.length
+        self.scrollbar = self.scrollbar._replace(
+            content_length=sections.length,
+            ui_size=top_area.width
+        )
 
         with top_area.cairo_clip_translate(context) as top_area:
             context.set_source_rgb(0.9, 0.9, 0.9)
@@ -274,18 +276,18 @@ class Timeline:
                 sections.draw_cairo(
                     context=context,
                     height=clip_area.height,
-                    x_factor=self.zoom_factor,
+                    x_factor=self.scrollbar.one_length_in_pixels,
                     rectangle_map=self.rectangle_map,
-                    x_offset=-self.start
+                    x_offset=-self.scrollbar.content_start
                 )
             context.set_source_rgb(0.1, 0.1, 0.1)
-            context.move_to(playhead_position*self.zoom_factor, 0)
-            context.line_to(playhead_position*self.zoom_factor, top_area.height)
+            context.move_to(playhead_position*self.scrollbar.one_length_in_pixels, 0)
+            context.line_to(playhead_position*self.scrollbar.one_length_in_pixels, top_area.height)
             context.stroke()
 
         with bottom_area.cairo_clip_translate(context) as area:
-            x_start = region_shown.start / whole_region.length * area.width
-            x_end = region_shown.end / whole_region.length * area.width
+            x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
+            x_end = self.scrollbar.region_shown.end / self.scrollbar.whole_region.length * area.width
 
             # TODO: add callback mechanism in rectangle map
             x, y, w, h = (
@@ -310,6 +312,86 @@ class Timeline:
             context.rectangle(area.x, area.y, area.width, area.height)
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.stroke()
+
+class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_size,content_desired_start")):
+
+    """
+    >>> zoom_scroll = Scrollbar(
+    ...     content_length=10,
+    ...     one_length_in_pixels=1,
+    ...     ui_size=100,
+    ...     content_desired_start=0
+    ... )
+    >>> zoom_scroll.content_start
+    0
+    """
+
+    @property
+    def content_start(self):
+        """
+        >>> Scrollbar(
+        ...     content_length=100,
+        ...     one_length_in_pixels=1,
+        ...     ui_size=10,
+        ...     content_desired_start=1
+        ... ).content_start
+        1
+
+        >>> Scrollbar(
+        ...     content_length=100,
+        ...     one_length_in_pixels=1,
+        ...     ui_size=10,
+        ...     content_desired_start=-10
+        ... ).content_start
+        0
+
+        >>> Scrollbar(
+        ...     content_length=100,
+        ...     one_length_in_pixels=1,
+        ...     ui_size=10,
+        ...     content_desired_start=100
+        ... ).content_start
+        90
+        """
+        # TODO: content_start -> x_offset | pixel_offset
+        length_shown = self.ui_size / self.one_length_in_pixels
+        max_start = max(0, int(math.ceil(self.content_length - length_shown)))
+        if self.content_desired_start < 0:
+            return 0
+        elif self.content_desired_start > max_start:
+            return max_start
+        else:
+            return self.content_desired_start
+
+    def move_scrollbar(self, pixels):
+        """
+        >>> Scrollbar(
+        ...     content_length=100,
+        ...     one_length_in_pixels=1,
+        ...     ui_size=10,
+        ...     content_desired_start=0
+        ... ).move_scrollbar(1).content_desired_start
+        10
+        """
+        one_pixel_in_length = self.ui_size / self.content_length
+        delta = pixels / one_pixel_in_length
+        return self._replace(
+            content_desired_start=int(self.content_desired_start+delta)
+        )
+
+    @property
+    def whole_region(self):
+        if self.content_length > 0:
+            return Region(start=0, end=self.content_length)
+        else:
+            return Region(start=0, end=10)
+
+    @property
+    def region_shown(self):
+        return Region(
+            start=self.content_start,
+            end=self.content_start+self.ui_size/self.one_length_in_pixels
+        )
 
 if __name__ == "__main__":
     App().run()
