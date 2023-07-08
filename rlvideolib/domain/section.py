@@ -1,9 +1,7 @@
-import cairo
 import mlt
 
 from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.graphics.rectangle import Rectangle
-from rlvideolib.graphics.rectangle import RectangleMap
 
 class Sections:
 
@@ -112,6 +110,10 @@ class MixSection:
 
     def draw_cairo(self, context, rectangle, rectangle_map):
         """
+        >>> import cairo
+        >>> from rlvideolib.graphics.rectangle import RectangleMap
+        >>> from rlvideolib.domain.cut import Cut
+
         >>> rectangle = Rectangle.from_size(width=300, height=100)
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, rectangle.width, rectangle.height)
         >>> context = cairo.Context(surface)
@@ -123,18 +125,43 @@ class MixSection:
         ... ).draw_cairo(context, rectangle, rectangle_map)
         >>> rectangle_map
         <BLANKLINE>
+
+        >>> rectangle_map = RectangleMap()
+        >>> MixSection(
+        ...     length=6,
+        ...     playlists=[
+        ...         PlaylistSection(
+        ...             length=6,
+        ...             parts=[
+        ...                 Cut.test_instance(name="A", start=0, end=6, position=0),
+        ...             ]
+        ...         ),
+        ...         PlaylistSection(
+        ...             length=6,
+        ...             parts=[
+        ...                 Cut.test_instance(name="B", start=0, end=6, position=0),
+        ...             ]
+        ...         ),
+        ...     ]
+        ... ).draw_cairo(context, rectangle, rectangle_map)
+        >>> rectangle_map
+        Rectangle(x=0, y=0, width=300, height=50):
+          Cut(source=Source(name='A'), in_out=Region(start=0, end=6), position=0)
+        Rectangle(x=0, y=50, width=300, height=50):
+          Cut(source=Source(name='B'), in_out=Region(start=0, end=6), position=0)
         """
         if not self.playlists:
             return
         sub_height = rectangle.height // len(self.playlists)
         rest = rectangle.height % len(self.playlists)
-        context.save()
+        r = rectangle
         for index, playlist in enumerate(self.playlists):
             if rest:
                 rest -= 1
                 h = sub_height + 1
             else:
                 h = sub_height
-            playlist.draw_cairo(context, rectangle, rectangle_map)
-            context.translate(0, h)
-        context.restore()
+            r = r._replace(height=h)
+            with r.cairo_clip_translate(context) as re:
+                playlist.draw_cairo(context, re, rectangle_map)
+            r = r.move(dy=h)

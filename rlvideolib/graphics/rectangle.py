@@ -28,8 +28,8 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
         """
         return Rectangle(x=0, y=0, width=width, height=height)
 
-    def move(self, dx):
-        return self._replace(x=self.x+dx)
+    def move(self, dx=0, dy=0):
+        return self._replace(x=self.x+dx, y=self.y+dy)
 
     def resize(self, width):
         return self._replace(width=width)
