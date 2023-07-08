@@ -1,7 +1,9 @@
+import cairo
 import mlt
 
 from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.graphics.rectangle import Rectangle
+from rlvideolib.graphics.rectangle import RectangleMap
 
 class Sections:
 
@@ -109,6 +111,21 @@ class MixSection:
         return tractor
 
     def draw_cairo(self, context, rectangle, rectangle_map):
+        """
+        >>> rectangle = Rectangle.from_size(width=300, height=100)
+        >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, rectangle.width, rectangle.height)
+        >>> context = cairo.Context(surface)
+
+        >>> rectangle_map = RectangleMap()
+        >>> MixSection(
+        ...     length=0,
+        ...     playlists=[]
+        ... ).draw_cairo(context, rectangle, rectangle_map)
+        >>> rectangle_map
+        <BLANKLINE>
+        """
+        if not self.playlists:
+            return
         sub_height = rectangle.height // len(self.playlists)
         rest = rectangle.height % len(self.playlists)
         context.save()
