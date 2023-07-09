@@ -6,6 +6,9 @@ import mlt
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.region import Region
 
+# TODO: add some kind of container for source files (caching, background
+# loading)
+
 cache = {}
 
 class Source(namedtuple("Source", "name")):
