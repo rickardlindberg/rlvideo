@@ -73,13 +73,20 @@ class App:
             self.timeline.mouse_up()
             mlt_player.set_producer(self.generate_mlt_producer())
             print(self.timeline.split_into_sections().to_ascii_canvas())
+        def timeline_scroll(widget, event):
+            if event.direction == Gdk.ScrollDirection.UP:
+                self.timeline.scroll_up(event.x, event.y)
+            elif event.direction == Gdk.ScrollDirection.DOWN:
+                self.timeline.scroll_down(event.x, event.y)
         timeline = Gtk.DrawingArea()
         timeline.connect("draw", timeline_draw)
         timeline.connect("button-press-event", timeline_button)
         timeline.connect("button-release-event", timeline_button_up)
         timeline.connect("motion-notify-event", timeline_motion)
+        timeline.connect("scroll-event", timeline_scroll)
         timeline.add_events(
             timeline.get_events() |
+            Gdk.EventMask.SCROLL_MASK |
             Gdk.EventMask.BUTTON_PRESS_MASK |
             Gdk.EventMask.BUTTON_RELEASE_MASK |
             Gdk.EventMask.POINTER_MOTION_MASK
@@ -216,11 +223,16 @@ class Timeline:
         self.tmp_cuts = None
         self.tmp_cut = None
 
+    def scroll_up(self, x, y):
+        self.set_zoom_factor(self.scrollbar.one_length_in_pixels*1.5)
+
+    def scroll_down(self, x, y):
+        self.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
+
     def add(self, cut):
         self.cuts = self.cuts.add(cut)
 
     def set_zoom_factor(self, zoom_factor):
-        # TODO: allow zoom factor to be set with mouse wheel
         self.scrollbar = self.scrollbar._replace(one_length_in_pixels=zoom_factor)
 
     def split_into_sections(self):
