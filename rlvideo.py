@@ -253,6 +253,7 @@ class Timeline:
     def set_zoom_factor(self, zoom_factor):
         self.scrollbar = self.scrollbar._replace(one_length_in_pixels=zoom_factor)
 
+    @timeit("Timeline.split_into_sections")
     def split_into_sections(self):
         return self.cuts.split_into_sections()
 
