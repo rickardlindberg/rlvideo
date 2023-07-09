@@ -6,6 +6,8 @@ import mlt
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.region import Region
 
+cache = {}
+
 class Source(namedtuple("Source", "name")):
 
     def create_cut(self, start, end):
@@ -17,13 +19,15 @@ class Source(namedtuple("Source", "name")):
         )
 
     def to_mlt_producer(self, profile):
-        if os.path.exists(self.name):
-            return mlt.Producer(profile, self.name)
-        else:
-            producer = mlt.Producer(profile, "pango")
-            producer.set("text", self.name)
-            producer.set("bgcolour", "red")
-            return producer
+        if self.name not in cache or cache[self.name][0] is not profile:
+            if os.path.exists(self.name):
+                producer = mlt.Producer(profile, self.name)
+            else:
+                producer = mlt.Producer(profile, "pango")
+                producer.set("text", self.name)
+                producer.set("bgcolour", "red")
+            cache[self.name] = (profile, producer)
+        return cache[self.name][1]
 
     def starts_at(self, position):
         return True
