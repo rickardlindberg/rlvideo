@@ -318,8 +318,8 @@ class Timeline:
                         rectangle_map=self.rectangle_map,
                     )
             context.set_source_rgb(0.1, 0.1, 0.1)
-            context.move_to(self.scrollbar.content_to_pixels(playhead_position), 0)
-            context.line_to(self.scrollbar.content_to_pixels(playhead_position), top_area.height)
+            context.move_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), 0)
+            context.line_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), top_area.height)
             context.stroke()
 
         with bottom_area.cairo_clip_translate(context) as area:
