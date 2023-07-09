@@ -341,6 +341,8 @@ class Cuts:
         >>> cuts.split_into_sections().to_ascii_canvas()
         |<-B0------|-B10----->|-C10-----><-A0--------------->|
         |          |<-C0------|                              |
+
+        TODO: speed up or cache split_into_sections
         """
         sections = Sections()
         start = 0
