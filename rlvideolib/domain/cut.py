@@ -191,37 +191,37 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
                 height=int(rect_h)
             ), self.get_source_cut())
 
-            context.set_source_rgb(1, 0, 0)
-            context.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
-            context.fill()
+        context.set_source_rgb(1, 0, 0)
+        context.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
+        context.fill()
 
+        context.set_source_rgb(0, 0, 0)
+
+        context.move_to(rectangle.x, rectangle.y)
+        context.line_to(rectangle.x+rectangle.width, rectangle.y)
+        context.stroke()
+
+        context.move_to(rectangle.x, rectangle.y+rectangle.height)
+        context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
+        context.stroke()
+
+        if self.starts_at_original_cut():
             context.set_source_rgb(0, 0, 0)
-
             context.move_to(rectangle.x, rectangle.y)
-            context.line_to(rectangle.x+rectangle.width, rectangle.y)
+            context.line_to(rectangle.x, rectangle.y+rectangle.height)
             context.stroke()
 
-            context.move_to(rectangle.x, rectangle.y+rectangle.height)
+        if self.ends_at_original_cut():
+            context.set_source_rgb(0, 0, 0)
+            context.move_to(rectangle.x+rectangle.width, rectangle.y)
             context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
             context.stroke()
 
-            if self.starts_at_original_cut():
-                context.set_source_rgb(0, 0, 0)
-                context.move_to(rectangle.x, rectangle.y)
-                context.line_to(rectangle.x, rectangle.y+rectangle.height)
-                context.stroke()
-
-            if self.ends_at_original_cut():
-                context.set_source_rgb(0, 0, 0)
-                context.move_to(rectangle.x+rectangle.width, rectangle.y)
-                context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
-                context.stroke()
-
-            if self.starts_at_original_cut():
-                context.move_to(rectangle.x+2, rectangle.y+10)
-                context.set_source_rgb(0, 0, 0)
-                context.text_path(self.get_label())
-                context.fill()
+        if self.starts_at_original_cut():
+            context.move_to(rectangle.x+2, rectangle.y+10)
+            context.set_source_rgb(0, 0, 0)
+            context.text_path(self.get_label())
+            context.fill()
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
 
