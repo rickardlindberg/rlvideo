@@ -86,6 +86,13 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
             ),
         ]
 
+    def divide_width(self, total_length, items):
+        offset = 0
+        for item in items:
+            width = (item.length/total_length)*self.width
+            yield item, self._replace(x=self.x+offset, width=width)
+            offset += width
+
     @contextmanager
     def cairo_clip_translate(self, context):
         context.save()

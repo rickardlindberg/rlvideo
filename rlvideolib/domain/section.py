@@ -74,15 +74,9 @@ class PlaylistSection:
         return playlist
 
     def draw_cairo(self, context, rectangle, rectangle_map):
-        context.save()
-        for part in self.parts:
-            r = Rectangle.from_size(
-                width=(part.length/self.length)*rectangle.width,
-                height=rectangle.height
-            )
-            part.draw_cairo(context, r, rectangle_map)
-            context.translate(r.width, 0)
-        context.restore()
+        for part, part_rectangle in rectangle.divide_width(self.length, self.parts):
+            with part_rectangle.cairo_clip_translate(context) as part_rectangle:
+                part.draw_cairo(context, part_rectangle, rectangle_map)
 
 class MixSection:
 
