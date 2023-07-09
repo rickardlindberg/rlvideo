@@ -352,6 +352,8 @@ class Timeline:
 
 class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_size,content_desired_start")):
 
+    # TODO: clean up Scrollbar interface
+
     """
     >>> zoom_scroll = Scrollbar(
     ...     content_length=10,
