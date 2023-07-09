@@ -1,6 +1,8 @@
 from collections import namedtuple
 import math
 import os
+import sys
+import time
 
 import cairo
 import gi
@@ -13,6 +15,20 @@ from rlvideolib.domain.region import Region
 from rlvideolib.domain.source import Source
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
+
+def timeit(name):
+    def decorator(fn):
+        def fn_with_timing(*args, **kwargs):
+            t0 = time.perf_counter()
+            result = fn(*args, **kwargs)
+            t1 = time.perf_counter()
+            sys.stderr.write(f"{name} = {int((t1-t0)*1000)}ms\n")
+            return result
+        if os.environ.get("RLVIDEO_PERFORMANCE"):
+            return fn_with_timing
+        else:
+            return fn
+    return decorator
 
 class App:
 
@@ -184,10 +200,12 @@ class Timeline:
     @staticmethod
     def with_test_clips():
         timeline = Timeline()
-        timeline.add(Source("resources/one-to-five.mp4").create_cut(0, 5).move(0))
-        timeline.add(Source("resources/one.mp4").create_cut(0, 15).move(10))
-        timeline.add(Source("resources/two.mp4").create_cut(0, 15).move(20))
-        timeline.add(Source("resources/three.mp4").create_cut(0, 15).move(30))
+        for i in range(int(os.environ.get("RLVIDEO_PERFORMANCE", "1"))):
+            offset = i*50
+            timeline.add(Source("resources/one-to-five.mp4").create_cut(0, 5).move(offset+0))
+            timeline.add(Source("resources/one.mp4").create_cut(0, 15).move(offset+5))
+            timeline.add(Source("resources/two.mp4").create_cut(0, 15).move(offset+20))
+            timeline.add(Source("resources/three.mp4").create_cut(0, 15).move(offset+35))
         timeline.set_zoom_factor(25)
         return timeline
 
@@ -238,9 +256,11 @@ class Timeline:
     def split_into_sections(self):
         return self.cuts.split_into_sections()
 
+    @timeit("Timeline.to_mlt_producer")
     def to_mlt_producer(self, profile):
         return self.split_into_sections().to_mlt_producer(profile)
 
+    @timeit("Timeline.draw_cairo")
     def draw_cairo(self, context, playhead_position, width, height):
         """
         >>> width, height = 300, 100
