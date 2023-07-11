@@ -93,6 +93,13 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
             yield item, self._replace(x=self.x+offset, width=width)
             offset += width
 
+    def divide_height(self, items, fn):
+        offset = 0
+        for item, distance in Distance(self.height).divide(items, fn):
+            if distance > 0:
+                yield item, self._replace(y=self.y+offset, height=distance)
+                offset += distance
+
     @contextmanager
     def cairo_clip_translate(self, context):
         context.save()
@@ -101,6 +108,28 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
         context.translate(self.x, self.y)
         yield Rectangle.from_size(width=self.width, height=self.height)
         context.restore()
+
+class Distance(namedtuple("Distance", "distance")):
+
+    def divide(self, items, size_fn):
+        """
+        >>> list(Distance(9).divide("abc", lambda item: 3))
+        [('a', 3), ('b', 3), ('c', 3)]
+
+        >>> list(Distance(10).divide("abc", lambda item: 3))
+        [('a', 3), ('b', 4), ('c', 3)]
+        """
+        total_size = sum(size_fn(item) for item in items)
+        size_so_far = 0
+        start = 0
+        for item in items:
+            item_pos = int(round((
+                (size_so_far+size_fn(item)) / total_size) * self.distance
+            ))
+            item_distance = item_pos-start
+            size_so_far += size_fn(item)
+            yield (item, item_distance)
+            start += item_distance
 
 class RectangleMap:
 

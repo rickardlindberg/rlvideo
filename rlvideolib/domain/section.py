@@ -144,18 +144,9 @@ class MixSection:
         Rectangle(x=0, y=50, width=300, height=50):
           Cut(source=Source(name='B'), in_out=Region(start=0, end=6), position=0)
         """
-        if not self.playlists:
-            return
-        sub_height = rectangle.height // len(self.playlists)
-        rest = rectangle.height % len(self.playlists)
-        r = rectangle
-        for index, playlist in enumerate(self.playlists):
-            if rest:
-                rest -= 1
-                h = sub_height + 1
-            else:
-                h = sub_height
-            r = r._replace(height=h)
-            with r.cairo_clip_translate(context) as re:
-                playlist.draw_cairo(context, re, rectangle_map)
-            r = r.move(dy=h)
+        for playlist, playlist_rectangle in rectangle.divide_height(
+            self.playlists,
+            lambda playlist: playlist.length
+        ):
+            with playlist_rectangle.cairo_clip_translate(context) as r:
+                playlist.draw_cairo(context, r, rectangle_map)
