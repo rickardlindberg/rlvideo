@@ -194,7 +194,7 @@ class Timeline:
         return timeline
 
     def __init__(self):
-        self.cuts = Cuts()
+        self.cuts = Cuts.empty()
         self.scrollbar = Scrollbar(
             content_length=0,
             content_desired_start=0,
