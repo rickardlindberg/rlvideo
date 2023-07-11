@@ -9,7 +9,7 @@ from rlvideolib.domain.section import PlaylistSection
 from rlvideolib.domain.section import Sections
 from rlvideolib.graphics.rectangle import Rectangle
 
-class Cut(namedtuple("Cut", "source,in_out,position")):
+class Cut(namedtuple("Cut", "source,in_out,position,id")):
 
     @staticmethod
     def test_instance(name="A", start=0, end=5, position=0):
@@ -17,7 +17,8 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         return Cut(
             source=Source(name=name),
             in_out=Region(start=start, end=end),
-            position=position
+            position=position,
+            id=None
         )
 
     @property
@@ -95,15 +96,15 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
-        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10)
+        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         Contains all:
 
         >>> cut.create_cut(Region(start=0, end=40))
-        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10)
+        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         >>> cut.create_cut(Region(start=10, end=30))
-        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10)
+        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         Subcut left:
 

@@ -18,7 +18,8 @@ class Source(namedtuple("Source", "name")):
         return Cut(
             source=self,
             in_out=Region(start=start, end=end),
-            position=0
+            position=0,
+            id=None
         )
 
     def to_mlt_producer(self, profile):
