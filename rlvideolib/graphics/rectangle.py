@@ -86,12 +86,12 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
             ),
         ]
 
-    def divide_width(self, total_length, items):
+    def divide_width(self, items, fn):
         offset = 0
-        for item in items:
-            width = (item.length/total_length)*self.width
-            yield item, self._replace(x=self.x+offset, width=width)
-            offset += width
+        for item, distance in Distance(self.width).divide(items, fn):
+            if distance > 0:
+                yield item, self._replace(x=self.x+offset, width=distance)
+                offset += distance
 
     def divide_height(self, items, fn):
         offset = 0
