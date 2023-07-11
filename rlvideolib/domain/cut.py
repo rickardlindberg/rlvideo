@@ -182,6 +182,7 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         )
 
     def draw_cairo(self, context, rectangle, rectangle_map):
+        # TODO: make all lines even size
         rect_x, rect_y = context.user_to_device(rectangle.x, rectangle.y)
         rect_w, rect_h = context.user_to_device_distance(rectangle.width, rectangle.height)
         if int(rect_w) > 0 and int(rect_h) > 0:
