@@ -196,6 +196,22 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         context.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
         context.fill()
 
+        if self.starts_at_original_cut():
+            context.set_source_rgb(0, 0, 0)
+        else:
+            context.set_source_rgb(1, 0, 0)
+        context.move_to(rectangle.x, rectangle.y)
+        context.line_to(rectangle.x, rectangle.y+rectangle.height)
+        context.stroke()
+
+        if self.ends_at_original_cut():
+            context.set_source_rgb(0, 0, 0)
+        else:
+            context.set_source_rgb(1, 0, 0)
+        context.move_to(rectangle.x+rectangle.width, rectangle.y)
+        context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
+        context.stroke()
+
         context.set_source_rgb(0, 0, 0)
 
         context.move_to(rectangle.x, rectangle.y)
@@ -205,18 +221,6 @@ class Cut(namedtuple("Cut", "source,in_out,position")):
         context.move_to(rectangle.x, rectangle.y+rectangle.height)
         context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
         context.stroke()
-
-        if self.starts_at_original_cut():
-            context.set_source_rgb(0, 0, 0)
-            context.move_to(rectangle.x, rectangle.y)
-            context.line_to(rectangle.x, rectangle.y+rectangle.height)
-            context.stroke()
-
-        if self.ends_at_original_cut():
-            context.set_source_rgb(0, 0, 0)
-            context.move_to(rectangle.x+rectangle.width, rectangle.y)
-            context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
-            context.stroke()
 
         if self.starts_at_original_cut():
             context.move_to(rectangle.x+2, rectangle.y+10)
