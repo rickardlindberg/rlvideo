@@ -1,8 +1,5 @@
 from collections import namedtuple
-import math
 import os
-import sys
-import time
 
 import cairo
 import gi
@@ -10,25 +7,12 @@ import mlt
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
+from rlvideolib.debug import timeit
 from rlvideolib.domain.cut import Cuts
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.source import Source
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
-
-def timeit(name):
-    def decorator(fn):
-        def fn_with_timing(*args, **kwargs):
-            t0 = time.perf_counter()
-            result = fn(*args, **kwargs)
-            t1 = time.perf_counter()
-            sys.stderr.write(f"{name} = {int((t1-t0)*1000)}ms\n")
-            return result
-        if os.environ.get("RLVIDEO_PERFORMANCE"):
-            return fn_with_timing
-        else:
-            return fn
-    return decorator
 
 class App:
 
