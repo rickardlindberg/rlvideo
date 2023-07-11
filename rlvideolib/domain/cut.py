@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from rlvideolib.asciicanvas import AsciiCanvas
+from rlvideolib.debug import timeit
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.region import UnionRegions
 from rlvideolib.domain.section import MixSection
@@ -407,6 +408,7 @@ class Cuts:
             playlists.append(Cuts([cut]).extract_playlist_section(region))
         return MixSection(length=region.length, playlists=playlists)
 
+    @timeit("Cuts.get_regions_with_overlap")
     def get_regions_with_overlap(self):
         overlaps = UnionRegions()
         cuts = list(self.cuts)
