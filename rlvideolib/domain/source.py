@@ -1,5 +1,6 @@
 from collections import namedtuple
 import os
+import uuid
 
 import mlt
 
@@ -19,7 +20,7 @@ class Source(namedtuple("Source", "name")):
             source=self,
             in_out=Region(start=start, end=end),
             position=0,
-            id=None
+            id=uuid.uuid4().hex
         )
 
     def to_mlt_producer(self, profile):

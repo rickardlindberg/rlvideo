@@ -152,7 +152,7 @@ class MltPlayer:
 class Timeline:
 
     """
-    >>> cut = Source("hello").create_cut(0, 10)
+    >>> cut = Source("hello").create_cut(0, 10).with_id(5)
     >>> timeline = Timeline()
     >>> timeline.add(cut)
     >>> width, height = 300, 100
@@ -166,7 +166,7 @@ class Timeline:
     ... )
     >>> timeline.rectangle_map
     Rectangle(x=10, y=20, width=10, height=20):
-      Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=None)
+      Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=5)
     Rectangle(x=10, y=60, width=7840, height=30):
       position
     >>> timeline.split_into_sections().to_ascii_canvas()
@@ -252,7 +252,7 @@ class Timeline:
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
         >>> timeline = Timeline()
-        >>> timeline.add(Source("hello").create_cut(0, 10).move(0))
+        >>> timeline.add(Source("hello").create_cut(0, 10).move(0).with_id(5))
         >>> timeline.draw_cairo(
         ...     context=context,
         ...     playhead_position=0,
@@ -267,7 +267,7 @@ class Timeline:
         ... )
         >>> timeline.rectangle_map
         Rectangle(x=10, y=20, width=10, height=20):
-          Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=None)
+          Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=5)
         Rectangle(x=10, y=60, width=7840, height=30):
           position
         """

@@ -12,14 +12,17 @@ from rlvideolib.graphics.rectangle import Rectangle
 class Cut(namedtuple("Cut", "source,in_out,position,id")):
 
     @staticmethod
-    def test_instance(name="A", start=0, end=5, position=0):
+    def test_instance(name="A", start=0, end=5, position=0, id=None):
         from rlvideolib.domain.source import Source
         return Cut(
             source=Source(name=name),
             in_out=Region(start=start, end=end),
             position=position,
-            id=None
+            id=id
         )
+
+    def with_id(self, id):
+        return self._replace(id=id)
 
     @property
     def length(self):
