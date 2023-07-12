@@ -331,6 +331,14 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
             ),
         )
 
+    def yield_cuts_in_period(self, period):
+        yielded = set()
+        for group in period.get_groups(self.region_group_size):
+            for cut_id in self.group_map.cuts_in_group(group):
+                if cut_id not in yielded:
+                    yield self.cut_map[cut_id]
+                    yielded.add(cut_id)
+
     def create_cut(self, period):
         """
         >>> cuts = Cuts.from_list([
@@ -345,7 +353,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         |     <-B0--->|
         """
         cuts = []
-        for cut in self.cut_map.values():
+        for cut in self.yield_cuts_in_period(period):
             sub_cut = cut.create_cut(period)
             if sub_cut:
                 cuts.append(sub_cut)
