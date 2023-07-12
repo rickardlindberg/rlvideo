@@ -250,7 +250,7 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
     def draw_cairo(self, context, rectangle, rectangle_map):
         pass
 
-class Cuts:
+class Cuts(namedtuple("Cuts", "cut_map")):
 
     """
     >>> a = Cut.test_instance(name="A", start=0, end=20, position=0, id=0)
@@ -276,9 +276,6 @@ class Cuts:
     @staticmethod
     def empty():
         return Cuts({})
-
-    def __init__(self, cut_map):
-        self.cut_map = cut_map
 
     def __iter__(self):
         return iter(self.cut_map.values())
