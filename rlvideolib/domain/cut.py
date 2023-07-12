@@ -310,10 +310,10 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         >>> cuts = Cuts.empty()
         >>> cuts = cuts.add(cut)
         >>> cuts.group_map
-        GroupMap(group_map={0: {99}})
+        GroupMap(group_map={0: [99]})
         >>> cuts = cuts.modify(cut, lambda cut: cut.move(DEFAULT_REGION_GROUP_SIZE))
         >>> cuts.group_map
-        GroupMap(group_map={0: set(), 1: {99}})
+        GroupMap(group_map={0: [], 1: [99]})
         """
         # TODO: custom exception if not found
         old_cut = self.cut_map[cut_to_modify.id]
@@ -530,21 +530,26 @@ class GroupMap(namedtuple("GroupMap", "group_map")):
     def add(self, cut_id, group_numbers):
         """
         >>> GroupMap.empty().add(5, [1, 2, 3])
-        GroupMap(group_map={1: {5}, 2: {5}, 3: {5}})
+        GroupMap(group_map={1: [5], 2: [5], 3: [5]})
         """
         new_group_map = dict(self.group_map)
         for group_number in group_numbers:
-            new_group_map[group_number] = new_group_map.get(group_number, set()).union({cut_id})
+            new_ids = new_group_map.get(group_number, [])
+            if cut_id not in new_ids:
+                new_ids = new_ids + [cut_id]
+            new_group_map[group_number] = new_ids
         return self._replace(group_map=new_group_map)
 
     def remove(self, cut_id, group_numbers):
         """
         >>> GroupMap.empty().add(5, [1, 2, 3]).remove(5, [1])
-        GroupMap(group_map={1: set(), 2: {5}, 3: {5}})
+        GroupMap(group_map={1: [], 2: [5], 3: [5]})
         """
         new_group_map = dict(self.group_map)
         for group_number in group_numbers:
-            new_group_map[group_number] = new_group_map[group_number].difference({cut_id})
+            new_ids = list(new_group_map[group_number])
+            new_ids.remove(cut_id)
+            new_group_map[group_number] = new_ids
         return self._replace(group_map=new_group_map)
 
     def cuts_in_group(self, group_number):
@@ -553,7 +558,7 @@ class GroupMap(namedtuple("GroupMap", "group_map")):
         set()
 
         >>> GroupMap.empty().add(5, {1}).cuts_in_group(1)
-        {5}
+        [5]
         """
         return self.group_map.get(group_number, set())
 
