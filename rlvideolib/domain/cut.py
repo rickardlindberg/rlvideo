@@ -10,6 +10,8 @@ from rlvideolib.domain.section import PlaylistSection
 from rlvideolib.domain.section import Sections
 from rlvideolib.graphics.rectangle import Rectangle
 
+DEFAULT_REGION_GROUP_SIZE = 100
+
 class Cut(namedtuple("Cut", "source,in_out,position,id")):
 
     @staticmethod
@@ -282,32 +284,57 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
 
     @staticmethod
     def empty():
-        return Cuts(cut_map={}, group_map=GroupMap.empty(), region_group_size=100)
+        return Cuts(cut_map={}, group_map=GroupMap.empty(), region_group_size=DEFAULT_REGION_GROUP_SIZE)
 
     def __iter__(self):
         return iter(self.cut_map.values())
 
     def add(self, *cuts):
+        new_group_map = self.group_map
         new_cuts = dict(self.cut_map)
         for cut in cuts:
             if cut.id in new_cuts:
                 raise ValueError(f"Cut with id = {cut.id} already exists.")
+            new_group_map = new_group_map.add(
+                cut.id,
+                cut.get_region_groups(self.region_group_size)
+            )
             new_cuts[cut.id] = cut
         # TODO: why does _replace not work here?
         return Cuts(
             cut_map=new_cuts,
-            group_map=self.group_map,
+            group_map=new_group_map,
             region_group_size=self.region_group_size
         )
 
     def modify(self, cut_to_modify, fn):
+        """
+        It updates groups correctly:
+
+        >>> cut = Cut.test_instance(start=0, end=1, id=99)
+        >>> cuts = Cuts.empty()
+        >>> cuts = cuts.add(cut)
+        >>> cuts.group_map
+        GroupMap(group_map={0: {99}})
+        >>> cuts = cuts.modify(cut, lambda cut: cut.move(DEFAULT_REGION_GROUP_SIZE))
+        >>> cuts.group_map
+        GroupMap(group_map={0: set(), 1: {99}})
+        """
         # TODO: custom exception if not found
+        old_cut = self.cut_map[cut_to_modify.id]
+        new_cut = fn(old_cut)
         new_cuts = dict(self.cut_map)
-        new_cuts[cut_to_modify.id] = fn(new_cuts[cut_to_modify.id])
+        new_cuts[cut_to_modify.id] = new_cut
         # TODO: why does _replace not work here?
         return Cuts(
             cut_map=new_cuts,
-            group_map=self.group_map,
+            group_map=self.group_map.remove(
+                old_cut.id,
+                old_cut.get_region_groups(self.region_group_size)
+            ).add(
+                new_cut.id,
+                new_cut.get_region_groups(self.region_group_size)
+            ),
             region_group_size=self.region_group_size
         )
 
