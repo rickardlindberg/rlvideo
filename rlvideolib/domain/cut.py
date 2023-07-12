@@ -259,7 +259,7 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
     def draw_cairo(self, context, rectangle, rectangle_map):
         pass
 
-class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
+class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
 
     """
     >>> a = Cut.test_instance(name="A", start=0, end=20, position=0, id=0)
@@ -284,22 +284,26 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
 
     @staticmethod
     def empty():
-        return Cuts(cut_map={}, group_map=GroupMap.empty(), region_group_size=DEFAULT_REGION_GROUP_SIZE)
+        return Cuts(
+            cut_map={},
+            region_to_cuts=RegionToCuts.empty(),
+            region_group_size=DEFAULT_REGION_GROUP_SIZE
+        )
 
     def add(self, *cuts):
-        new_group_map = self.group_map
+        new_region_to_cuts = self.region_to_cuts
         new_cuts = dict(self.cut_map)
         for cut in cuts:
             if cut.id in new_cuts:
                 raise ValueError(f"Cut with id = {cut.id} already exists.")
-            new_group_map = new_group_map.add(
+            new_region_to_cuts = new_region_to_cuts.add_cut_to_regions(
                 cut.id,
                 cut.get_region_groups(self.region_group_size)
             )
             new_cuts[cut.id] = cut
         return self._replace(
             cut_map=new_cuts,
-            group_map=new_group_map,
+            region_to_cuts=new_region_to_cuts,
         )
 
     def modify(self, cut_to_modify, fn):
@@ -309,11 +313,11 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         >>> cut = Cut.test_instance(start=0, end=1, id=99)
         >>> cuts = Cuts.empty()
         >>> cuts = cuts.add(cut)
-        >>> cuts.group_map
-        GroupMap(group_map={0: [99]})
+        >>> cuts.region_to_cuts
+        RegionToCuts(region_number_to_cut_ids={0: [99]})
         >>> cuts = cuts.modify(cut, lambda cut: cut.move(DEFAULT_REGION_GROUP_SIZE))
-        >>> cuts.group_map
-        GroupMap(group_map={0: [], 1: [99]})
+        >>> cuts.region_to_cuts
+        RegionToCuts(region_number_to_cut_ids={0: [], 1: [99]})
         """
         # TODO: custom exception if not found
         old_cut = self.cut_map[cut_to_modify.id]
@@ -322,10 +326,10 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         new_cuts[cut_to_modify.id] = new_cut
         return self._replace(
             cut_map=new_cuts,
-            group_map=self.group_map.remove(
+            region_to_cuts=self.region_to_cuts.remove_cut_from_regions(
                 old_cut.id,
                 old_cut.get_region_groups(self.region_group_size)
-            ).add(
+            ).add_cut_to_regions(
                 new_cut.id,
                 new_cut.get_region_groups(self.region_group_size)
             ),
@@ -334,7 +338,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
     def yield_cuts_in_period(self, period):
         yielded = set()
         for group in period.get_groups(self.region_group_size):
-            for cut_id in self.group_map.cuts_in_group(group):
+            for cut_id in self.region_to_cuts.get_cuts_in_region(group):
                 if cut_id not in yielded:
                     yield self.cut_map[cut_id]
                     yielded.add(cut_id)
@@ -485,7 +489,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
     @timeit("Cuts.get_regions_with_overlap")
     def get_regions_with_overlap(self):
         overlaps = UnionRegions()
-        for cut_ids in self.group_map.iter_groups():
+        for cut_ids in self.region_to_cuts.iter_groups():
             for (id1, id2) in yield_combinations(cut_ids):
                 overlap = self.cut_map[id1].get_overlap(self.cut_map[id2])
                 if overlap:
@@ -526,49 +530,53 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
             canvas.add_text("|", x, y)
         return canvas
 
-class GroupMap(namedtuple("GroupMap", "group_map")):
+class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
 
     @staticmethod
     def empty():
-        return GroupMap({})
+        """
+        >>> RegionToCuts.empty()
+        RegionToCuts(region_number_to_cut_ids={})
+        """
+        return RegionToCuts({})
 
     def iter_groups(self):
-        return iter(self.group_map.values())
+        return iter(self.region_number_to_cut_ids.values())
 
-    def add(self, cut_id, group_numbers):
+    def add_cut_to_regions(self, cut_id, group_numbers):
         """
-        >>> GroupMap.empty().add(5, [1, 2, 3])
-        GroupMap(group_map={1: [5], 2: [5], 3: [5]})
+        >>> RegionToCuts.empty().add_cut_to_regions(5, [1, 2, 3])
+        RegionToCuts(region_number_to_cut_ids={1: [5], 2: [5], 3: [5]})
         """
-        new_group_map = dict(self.group_map)
-        for group_number in group_numbers:
-            new_ids = new_group_map.get(group_number, [])
+        new_region_to_cuts = dict(self.region_number_to_cut_ids)
+        for region_number in group_numbers:
+            new_ids = new_region_to_cuts.get(region_number, [])
             if cut_id not in new_ids:
                 new_ids = new_ids + [cut_id]
-            new_group_map[group_number] = new_ids
-        return self._replace(group_map=new_group_map)
+            new_region_to_cuts[region_number] = new_ids
+        return self._replace(region_number_to_cut_ids=new_region_to_cuts)
 
-    def remove(self, cut_id, group_numbers):
+    def remove_cut_from_regions(self, cut_id, group_numbers):
         """
-        >>> GroupMap.empty().add(5, [1, 2, 3]).remove(5, [1])
-        GroupMap(group_map={1: [], 2: [5], 3: [5]})
+        >>> RegionToCuts.empty().add_cut_to_regions(5, [1, 2, 3]).remove_cut_from_regions(5, [1])
+        RegionToCuts(region_number_to_cut_ids={1: [], 2: [5], 3: [5]})
         """
-        new_group_map = dict(self.group_map)
-        for group_number in group_numbers:
-            new_ids = list(new_group_map[group_number])
+        new_region_to_cuts = dict(self.region_number_to_cut_ids)
+        for region_number in group_numbers:
+            new_ids = list(new_region_to_cuts[region_number])
             new_ids.remove(cut_id)
-            new_group_map[group_number] = new_ids
-        return self._replace(group_map=new_group_map)
+            new_region_to_cuts[region_number] = new_ids
+        return self._replace(region_number_to_cut_ids=new_region_to_cuts)
 
-    def cuts_in_group(self, group_number):
+    def get_cuts_in_region(self, region_number):
         """
-        >>> GroupMap.empty().cuts_in_group(5)
-        set()
+        >>> RegionToCuts.empty().get_cuts_in_region(5)
+        []
 
-        >>> GroupMap.empty().add(5, {1}).cuts_in_group(1)
+        >>> RegionToCuts.empty().add_cut_to_regions(5, [1]).get_cuts_in_region(1)
         [5]
         """
-        return self.group_map.get(group_number, set())
+        return self.region_number_to_cut_ids.get(region_number, [])
 
 def yield_combinations(items):
     if items:
