@@ -1,6 +1,5 @@
 from collections import namedtuple
 import os
-import uuid
 
 import mlt
 
@@ -20,8 +19,8 @@ class Source(namedtuple("Source", "name")):
             source=self,
             in_out=Region(start=start, end=end),
             position=0,
-            id=uuid.uuid4().hex
-        )
+            id=None
+        ).with_unique_id()
 
     def to_mlt_producer(self, profile):
         if self.name not in cache or cache[self.name][0] is not profile:
