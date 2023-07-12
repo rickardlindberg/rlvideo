@@ -484,11 +484,9 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
     @timeit("Cuts.get_regions_with_overlap")
     def get_regions_with_overlap(self):
         overlaps = UnionRegions()
-        cuts = list(self)
-        while cuts:
-            cut = cuts.pop(0)
-            for other in cuts:
-                overlap = cut.get_overlap(other)
+        for cut_ids in self.group_map.iter_groups():
+            for (id1, id2) in yield_combinations(cut_ids):
+                overlap = self.cut_map[id1].get_overlap(self.cut_map[id2])
                 if overlap:
                     overlaps.add(overlap)
         return overlaps
@@ -533,6 +531,9 @@ class GroupMap(namedtuple("GroupMap", "group_map")):
     def empty():
         return GroupMap({})
 
+    def iter_groups(self):
+        return iter(self.group_map.values())
+
     def add(self, cut_id, group_numbers):
         """
         >>> GroupMap.empty().add(5, [1, 2, 3])
@@ -562,3 +563,11 @@ class GroupMap(namedtuple("GroupMap", "group_map")):
         {5}
         """
         return self.group_map.get(group_number, set())
+
+def yield_combinations(items):
+    if items:
+        rest = list(items)
+        while rest:
+            item = rest.pop(0)
+            for other in rest:
+                yield (item, other)
