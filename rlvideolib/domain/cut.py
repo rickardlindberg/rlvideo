@@ -194,10 +194,12 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         playlist.append(self.to_mlt_producer(profile, cache))
 
     def to_mlt_producer(self, profile, cache):
-        return self.source.to_mlt_producer(profile, cache).cut(
-            self.in_out.start,
-            self.in_out.end-1
-        )
+        def create():
+            return self.source.to_mlt_producer(profile, cache).cut(
+                self.in_out.start,
+                self.in_out.end-1
+            )
+        return cache.get_or_create((self.source, self.in_out), create)
 
     def draw_cairo(self, context, rectangle, rectangle_map):
         # TODO: make all lines even size
