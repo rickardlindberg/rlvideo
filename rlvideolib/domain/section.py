@@ -1,6 +1,7 @@
 import mlt
 
 from rlvideolib.asciicanvas import AsciiCanvas
+from rlvideolib.debug import timeit
 from rlvideolib.graphics.rectangle import Rectangle
 
 class Sections:
@@ -36,6 +37,7 @@ class Sections:
             playlist.append(section.to_mlt_producer(profile))
         return playlist
 
+    @timeit("Sections.draw_cairo")
     def draw_cairo(self, context, rectangle, rectangle_map):
         for section, section_rectangle in rectangle.divide_width(
             self.sections,
