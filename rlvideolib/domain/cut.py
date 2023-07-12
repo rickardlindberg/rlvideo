@@ -293,6 +293,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
             if cut.id in new_cuts:
                 raise ValueError(f"Cut with id = {cut.id} already exists.")
             new_cuts[cut.id] = cut
+        # TODO: why does _replace not work here?
         return Cuts(
             cut_map=new_cuts,
             group_map=self.group_map,
@@ -303,6 +304,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         # TODO: custom exception if not found
         new_cuts = dict(self.cut_map)
         new_cuts[cut_to_modify.id] = fn(new_cuts[cut_to_modify.id])
+        # TODO: why does _replace not work here?
         return Cuts(
             cut_map=new_cuts,
             group_map=self.group_map,
