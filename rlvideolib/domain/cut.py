@@ -1,4 +1,5 @@
 from collections import namedtuple
+import itertools
 import uuid
 
 from rlvideolib.asciicanvas import AsciiCanvas
@@ -490,7 +491,7 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
     def get_regions_with_overlap(self):
         overlaps = UnionRegions()
         for cut_ids in self.region_to_cuts.iter_groups():
-            for (id1, id2) in yield_combinations(cut_ids):
+            for (id1, id2) in itertools.combinations(cut_ids, 2):
                 overlap = self.cut_map[id1].get_overlap(self.cut_map[id2])
                 if overlap:
                     overlaps.add(overlap)
@@ -577,11 +578,3 @@ class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
         [5]
         """
         return self.region_number_to_cut_ids.get(region_number, [])
-
-def yield_combinations(items):
-    if items:
-        rest = list(items)
-        while rest:
-            item = rest.pop(0)
-            for other in rest:
-                yield (item, other)
