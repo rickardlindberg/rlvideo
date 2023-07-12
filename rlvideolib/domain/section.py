@@ -44,11 +44,13 @@ class Sections:
             lambda section: section.length
         ):
             with section_rectangle.cairo_clip_translate(context) as r:
-                section.draw_cairo(
-                    context=context,
-                    rectangle=r,
-                    rectangle_map=rectangle_map,
-                )
+                x1, y1, x2, y2 = context.clip_extents()
+                if x2 > x1:
+                    section.draw_cairo(
+                        context=context,
+                        rectangle=r,
+                        rectangle_map=rectangle_map,
+                    )
 
 class PlaylistSection:
 
@@ -78,7 +80,9 @@ class PlaylistSection:
             lambda part: part.length
         ):
             with part_rectangle.cairo_clip_translate(context) as r:
-                part.draw_cairo(context, r, rectangle_map)
+                x1, y1, x2, y2 = context.clip_extents()
+                if x2 > x1:
+                    part.draw_cairo(context, r, rectangle_map)
 
 class MixSection:
 
