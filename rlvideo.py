@@ -111,6 +111,7 @@ class App:
 class MltPlayer:
 
     def __init__(self, profile, window_id):
+        # TODO: player area outside video don't always refresh
         self.profile = profile
         os.putenv("SDL_WINDOWID", str(window_id))
         self.consumer = mlt.Consumer(self.profile, "sdl")
