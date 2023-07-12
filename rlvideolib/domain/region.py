@@ -18,6 +18,9 @@ class Region(namedtuple("Region", "start,end")):
 
     def get_groups(self, group_size):
         """
+        >>> Region(start=0, end=1).get_groups(1)
+        {0}
+
         >>> Region(start=0, end=5).get_groups(1)
         {0, 1, 2, 3, 4}
 
