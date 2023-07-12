@@ -16,15 +16,15 @@ class Region(namedtuple("Region", "start,end")):
     def length(self):
         return self.end - self.start
 
-    def get_period_groups(self, group_size):
+    def get_groups(self, group_size):
         """
-        >>> Region(start=0, end=5).get_period_groups(1)
+        >>> Region(start=0, end=5).get_groups(1)
         {0, 1, 2, 3, 4}
 
-        >>> Region(start=0, end=6).get_period_groups(2)
+        >>> Region(start=0, end=6).get_groups(2)
         {0, 1, 2}
 
-        >>> Region(start=0, end=7).get_period_groups(2)
+        >>> Region(start=0, end=7).get_groups(2)
         {0, 1, 2, 3}
         """
         return set(range(self.start//group_size, ((self.end-1)//group_size)+1))

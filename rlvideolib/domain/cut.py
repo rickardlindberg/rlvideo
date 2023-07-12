@@ -22,12 +22,12 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
             id=id
         )
 
-    def get_period_groups(self, group_size):
+    def get_region_groups(self, group_size):
         """
-        >>> Cut.test_instance(start=0, end=10).get_period_groups(5)
+        >>> Cut.test_instance(start=0, end=10).get_region_groups(5)
         {0, 1}
         """
-        return self.region.get_period_groups(group_size)
+        return self.region.get_groups(group_size)
 
     def with_unique_id(self):
         return self.with_id(uuid.uuid4().hex)
