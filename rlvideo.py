@@ -434,7 +434,10 @@ class MltProducerCache:
         self.next = {}
 
     def get(self, key):
-        return self.previous.get(key, None)
+        if key in self.previous:
+            return self.previous[key]
+        elif key in self.next:
+            return self.next[key]
 
     def set(self, key, value):
         self.next[key] = value
