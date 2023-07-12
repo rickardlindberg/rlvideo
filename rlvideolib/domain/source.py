@@ -21,15 +21,15 @@ class Source(namedtuple("Source", "name")):
         ).with_unique_id()
 
     def to_mlt_producer(self, profile, cache):
-        if cache.get(self.name) is None:
+        def create():
             if os.path.exists(self.name):
                 producer = mlt.Producer(profile, self.name)
             else:
                 producer = mlt.Producer(profile, "pango")
                 producer.set("text", self.name)
                 producer.set("bgcolour", "red")
-            cache.set(self.name, producer)
-        return cache.get(self.name)
+            return producer
+        return cache.get_or_create(self.name, create)
 
     def starts_at(self, position):
         return True
