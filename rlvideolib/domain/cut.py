@@ -531,6 +531,21 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
             canvas.add_text("|", x, y)
         return canvas
 
+class CutsWithCache(namedtuple("Cuts", "cuts")):
+
+    @staticmethod
+    def empty():
+        return CutsWithCache(cuts=Cuts.empty())
+
+    def add(self, cut):
+        return self._replace(cuts=self.cuts.add(cut))
+
+    def modify(self, cut_to_modify, fn):
+        return self._replace(cuts=self.cuts.modify(cut_to_modify, fn))
+
+    def split_into_sections(self):
+        return self.cuts.split_into_sections()
+
 class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
 
     @staticmethod

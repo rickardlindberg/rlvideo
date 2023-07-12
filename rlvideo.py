@@ -8,7 +8,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
 from rlvideolib.debug import timeit
-from rlvideolib.domain.cut import Cuts
+from rlvideolib.domain.cut import CutsWithCache
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.source import Source
 from rlvideolib.graphics.rectangle import Rectangle
@@ -194,7 +194,7 @@ class Timeline:
         return timeline
 
     def __init__(self):
-        self.cuts = Cuts.empty()
+        self.cuts = CutsWithCache.empty()
         self.scrollbar = Scrollbar(
             content_length=0,
             content_desired_start=0,
