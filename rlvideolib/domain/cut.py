@@ -286,9 +286,6 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
     def empty():
         return Cuts(cut_map={}, group_map=GroupMap.empty(), region_group_size=DEFAULT_REGION_GROUP_SIZE)
 
-    def __iter__(self):
-        return iter(self.cut_map.values())
-
     def add(self, *cuts):
         new_group_map = self.group_map
         new_cuts = dict(self.cut_map)
@@ -300,11 +297,9 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
                 cut.get_region_groups(self.region_group_size)
             )
             new_cuts[cut.id] = cut
-        # TODO: why does _replace not work here?
-        return Cuts(
+        return self._replace(
             cut_map=new_cuts,
             group_map=new_group_map,
-            region_group_size=self.region_group_size
         )
 
     def modify(self, cut_to_modify, fn):
@@ -325,8 +320,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         new_cut = fn(old_cut)
         new_cuts = dict(self.cut_map)
         new_cuts[cut_to_modify.id] = new_cut
-        # TODO: why does _replace not work here?
-        return Cuts(
+        return self._replace(
             cut_map=new_cuts,
             group_map=self.group_map.remove(
                 old_cut.id,
@@ -335,7 +329,6 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
                 new_cut.id,
                 new_cut.get_region_groups(self.region_group_size)
             ),
-            region_group_size=self.region_group_size
         )
 
     def create_cut(self, period):
@@ -352,7 +345,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         |     <-B0--->|
         """
         cuts = []
-        for cut in self:
+        for cut in self.cut_map.values():
             sub_cut = cut.create_cut(period)
             if sub_cut:
                 cuts.append(sub_cut)
@@ -450,7 +443,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         # TODO: test value errors
         parts = []
         start = region.start
-        for cut in sorted(self.create_cut(region), key=lambda cut: cut.start):
+        for cut in sorted(self.create_cut(region).cut_map.values(), key=lambda cut: cut.start):
             if cut.start > start:
                 parts.append(SpaceCut(cut.start-start))
             elif cut.start < start:
@@ -477,7 +470,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         %%%%%<-B0--->%%
         """
         playlists = []
-        for cut in self.create_cut(region):
+        for cut in self.create_cut(region).cut_map.values():
             playlists.append(Cuts.empty().add(cut).extract_playlist_section(region))
         return MixSection(length=region.length, playlists=playlists)
 
@@ -501,7 +494,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         10
         """
         if self.cut_map:
-            return max(cut.end for cut in self)
+            return max(cut.end for cut in self.cut_map.values())
         else:
             return 0
 
@@ -517,7 +510,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
         |     <-C0--->     |
         """
         canvas = AsciiCanvas()
-        for y, cut in enumerate(self):
+        for y, cut in enumerate(self.cut_map.values()):
             canvas.add_canvas(cut.to_ascii_canvas(), dy=y, dx=cut.start+1)
         x = canvas.get_max_x()+1
         for y in range(len(self.cut_map)):
