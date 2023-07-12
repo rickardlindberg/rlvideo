@@ -1,4 +1,5 @@
 from collections import namedtuple
+import uuid
 
 from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.debug import timeit
@@ -249,8 +250,8 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
 class Cuts:
 
     """
-    >>> a = Cut.test_instance(name="A", start=0, end=20, position=0)
-    >>> b = Cut.test_instance(name="b", start=0, end=20, position=10)
+    >>> a = Cut.test_instance(name="A", start=0, end=20, position=0, id=0)
+    >>> b = Cut.test_instance(name="b", start=0, end=20, position=10, id=1)
     >>> cuts = Cuts.empty()
     >>> cuts = cuts.add(a)
     >>> cuts = cuts.add(b)
@@ -267,30 +268,37 @@ class Cuts:
         return Cuts.empty().add(*cuts)
 
     @staticmethod
+    def from_list_new_id(cuts):
+        return Cuts.empty().add(*[cut.with_id(uuid.uuid4().hex) for cut in cuts])
+
+    @staticmethod
     def empty():
-        return Cuts([])
+        return Cuts({})
 
     def __init__(self, cut_map):
         self.cut_map = cut_map
 
     def __iter__(self):
-        return iter(self.cut_map)
+        return iter(self.cut_map.values())
 
     def add(self, *cuts):
-        new_cuts = list(self.cut_map)
+        # TODO: can not add same cut twice
+        new_cuts = dict(self.cut_map)
         for cut in cuts:
-            new_cuts.append(cut)
+            if cut.id in new_cuts:
+                raise ValueError(f"Cut with id = {cut.id} already exists.")
+            new_cuts[cut.id] = cut
         return Cuts(new_cuts)
 
     def modify(self, cut_to_modify, fn):
-        return Cuts([
-            fn(cut) if cut is cut_to_modify else cut
-            for cut in self
-        ])
+        # TODO: custom exception if not found
+        new_cuts = dict(self.cut_map)
+        new_cuts[cut_to_modify.id] = fn(new_cuts[cut_to_modify.id])
+        return Cuts(new_cuts)
 
     def create_cut(self, period):
         """
-        >>> cuts = Cuts.from_list([
+        >>> cuts = Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=8, position=0),
         ...     Cut.test_instance(name="B", start=0, end=8, position=5),
         ... ])
@@ -306,20 +314,20 @@ class Cuts:
             sub_cut = cut.create_cut(period)
             if sub_cut:
                 cuts.append(sub_cut)
-        return Cuts(cuts)
+        return Cuts.from_list(cuts)
 
     def split_into_sections(self):
         """
         A single cut returns a single section with that cut:
 
-        >>> Cuts.from_list([
+        >>> Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=10, position=0)
         ... ]).split_into_sections().to_ascii_canvas()
         |<-A0----->|
 
         Two non-overlapping cuts returns two sections with each cut in each:
 
-        >>> Cuts.from_list([
+        >>> Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=10, position=0),
         ...     Cut.test_instance(name="B", start=0, end=10, position=10),
         ... ]).split_into_sections().to_ascii_canvas()
@@ -327,7 +335,7 @@ class Cuts:
 
         Overlap:
 
-        >>> Cuts.from_list([
+        >>> Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=20, position=0),
         ...     Cut.test_instance(name="B", start=0, end=20, position=10),
         ... ]).split_into_sections().to_ascii_canvas()
@@ -341,14 +349,14 @@ class Cuts:
 
         Initial space:
 
-        >>> Cuts.from_list([
+        >>> Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=10, position=5)
         ... ]).split_into_sections().to_ascii_canvas()
         |%%%%%<-A0----->|
 
         BUG:
 
-        >>> Cuts.from_list([
+        >>> Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=10, position=5),
         ...     Cut.test_instance(name="B", start=0, end=10, position=5),
         ... ]).split_into_sections().to_ascii_canvas()
@@ -357,7 +365,7 @@ class Cuts:
 
         BUG:
 
-        >>> cuts = Cuts.from_list([
+        >>> cuts = Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=20, position=30),
         ...     Cut.test_instance(name="B", start=0, end=20, position=0),
         ...     Cut.test_instance(name="C", start=0, end=20, position=10),
@@ -387,7 +395,7 @@ class Cuts:
 
     def extract_playlist_section(self, region):
         """
-        >>> cuts = Cuts.from_list([
+        >>> cuts = Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=8, position=1),
         ...     Cut.test_instance(name="B", start=0, end=8, position=10),
         ... ])
@@ -415,7 +423,7 @@ class Cuts:
 
     def extract_mix_section(self, region):
         """
-        >>> cuts = Cuts.from_list([
+        >>> cuts = Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=8, position=1),
         ...     Cut.test_instance(name="B", start=0, end=8, position=5),
         ... ])
@@ -428,7 +436,7 @@ class Cuts:
         """
         playlists = []
         for cut in self.create_cut(region):
-            playlists.append(Cuts([cut]).extract_playlist_section(region))
+            playlists.append(Cuts.from_list([cut]).extract_playlist_section(region))
         return MixSection(length=region.length, playlists=playlists)
 
     @timeit("Cuts.get_regions_with_overlap")
@@ -449,7 +457,7 @@ class Cuts:
         >>> Cuts.empty().end
         0
 
-        >>> Cuts.from_list([Cut.test_instance(start=0, end=5, position=5)]).end
+        >>> Cuts.from_list_new_id([Cut.test_instance(start=0, end=5, position=5)]).end
         10
         """
         if self.cut_map:
@@ -459,7 +467,7 @@ class Cuts:
 
     def to_ascii_canvas(self):
         """
-        >>> Cuts.from_list([
+        >>> Cuts.from_list_new_id([
         ...     Cut.test_instance(name="A", start=0, end=8, position=10),
         ...     Cut.test_instance(name="B", start=0, end=8, position=0),
         ...     Cut.test_instance(name="C", start=0, end=8, position=5),
