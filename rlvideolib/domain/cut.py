@@ -257,7 +257,7 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
     def draw_cairo(self, context, rectangle, rectangle_map):
         pass
 
-class Cuts(namedtuple("Cuts", "cut_map")):
+class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
 
     """
     >>> a = Cut.test_instance(name="A", start=0, end=20, position=0, id=0)
@@ -282,7 +282,7 @@ class Cuts(namedtuple("Cuts", "cut_map")):
 
     @staticmethod
     def empty():
-        return Cuts({})
+        return Cuts(cut_map={}, group_map={}, region_group_size=100)
 
     def __iter__(self):
         return iter(self.cut_map.values())
@@ -293,13 +293,21 @@ class Cuts(namedtuple("Cuts", "cut_map")):
             if cut.id in new_cuts:
                 raise ValueError(f"Cut with id = {cut.id} already exists.")
             new_cuts[cut.id] = cut
-        return Cuts(new_cuts)
+        return Cuts(
+            cut_map=new_cuts,
+            group_map=self.group_map,
+            region_group_size=self.region_group_size
+        )
 
     def modify(self, cut_to_modify, fn):
         # TODO: custom exception if not found
         new_cuts = dict(self.cut_map)
         new_cuts[cut_to_modify.id] = fn(new_cuts[cut_to_modify.id])
-        return Cuts(new_cuts)
+        return Cuts(
+            cut_map=new_cuts,
+            group_map=self.group_map,
+            region_group_size=self.region_group_size
+        )
 
     def create_cut(self, period):
         """
