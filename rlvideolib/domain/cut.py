@@ -505,3 +505,33 @@ class GroupMap(namedtuple("GroupMap", "group_map")):
     @staticmethod
     def empty():
         return GroupMap({})
+
+    def add(self, cut_id, group_numbers):
+        """
+        >>> GroupMap.empty().add(5, [1, 2, 3])
+        GroupMap(group_map={1: {5}, 2: {5}, 3: {5}})
+        """
+        new_group_map = dict(self.group_map)
+        for group_number in group_numbers:
+            new_group_map[group_number] = new_group_map.get(group_number, set()).union({cut_id})
+        return self._replace(group_map=new_group_map)
+
+    def remove(self, cut_id, group_numbers):
+        """
+        >>> GroupMap.empty().add(5, [1, 2, 3]).remove(5, [1])
+        GroupMap(group_map={1: set(), 2: {5}, 3: {5}})
+        """
+        new_group_map = dict(self.group_map)
+        for group_number in group_numbers:
+            new_group_map[group_number] = new_group_map[group_number].difference({cut_id})
+        return self._replace(group_map=new_group_map)
+
+    def cuts_in_group(self, group_number):
+        """
+        >>> GroupMap.empty().cuts_in_group(5)
+        set()
+
+        >>> GroupMap.empty().add(5, {1}).cuts_in_group(1)
+        {5}
+        """
+        return self.group_map.get(group_number, set())
