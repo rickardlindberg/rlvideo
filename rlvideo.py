@@ -20,13 +20,16 @@ class App:
         mlt.Factory().init()
         self.profile = mlt.Profile()
         self.timeline = Timeline.with_test_clips()
+        self.mlt_producer_cache = MltProducerCache()
 
     def generate_mlt_producer(self):
         """
         >>> isinstance(App().generate_mlt_producer(), mlt.Playlist)
         True
         """
-        return self.timeline.to_mlt_producer(self.profile)
+        x = self.timeline.to_mlt_producer(self.profile, self.mlt_producer_cache)
+        self.mlt_producer_cache.swap()
+        return x
 
     def run(self):
 
@@ -242,8 +245,8 @@ class Timeline:
         return self.cuts.split_into_sections()
 
     @timeit("Timeline.to_mlt_producer")
-    def to_mlt_producer(self, profile):
-        return self.split_into_sections().to_mlt_producer(profile)
+    def to_mlt_producer(self, profile, cache):
+        return self.split_into_sections().to_mlt_producer(profile, cache)
 
     @timeit("Timeline.draw_cairo")
     def draw_cairo(self, context, playhead_position, width, height):
@@ -419,6 +422,22 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 
     def content_to_pixels(self, length):
         return length * self.one_length_in_pixels
+
+class MltProducerCache:
+
+    def __init__(self):
+        self.previous = {}
+        self.next = {}
+
+    def swap(self):
+        self.previous = self.next
+        self.next = {}
+
+    def get(self, key):
+        return self.previous.get(key, None)
+
+    def set(self, key, value):
+        self.next[key] = value
 
 if __name__ == "__main__":
     App().run()

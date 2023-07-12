@@ -31,10 +31,10 @@ class Sections:
                     canvas.add_text("|", line, y)
         return canvas
 
-    def to_mlt_producer(self, profile):
+    def to_mlt_producer(self, profile, cache):
         playlist = mlt.Playlist()
         for section in self.sections:
-            playlist.append(section.to_mlt_producer(profile))
+            playlist.append(section.to_mlt_producer(profile, cache))
         return playlist
 
     @timeit("Sections.draw_cairo")
@@ -67,10 +67,10 @@ class PlaylistSection:
             x = canvas.get_max_x() + 1
         return canvas
 
-    def to_mlt_producer(self, profile):
+    def to_mlt_producer(self, profile, cache):
         playlist = mlt.Playlist()
         for part in self.parts:
-            part.add_to_mlt_playlist(profile, playlist)
+            part.add_to_mlt_playlist(profile, cache, playlist)
         assert playlist.get_playtime() == self.length
         return playlist
 
@@ -98,11 +98,11 @@ class MixSection:
             canvas.add_canvas(playlist.to_ascii_canvas(), dy=y)
         return canvas
 
-    def to_mlt_producer(self, profile):
+    def to_mlt_producer(self, profile, cache):
         tractor = mlt.Tractor()
         for playlist in self.playlists:
             tractor.insert_track(
-                playlist.to_mlt_producer(profile),
+                playlist.to_mlt_producer(profile, cache),
                 0
             )
         assert tractor.get_playtime() == self.length

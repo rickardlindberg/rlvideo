@@ -9,7 +9,7 @@ from rlvideolib.domain.region import Region
 # TODO: add some kind of container for source files (caching, background
 # loading)
 
-cache = {}
+old_cache = {}
 
 class Source(namedtuple("Source", "name")):
 
@@ -22,16 +22,16 @@ class Source(namedtuple("Source", "name")):
             id=None
         ).with_unique_id()
 
-    def to_mlt_producer(self, profile):
-        if self.name not in cache or cache[self.name][0] is not profile:
+    def to_mlt_producer(self, profile, cache):
+        if self.name not in old_cache or old_cache[self.name][0] is not profile:
             if os.path.exists(self.name):
                 producer = mlt.Producer(profile, self.name)
             else:
                 producer = mlt.Producer(profile, "pango")
                 producer.set("text", self.name)
                 producer.set("bgcolour", "red")
-            cache[self.name] = (profile, producer)
-        return cache[self.name][1]
+            old_cache[self.name] = (profile, producer)
+        return old_cache[self.name][1]
 
     def starts_at(self, position):
         return True

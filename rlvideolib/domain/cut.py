@@ -190,11 +190,11 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         canvas.add_text(text, 0, 0)
         return canvas
 
-    def add_to_mlt_playlist(self, profile, playlist):
-        playlist.append(self.to_mlt_producer(profile))
+    def add_to_mlt_playlist(self, profile, cache, playlist):
+        playlist.append(self.to_mlt_producer(profile, cache))
 
-    def to_mlt_producer(self, profile):
-        return self.source.to_mlt_producer(profile).cut(
+    def to_mlt_producer(self, profile, cache):
+        return self.source.to_mlt_producer(profile, cache).cut(
             self.in_out.start,
             self.in_out.end-1
         )
@@ -254,7 +254,7 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
         canvas.add_text("%"*self.length, 0, 0)
         return canvas
 
-    def add_to_mlt_playlist(self, profile, playlist):
+    def add_to_mlt_playlist(self, profile, cache, playlist):
         playlist.blank(self.length-1)
 
     def draw_cairo(self, context, rectangle, rectangle_map):
