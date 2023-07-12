@@ -282,7 +282,7 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
 
     @staticmethod
     def empty():
-        return Cuts(cut_map={}, group_map={}, region_group_size=100)
+        return Cuts(cut_map={}, group_map=GroupMap.empty(), region_group_size=100)
 
     def __iter__(self):
         return iter(self.cut_map.values())
@@ -499,3 +499,9 @@ class Cuts(namedtuple("Cuts", "cut_map,group_map,region_group_size")):
             canvas.add_text("|", 0, y)
             canvas.add_text("|", x, y)
         return canvas
+
+class GroupMap(namedtuple("GroupMap", "group_map")):
+
+    @staticmethod
+    def empty():
+        return GroupMap({})
