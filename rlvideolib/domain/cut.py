@@ -264,22 +264,28 @@ class Cuts:
 
     @staticmethod
     def from_list(cuts):
-        return Cuts(cuts)
+        return Cuts.empty().add(*cuts)
 
     @staticmethod
     def empty():
         return Cuts([])
 
-    def __init__(self, cuts=[]):
-        self.cuts = list(cuts)
+    def __init__(self, cut_map):
+        self.cut_map = cut_map
 
-    def add(self, cut):
-        return Cuts.from_list(self.cuts+[cut])
+    def __iter__(self):
+        return iter(self.cut_map)
+
+    def add(self, *cuts):
+        new_cuts = list(self.cut_map)
+        for cut in cuts:
+            new_cuts.append(cut)
+        return Cuts(new_cuts)
 
     def modify(self, cut_to_modify, fn):
-        return Cuts.from_list([
+        return Cuts([
             fn(cut) if cut is cut_to_modify else cut
-            for cut in self.cuts
+            for cut in self
         ])
 
     def create_cut(self, period):
@@ -296,11 +302,11 @@ class Cuts:
         |     <-B0--->|
         """
         cuts = []
-        for cut in self.cuts:
+        for cut in self:
             sub_cut = cut.create_cut(period)
             if sub_cut:
                 cuts.append(sub_cut)
-        return Cuts.from_list(cuts)
+        return Cuts(cuts)
 
     def split_into_sections(self):
         """
@@ -394,7 +400,7 @@ class Cuts:
         # TODO: test value errors
         parts = []
         start = region.start
-        for cut in sorted(self.create_cut(region).cuts, key=lambda cut: cut.start):
+        for cut in sorted(self.create_cut(region), key=lambda cut: cut.start):
             if cut.start > start:
                 parts.append(SpaceCut(cut.start-start))
             elif cut.start < start:
@@ -421,14 +427,14 @@ class Cuts:
         %%%%%<-B0--->%%
         """
         playlists = []
-        for cut in self.create_cut(region).cuts:
-            playlists.append(Cuts.from_list([cut]).extract_playlist_section(region))
+        for cut in self.create_cut(region):
+            playlists.append(Cuts([cut]).extract_playlist_section(region))
         return MixSection(length=region.length, playlists=playlists)
 
     @timeit("Cuts.get_regions_with_overlap")
     def get_regions_with_overlap(self):
         overlaps = UnionRegions()
-        cuts = list(self.cuts)
+        cuts = list(self)
         while cuts:
             cut = cuts.pop(0)
             for other in cuts:
@@ -446,8 +452,8 @@ class Cuts:
         >>> Cuts.from_list([Cut.test_instance(start=0, end=5, position=5)]).end
         10
         """
-        if self.cuts:
-            return max(cut.end for cut in self.cuts)
+        if self.cut_map:
+            return max(cut.end for cut in self)
         else:
             return 0
 
@@ -463,10 +469,10 @@ class Cuts:
         |     <-C0--->     |
         """
         canvas = AsciiCanvas()
-        for y, cut in enumerate(self.cuts):
+        for y, cut in enumerate(self):
             canvas.add_canvas(cut.to_ascii_canvas(), dy=y, dx=cut.start+1)
         x = canvas.get_max_x()+1
-        for y in range(len(self.cuts)):
+        for y in range(len(self.cut_map)):
             canvas.add_text("|", 0, y)
             canvas.add_text("|", x, y)
         return canvas
