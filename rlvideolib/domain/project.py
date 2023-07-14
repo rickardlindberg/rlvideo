@@ -1,5 +1,6 @@
 import os
 
+from rlvideolib.debug import timeit
 from rlvideolib.domain.cut import Cuts
 from rlvideolib.domain.source import Source
 
@@ -26,3 +27,8 @@ class Project:
 
     def __init__(self):
         self.cuts = Cuts.empty()
+
+    @timeit("Project.split_into_sections")
+    def split_into_sections(self):
+        return self.cuts.split_into_sections()
+

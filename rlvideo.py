@@ -234,10 +234,8 @@ class Timeline:
     def set_zoom_factor(self, zoom_factor):
         self.scrollbar = self.scrollbar._replace(one_length_in_pixels=zoom_factor)
 
-    @timeit("Timeline.split_into_sections")
     def split_into_sections(self):
-        # TODO: don't break law of demeter
-        return self.project.cuts.split_into_sections()
+        return self.project.split_into_sections()
 
     @timeit("Timeline.to_mlt_producer")
     def to_mlt_producer(self, profile, cache):
