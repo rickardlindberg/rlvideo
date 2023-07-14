@@ -32,6 +32,9 @@ class Project:
         self.cuts = Cuts.empty()
         self.mlt_producer_cache = MltProducerCache()
 
+    def add_cut(self, cut):
+        self.cuts = self.cuts.add(cut)
+
     def new_transaction(self):
         return Transaction(self)
 

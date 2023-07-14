@@ -216,8 +216,7 @@ class Timeline:
         self.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
 
     def add(self, cut):
-        # TODO: don't break law of demeter
-        self.project.cuts = self.project.cuts.add(cut)
+        self.project.add_cut(cut)
 
     def set_zoom_factor(self, zoom_factor):
         self.scrollbar = self.scrollbar._replace(one_length_in_pixels=zoom_factor)
