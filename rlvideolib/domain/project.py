@@ -45,9 +45,11 @@ class Project:
         self.sources = self.sources.add(source)
         self.cuts = self.cuts.add(source.create_cut(0, source.length).move(self.cuts.end))
 
-    def add_text_clip(self, text, length):
+    def add_text_clip(self, text, length, id=None):
         # TODO: move to transaction
-        source = TextSource(id=None, text=text).with_unique_id()
+        source = TextSource(id=id, text=text)
+        if id is None:
+            source = source.with_unique_id()
         self.sources = self.sources.add(source)
         self.cuts = self.cuts.add(source.create_cut(0, length).move(self.cuts.end))
 

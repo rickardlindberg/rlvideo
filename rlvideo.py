@@ -147,7 +147,7 @@ class Timeline:
 
     """
     >>> project = Project.new()
-    >>> project.add_text_clip("hello", length=10)
+    >>> project.add_text_clip("hello", length=10, id="hello")
     >>> timeline = Timeline(project=project)
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
@@ -160,7 +160,7 @@ class Timeline:
     ... )
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
     Rectangle(x=10, y=20, width=10, height=20):
-      Cut(source=CutSource(source=TextSource(id=..., text='hello')), in_out=Region(start=0, end=10), position=0, id=...)
+      Cut(source=CutSource(source=TextSource(id='hello', text='hello')), in_out=Region(start=0, end=10), position=0, id=...)
     Rectangle(x=10, y=60, width=7840, height=30):
       position
     >>> timeline.split_into_sections().to_ascii_canvas()

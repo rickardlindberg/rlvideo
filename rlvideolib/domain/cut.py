@@ -101,9 +101,6 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
     def ends_at(self, position):
         return self.end == position
 
-    def get_label(self):
-        return self.source.get_label()
-
     def get_source_id(self):
         return self.source.get_source_id()
 
@@ -184,7 +181,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
             end_marker = "-"
         text = ""
         text += start_marker
-        text += self.get_label()[0]
+        text += self.get_source_id()[0]
         text += str(self.in_out.start)
         text += "-"*(self.length-len(text)-len(end_marker))
         text += end_marker
@@ -597,6 +594,3 @@ class CutSource(namedtuple("CutSource", "source")):
 
     def get_source_id(self):
         return self.source.id
-
-    def get_label(self):
-        return self.source.get_label()

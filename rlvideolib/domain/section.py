@@ -116,7 +116,7 @@ class MixSection:
         >>> from rlvideolib.domain.cut import Cut
         >>> class MockProject:
         ...     def get_label(self, id):
-        ...         return id
+        ...         return "MockLabel"
 
         >>> rectangle = Rectangle.from_size(width=300, height=100)
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, rectangle.width, rectangle.height)
