@@ -397,5 +397,14 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
     def content_to_pixels(self, length):
         return length * self.one_length_in_pixels
 
+class BackgroundWorker:
+
+    def add(result_fn, work_fn, *args, **kwargs):
+        def worker():
+            GLib.idle_add(result_fn, *work_fn(*args, **kwargs))
+        thread = threading.Thread(worker)
+        thread.daemon = True
+        thread.start()
+
 if __name__ == "__main__":
     App().run()
