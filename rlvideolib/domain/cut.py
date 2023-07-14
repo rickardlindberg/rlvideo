@@ -19,7 +19,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
     def test_instance(name="A", start=0, end=5, position=0, id=None, source_id=None):
         from rlvideolib.domain.source import TextSource
         return Cut(
-            source=TextSource(id=source_id, text=name),
+            source=CutSource(TextSource(id=source_id, text=name)),
             in_out=Region(start=start, end=end),
             position=position,
             id=id
@@ -113,15 +113,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
-        Cut(source=TextSource(id=None, text='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source=TextSource(id=None, text='A')), in_out=Region(start=0, end=20), position=10, id=None)
 
         Contains all:
 
         >>> cut.create_cut(Region(start=0, end=40))
-        Cut(source=TextSource(id=None, text='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source=TextSource(id=None, text='A')), in_out=Region(start=0, end=20), position=10, id=None)
 
         >>> cut.create_cut(Region(start=10, end=30))
-        Cut(source=TextSource(id=None, text='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source=TextSource(id=None, text='A')), in_out=Region(start=0, end=20), position=10, id=None)
 
         Subcut left:
 
@@ -579,3 +579,17 @@ class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
         [5]
         """
         return self.region_number_to_cut_ids.get(region_number, [])
+
+class CutSource(namedtuple("CutSource", "source")):
+
+    def to_mlt_producer(self, profile, cache):
+        return self.source.to_mlt_producer(profile, cache)
+
+    def starts_at(self, position):
+        return True
+
+    def ends_at(self, position):
+        return True
+
+    def get_label(self):
+        return self.source.get_label()
