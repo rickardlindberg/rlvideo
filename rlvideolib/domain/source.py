@@ -1,5 +1,6 @@
 from collections import namedtuple
 import os
+import uuid
 
 import mlt
 
@@ -11,6 +12,9 @@ from rlvideolib.domain.region import Region
 # loading)
 
 class FileSource(namedtuple("FileSource", "id,path,length")):
+
+    def with_unique_id(self):
+        return self._replace(id=uuid.uuid4().hex)
 
     def create_cut(self, start, end):
         if start < 0 or end > self.length:
@@ -34,6 +38,9 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
 
 class TextSource(namedtuple("TextSource", "id,text")):
 
+    def with_unique_id(self):
+        return self._replace(id=uuid.uuid4().hex)
+
     def create_cut(self, start, end):
         return Cut(
             # TODO: source should be self.id
@@ -50,3 +57,16 @@ class TextSource(namedtuple("TextSource", "id,text")):
 
     def get_label(self):
         return self.text
+
+class Sources(namedtuple("Sources", "id_to_source")):
+
+    @staticmethod
+    def empty():
+        return Sources({})
+
+    def add(self, source):
+        if source.id in self.id_to_source:
+            raise ValueError(f"Source with id {source.id} already exists.")
+        new = dict(self.id_to_source)
+        new[source.id] = source
+        return self._replace(id_to_source=new)

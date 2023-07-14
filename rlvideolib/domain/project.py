@@ -5,6 +5,7 @@ import mlt
 from rlvideolib.debug import timeit
 from rlvideolib.domain.cut import Cuts
 from rlvideolib.domain.source import FileSource
+from rlvideolib.domain.source import Sources
 from rlvideolib.domain.source import TextSource
 
 class Project:
@@ -31,17 +32,21 @@ class Project:
     def __init__(self):
         self.profile = mlt.Profile()
         self.cuts = Cuts.empty()
+        self.sources = Sources.empty()
         self.mlt_producer_cache = MltProducerCache()
 
     def add_clip(self, path):
         # TODO: move to transaction
         producer = mlt.Producer(self.profile, path)
-        source = FileSource(id=None, path=path, length=producer.get_playtime())
+        source = FileSource(id=None, path=path, length=producer.get_playtime()).with_unique_id()
+        self.sources = self.sources.add(source)
         self.cuts = self.cuts.add(source.create_cut(0, source.length).move(self.cuts.end))
 
     def add_text_clip(self, text, length):
         # TODO: move to transaction
-        self.cuts = self.cuts.add(TextSource(id=None, text=text).create_cut(0, length).move(self.cuts.end))
+        source = TextSource(id=None, text=text).with_unique_id()
+        self.sources = self.sources.add(source)
+        self.cuts = self.cuts.add(source.create_cut(0, length).move(self.cuts.end))
 
     def new_transaction(self):
         return Transaction(self)
