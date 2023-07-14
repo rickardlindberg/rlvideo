@@ -8,7 +8,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
 from rlvideolib.debug import timeit
-from rlvideolib.domain.cut import Cuts
+from rlvideolib.domain.project import Project
 from rlvideolib.domain.region import Region
 from rlvideolib.domain.source import Source
 from rlvideolib.graphics.rectangle import Rectangle
@@ -198,7 +198,7 @@ class Timeline:
         return timeline
 
     def __init__(self):
-        self.cuts = Cuts.empty()
+        self.project = Project.new()
         self.scrollbar = Scrollbar(
             content_length=0,
             content_desired_start=0,
@@ -211,7 +211,7 @@ class Timeline:
     def mouse_down(self, x, y):
         self.tmp_xy = (x, y)
         self.tmp_scrollbar = self.scrollbar
-        self.tmp_cuts = self.cuts
+        self.tmp_cuts = self.project.cuts
         self.tmp_cut = self.rectangle_map.get(x, y)
 
     def mouse_move(self, x, y):
@@ -220,7 +220,7 @@ class Timeline:
             if self.tmp_cut == "position":
                 self.scrollbar = self.tmp_scrollbar.move_scrollbar(delta)
             else:
-                self.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
+                self.project.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
                     x.move(int(delta/self.scrollbar.one_length_in_pixels)))
 
     def mouse_up(self):
@@ -236,14 +236,14 @@ class Timeline:
         self.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
 
     def add(self, cut):
-        self.cuts = self.cuts.add(cut)
+        self.project.cuts = self.project.cuts.add(cut)
 
     def set_zoom_factor(self, zoom_factor):
         self.scrollbar = self.scrollbar._replace(one_length_in_pixels=zoom_factor)
 
     @timeit("Timeline.split_into_sections")
     def split_into_sections(self):
-        return self.cuts.split_into_sections()
+        return self.project.cuts.split_into_sections()
 
     @timeit("Timeline.to_mlt_producer")
     def to_mlt_producer(self, profile, cache):
