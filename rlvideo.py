@@ -190,8 +190,7 @@ class Timeline:
     def mouse_down(self, x, y):
         self.tmp_xy = (x, y)
         self.tmp_scrollbar = self.scrollbar
-        # TODO: don't break law of demeter
-        self.tmp_cuts = self.project.cuts
+        self.tmp_transaction = self.project.new_transaction()
         self.tmp_cut = self.rectangle_map.get(x, y)
 
     def mouse_move(self, x, y):
@@ -200,14 +199,14 @@ class Timeline:
             if self.tmp_cut == "position":
                 self.scrollbar = self.tmp_scrollbar.move_scrollbar(delta)
             else:
-                # TODO: don't break law of demeter
-                self.project.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
+                self.tmp_transaction.rollback()
+                self.tmp_transaction.modify(self.tmp_cut, lambda x:
                     x.move(int(delta/self.scrollbar.one_length_in_pixels)))
 
     def mouse_up(self):
         self.tmp_xy = None
         self.tmp_scrollbar= None
-        self.tmp_cuts = None
+        self.tmp_transaction = None
         self.tmp_cut = None
 
     def scroll_up(self, x, y):

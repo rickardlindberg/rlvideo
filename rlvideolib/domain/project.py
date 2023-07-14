@@ -32,6 +32,9 @@ class Project:
         self.cuts = Cuts.empty()
         self.mlt_producer_cache = MltProducerCache()
 
+    def new_transaction(self):
+        return Transaction(self)
+
     @timeit("Project.split_into_sections")
     def split_into_sections(self):
         return self.cuts.split_into_sections()
@@ -66,3 +69,15 @@ class MltProducerCache:
         elif key not in self.next:
             self.next[key] = fn()
         return self.next[key]
+
+class Transaction:
+
+    def __init__(self, project):
+        self.project = project
+        self.initial_cuts = project.cuts
+
+    def rollback(self):
+        self.project.cuts = self.initial_cuts
+
+    def modify(self, cut_to_modify, fn):
+        self.project.cuts = self.project.cuts.modify(cut_to_modify, fn)
