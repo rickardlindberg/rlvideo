@@ -19,6 +19,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
     def test_instance(name="A", start=0, end=5, position=0, id=None, source_id=None):
         from rlvideolib.domain.source import TextSource
         return Cut(
+            # TODO: source should be self.id
             source=CutSource(TextSource(id=source_id, text=name)),
             in_out=Region(start=start, end=end),
             position=position,
