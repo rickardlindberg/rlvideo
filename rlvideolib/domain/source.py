@@ -9,10 +9,11 @@ from rlvideolib.domain.region import Region
 # TODO: add some kind of container for source files (caching, background
 # loading)
 
-class FileSource(namedtuple("FileSource", "id,path")):
+class FileSource(namedtuple("FileSource", "id,path,length")):
 
     def create_cut(self, start, end):
-        # TODO: ensure cut is valid
+        if start < 0 or end > self.length:
+            raise ValueError("Invalid cut.")
         return Cut(
             source=self,
             in_out=Region(start=start, end=end),

@@ -36,7 +36,8 @@ class Project:
     def add_clip(self, path):
         # TODO: move to transaction
         producer = mlt.Producer(self.profile, path)
-        self.cuts = self.cuts.add(FileSource(id=None, path=path).create_cut(0, producer.get_playtime()).move(self.cuts.end))
+        source = FileSource(id=None, path=path, length=producer.get_playtime())
+        self.cuts = self.cuts.add(source.create_cut(0, source.length).move(self.cuts.end))
 
     def add_text_clip(self, text, length):
         # TODO: move to transaction
