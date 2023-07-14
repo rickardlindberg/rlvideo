@@ -400,8 +400,11 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 class BackgroundWorker:
 
     def add(result_fn, work_fn, *args, **kwargs):
+        def result(*args):
+            result_fn(*args)
+            return False # To only schedule it once
         def worker():
-            GLib.idle_add(result_fn, *work_fn(*args, **kwargs))
+            GLib.idle_add(result, *work_fn(*args, **kwargs))
         thread = threading.Thread(worker)
         thread.daemon = True
         thread.start()
