@@ -18,20 +18,16 @@ class App:
 
     def __init__(self):
         mlt.Factory().init()
-        self.profile = mlt.Profile()
         self.project = Project.with_test_clips()
         self.timeline = Timeline(project=self.project)
         self.timeline.set_zoom_factor(25)
-        self.mlt_producer_cache = MltProducerCache()
 
     def generate_mlt_producer(self):
         """
         >>> isinstance(App().generate_mlt_producer(), mlt.Playlist)
         True
         """
-        x = self.project.to_mlt_producer(self.profile, self.mlt_producer_cache)
-        self.mlt_producer_cache.swap()
-        return x
+        return self.project.get_preview_mlt_producer()
 
     def run(self):
 
@@ -104,7 +100,7 @@ class App:
 
         main_window.show_all()
 
-        mlt_player = MltPlayer(self.profile, preview.get_window().get_xid())
+        mlt_player = MltPlayer(self.project.profile, preview.get_window().get_xid())
         mlt_player.set_producer(self.generate_mlt_producer())
         print(self.timeline.split_into_sections().to_ascii_canvas())
 
@@ -411,23 +407,6 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 
     def content_to_pixels(self, length):
         return length * self.one_length_in_pixels
-
-class MltProducerCache:
-
-    def __init__(self):
-        self.previous = {}
-        self.next = {}
-
-    def swap(self):
-        self.previous = self.next
-        self.next = {}
-
-    def get_or_create(self, key, fn):
-        if key in self.previous:
-            self.next[key] = self.previous[key]
-        elif key not in self.next:
-            self.next[key] = fn()
-        return self.next[key]
 
 if __name__ == "__main__":
     App().run()
