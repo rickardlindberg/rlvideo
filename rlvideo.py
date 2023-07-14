@@ -277,6 +277,7 @@ class Timeline:
                         context=context,
                         rectangle=sections_area,
                         rectangle_map=self.rectangle_map,
+                        project=self.project
                     )
             context.set_source_rgb(0.1, 0.1, 0.1)
             context.move_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), 0)

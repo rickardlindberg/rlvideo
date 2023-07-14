@@ -202,7 +202,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
             )
         return cache.get_or_create((self.source, self.in_out), create)
 
-    def draw_cairo(self, context, rectangle, rectangle_map):
+    def draw_cairo(self, context, rectangle, rectangle_map, project):
         # TODO: make all lines even size
         rect_x, rect_y = context.user_to_device(rectangle.x, rectangle.y)
         rect_w, rect_h = context.user_to_device_distance(rectangle.width, rectangle.height)
@@ -260,7 +260,7 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
     def add_to_mlt_playlist(self, profile, cache, playlist):
         playlist.blank(self.length-1)
 
-    def draw_cairo(self, context, rectangle, rectangle_map):
+    def draw_cairo(self, context, rectangle, rectangle_map, project):
         pass
 
 class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):

@@ -38,7 +38,7 @@ class Sections:
         return playlist
 
     @timeit("Sections.draw_cairo")
-    def draw_cairo(self, context, rectangle, rectangle_map):
+    def draw_cairo(self, context, rectangle, rectangle_map, project):
         for section, section_rectangle in rectangle.divide_width(
             self.sections,
             lambda section: section.length
@@ -50,6 +50,7 @@ class Sections:
                         context=context,
                         rectangle=r,
                         rectangle_map=rectangle_map,
+                        project=project,
                     )
 
 class PlaylistSection:
@@ -74,7 +75,7 @@ class PlaylistSection:
         assert playlist.get_playtime() == self.length
         return playlist
 
-    def draw_cairo(self, context, rectangle, rectangle_map):
+    def draw_cairo(self, context, rectangle, rectangle_map, project):
         for part, part_rectangle in rectangle.divide_width(
             self.parts,
             lambda part: part.length
@@ -82,7 +83,7 @@ class PlaylistSection:
             with part_rectangle.cairo_clip_translate(context) as r:
                 x1, y1, x2, y2 = context.clip_extents()
                 if x2 > x1:
-                    part.draw_cairo(context, r, rectangle_map)
+                    part.draw_cairo(context, r, rectangle_map, project)
 
 class MixSection:
 
@@ -108,7 +109,7 @@ class MixSection:
         assert tractor.get_playtime() == self.length
         return tractor
 
-    def draw_cairo(self, context, rectangle, rectangle_map):
+    def draw_cairo(self, context, rectangle, rectangle_map, project):
         """
         >>> import cairo
         >>> from rlvideolib.graphics.rectangle import RectangleMap
@@ -122,7 +123,7 @@ class MixSection:
         >>> MixSection(
         ...     length=0,
         ...     playlists=[]
-        ... ).draw_cairo(context, rectangle, rectangle_map)
+        ... ).draw_cairo(context, rectangle, rectangle_map, None)
         >>> rectangle_map
         <BLANKLINE>
 
@@ -143,7 +144,7 @@ class MixSection:
         ...             ]
         ...         ),
         ...     ]
-        ... ).draw_cairo(context, rectangle, rectangle_map)
+        ... ).draw_cairo(context, rectangle, rectangle_map, None)
         >>> rectangle_map
         Rectangle(x=0, y=0, width=300, height=50):
           Cut(source=CutSource(source=TextSource(id=None, text='A')), in_out=Region(start=0, end=6), position=0, id=None)
@@ -155,4 +156,4 @@ class MixSection:
             lambda playlist: playlist.length
         ):
             with playlist_rectangle.cairo_clip_translate(context) as r:
-                playlist.draw_cairo(context, r, rectangle_map)
+                playlist.draw_cairo(context, r, rectangle_map, project)
