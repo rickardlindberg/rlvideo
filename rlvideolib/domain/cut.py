@@ -323,6 +323,7 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         RegionToCuts(region_number_to_cut_ids={0: [], 1: [99]})
         """
         # TODO: custom exception if not found
+        # TODO: should only take id
         old_cut = self.cut_map[cut_to_modify.id]
         new_cut = fn(old_cut)
         new_cuts = dict(self.cut_map)
