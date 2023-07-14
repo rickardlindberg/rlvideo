@@ -9,7 +9,7 @@ from rlvideolib.domain.region import Region
 # TODO: add some kind of container for source files (caching, background
 # loading)
 
-class Source(namedtuple("Source", "name")):
+class FileSource(namedtuple("FileSource", "id,path")):
 
     def create_cut(self, start, end):
         # TODO: ensure cut is valid
@@ -22,14 +22,9 @@ class Source(namedtuple("Source", "name")):
 
     def to_mlt_producer(self, profile, cache):
         def create():
-            if os.path.exists(self.name):
-                producer = mlt.Producer(profile, self.name)
-            else:
-                producer = mlt.Producer(profile, "pango")
-                producer.set("text", self.name)
-                producer.set("bgcolour", "red")
+            producer = mlt.Producer(profile, self.path)
             return producer
-        return cache.get_or_create(self.name, create)
+        return cache.get_or_create(self.path, create)
 
     def starts_at(self, position):
         return True
@@ -38,7 +33,7 @@ class Source(namedtuple("Source", "name")):
         return True
 
     def get_label(self):
-        return os.path.basename(self.name)
+        return os.path.basename(self.path)
 
 class TextSource(namedtuple("TextSource", "id,text")):
 

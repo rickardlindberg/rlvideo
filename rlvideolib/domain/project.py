@@ -4,7 +4,7 @@ import mlt
 
 from rlvideolib.debug import timeit
 from rlvideolib.domain.cut import Cuts
-from rlvideolib.domain.source import Source
+from rlvideolib.domain.source import FileSource
 from rlvideolib.domain.source import TextSource
 
 class Project:
@@ -36,7 +36,7 @@ class Project:
     def add_clip(self, path):
         # TODO: move to transaction
         producer = mlt.Producer(self.profile, path)
-        self.cuts = self.cuts.add(Source(path).create_cut(0, producer.get_playtime()).move(self.cuts.end))
+        self.cuts = self.cuts.add(FileSource(id=None, path=path).create_cut(0, producer.get_playtime()).move(self.cuts.end))
 
     def add_text_clip(self, text, length):
         # TODO: move to transaction
