@@ -211,6 +211,7 @@ class Timeline:
     def mouse_down(self, x, y):
         self.tmp_xy = (x, y)
         self.tmp_scrollbar = self.scrollbar
+        # TODO: don't break law of demeter
         self.tmp_cuts = self.project.cuts
         self.tmp_cut = self.rectangle_map.get(x, y)
 
@@ -220,6 +221,7 @@ class Timeline:
             if self.tmp_cut == "position":
                 self.scrollbar = self.tmp_scrollbar.move_scrollbar(delta)
             else:
+                # TODO: don't break law of demeter
                 self.project.cuts = self.tmp_cuts.modify(self.tmp_cut, lambda x:
                     x.move(int(delta/self.scrollbar.one_length_in_pixels)))
 
@@ -236,6 +238,7 @@ class Timeline:
         self.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
 
     def add(self, cut):
+        # TODO: don't break law of demeter
         self.project.cuts = self.project.cuts.add(cut)
 
     def set_zoom_factor(self, zoom_factor):
@@ -243,6 +246,7 @@ class Timeline:
 
     @timeit("Timeline.split_into_sections")
     def split_into_sections(self):
+        # TODO: don't break law of demeter
         return self.project.cuts.split_into_sections()
 
     @timeit("Timeline.to_mlt_producer")
