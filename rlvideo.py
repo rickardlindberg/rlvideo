@@ -147,9 +147,8 @@ class MltPlayer:
 class Timeline:
 
     """
-    >>> cut = Source("hello").create_cut(0, 10).with_id(5)
     >>> project = Project.new()
-    >>> project.add_cut(cut)
+    >>> project.add_text_clip("hello", length=10)
     >>> timeline = Timeline(project=project)
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
@@ -160,9 +159,9 @@ class Timeline:
     ...     width=width,
     ...     height=height
     ... )
-    >>> timeline.rectangle_map
+    >>> timeline.rectangle_map # doctest: +ELLIPSIS
     Rectangle(x=10, y=20, width=10, height=20):
-      Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=5)
+      Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=...)
     Rectangle(x=10, y=60, width=7840, height=30):
       position
     >>> timeline.split_into_sections().to_ascii_canvas()
@@ -229,7 +228,7 @@ class Timeline:
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
         >>> project = Project.new()
-        >>> project.add_cut(Source("hello").create_cut(0, 10).move(0).with_id(5))
+        >>> project.add_text_clip("hello", length=10)
         >>> timeline = Timeline(project=project)
         >>> timeline.draw_cairo(
         ...     context=context,
@@ -243,9 +242,9 @@ class Timeline:
         ...     width=width,
         ...     height=height
         ... )
-        >>> timeline.rectangle_map
+        >>> timeline.rectangle_map # doctest: +ELLIPSIS
         Rectangle(x=10, y=20, width=10, height=20):
-          Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=5)
+          Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=...)
         Rectangle(x=10, y=60, width=7840, height=30):
           position
         """
