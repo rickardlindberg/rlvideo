@@ -22,13 +22,6 @@ class App:
         self.timeline = Timeline(project=self.project)
         self.timeline.set_zoom_factor(25)
 
-    def generate_mlt_producer(self):
-        """
-        >>> isinstance(App().generate_mlt_producer(), mlt.Playlist)
-        True
-        """
-        return self.project.get_preview_mlt_producer()
-
     def run(self):
 
         def key_press_handler(window, event):
@@ -72,7 +65,7 @@ class App:
             ))
         def timeline_button_up(widget, event):
             self.timeline.mouse_up()
-            mlt_player.set_producer(self.generate_mlt_producer())
+            mlt_player.set_producer(self.project.get_preview_mlt_producer())
             print(self.timeline.split_into_sections().to_ascii_canvas())
         def timeline_scroll(widget, event):
             if event.direction == Gdk.ScrollDirection.UP:
@@ -101,7 +94,7 @@ class App:
         main_window.show_all()
 
         mlt_player = MltPlayer(self.project.profile, preview.get_window().get_xid())
-        mlt_player.set_producer(self.generate_mlt_producer())
+        mlt_player.set_producer(self.project.get_preview_mlt_producer())
         print(self.timeline.split_into_sections().to_ascii_canvas())
 
         Gtk.main()
