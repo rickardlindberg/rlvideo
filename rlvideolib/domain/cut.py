@@ -584,7 +584,7 @@ class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
 class CutSource(namedtuple("CutSource", "source")):
 
     def to_mlt_producer(self, profile, cache):
-        return self.source.to_mlt_producer(profile, cache)
+        return cache.get_source(self.get_source_id()).to_mlt_producer(profile, cache)
 
     def starts_at(self, position):
         return True

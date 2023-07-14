@@ -33,10 +33,13 @@ class Project:
         self.profile = mlt.Profile()
         self.cuts = Cuts.empty()
         self.sources = Sources.empty()
-        self.mlt_producer_cache = MltProducerCache()
+        self.mlt_producer_cache = MltProducerCache(self)
 
     def get_label(self, source_id):
-        return self.sources.get(source_id).get_label()
+        return self.get_source(source_id).get_label()
+
+    def get_source(self, source_id):
+        return self.sources.get(source_id)
 
     def add_clip(self, path):
         # TODO: move to transaction
@@ -76,9 +79,13 @@ class Project:
 
 class MltProducerCache:
 
-    def __init__(self):
+    def __init__(self, project):
         self.previous = {}
         self.next = {}
+        self.project = project
+
+    def get_source(self, source_id):
+        return self.project.get_source(source_id)
 
     def swap(self):
         self.previous = self.next
