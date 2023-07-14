@@ -20,6 +20,7 @@ class App:
         mlt.Factory().init()
         self.profile = mlt.Profile()
         self.timeline = Timeline.with_test_clips()
+        self.timeline.set_zoom_factor(25)
         self.mlt_producer_cache = MltProducerCache()
 
     def generate_mlt_producer(self):
@@ -194,7 +195,6 @@ class Timeline:
             timeline.add(Source("resources/one.mp4").create_cut(0, 15).move(offset+5))
             timeline.add(Source("resources/two.mp4").create_cut(0, 15).move(offset+20))
             timeline.add(Source("resources/three.mp4").create_cut(0, 15).move(offset+35))
-        timeline.set_zoom_factor(25)
         return timeline
 
     def __init__(self):
