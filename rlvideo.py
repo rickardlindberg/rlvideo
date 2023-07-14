@@ -19,7 +19,8 @@ class App:
     def __init__(self):
         mlt.Factory().init()
         self.profile = mlt.Profile()
-        self.timeline = Timeline.with_test_clips()
+        self.project = Project.with_test_clips()
+        self.timeline = Timeline(project=self.project)
         self.timeline.set_zoom_factor(25)
         self.mlt_producer_cache = MltProducerCache()
 
@@ -158,7 +159,7 @@ class Timeline:
 
     """
     >>> cut = Source("hello").create_cut(0, 10).with_id(5)
-    >>> timeline = Timeline()
+    >>> timeline = Timeline(project=Project.new())
     >>> timeline.add(cut)
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
@@ -186,19 +187,8 @@ class Timeline:
     |%<-h0----->|
     """
 
-    @staticmethod
-    def with_test_clips():
-        timeline = Timeline()
-        for i in range(int(os.environ.get("RLVIDEO_PERFORMANCE", "1"))):
-            offset = i*50
-            timeline.add(Source("resources/one-to-five.mp4").create_cut(0, 5).move(offset+0))
-            timeline.add(Source("resources/one.mp4").create_cut(0, 15).move(offset+5))
-            timeline.add(Source("resources/two.mp4").create_cut(0, 15).move(offset+20))
-            timeline.add(Source("resources/three.mp4").create_cut(0, 15).move(offset+35))
-        return timeline
-
-    def __init__(self):
-        self.project = Project.new()
+    def __init__(self, project):
+        self.project = project
         self.scrollbar = Scrollbar(
             content_length=0,
             content_desired_start=0,
@@ -259,7 +249,7 @@ class Timeline:
         >>> width, height = 300, 100
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
-        >>> timeline = Timeline()
+        >>> timeline = Timeline(project=Project.new())
         >>> timeline.add(Source("hello").create_cut(0, 10).move(0).with_id(5))
         >>> timeline.draw_cairo(
         ...     context=context,
