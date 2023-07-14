@@ -35,6 +35,9 @@ class Project:
         self.sources = Sources.empty()
         self.mlt_producer_cache = MltProducerCache()
 
+    def get_label(self, source_id):
+        return self.sources.get(source_id).get_label()
+
     def add_clip(self, path):
         # TODO: move to transaction
         producer = mlt.Producer(self.profile, path)

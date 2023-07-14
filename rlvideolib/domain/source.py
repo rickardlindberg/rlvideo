@@ -70,3 +70,6 @@ class Sources(namedtuple("Sources", "id_to_source")):
         new = dict(self.id_to_source)
         new[source.id] = source
         return self._replace(id_to_source=new)
+
+    def get(self, id):
+        return self.id_to_source[id]

@@ -114,6 +114,9 @@ class MixSection:
         >>> import cairo
         >>> from rlvideolib.graphics.rectangle import RectangleMap
         >>> from rlvideolib.domain.cut import Cut
+        >>> class MockProject:
+        ...     def get_label(self, id):
+        ...         return id
 
         >>> rectangle = Rectangle.from_size(width=300, height=100)
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, rectangle.width, rectangle.height)
@@ -123,7 +126,7 @@ class MixSection:
         >>> MixSection(
         ...     length=0,
         ...     playlists=[]
-        ... ).draw_cairo(context, rectangle, rectangle_map, None)
+        ... ).draw_cairo(context, rectangle, rectangle_map, MockProject())
         >>> rectangle_map
         <BLANKLINE>
 
@@ -144,12 +147,12 @@ class MixSection:
         ...             ]
         ...         ),
         ...     ]
-        ... ).draw_cairo(context, rectangle, rectangle_map, None)
+        ... ).draw_cairo(context, rectangle, rectangle_map, MockProject())
         >>> rectangle_map
         Rectangle(x=0, y=0, width=300, height=50):
-          Cut(source=CutSource(source=TextSource(id=None, text='A')), in_out=Region(start=0, end=6), position=0, id=None)
+          Cut(source=CutSource(source=TextSource(id='A', text='A')), in_out=Region(start=0, end=6), position=0, id=None)
         Rectangle(x=0, y=50, width=300, height=50):
-          Cut(source=CutSource(source=TextSource(id=None, text='B')), in_out=Region(start=0, end=6), position=0, id=None)
+          Cut(source=CutSource(source=TextSource(id='B', text='B')), in_out=Region(start=0, end=6), position=0, id=None)
         """
         for playlist, playlist_rectangle in rectangle.divide_height(
             self.playlists,

@@ -16,11 +16,11 @@ DEFAULT_REGION_GROUP_SIZE = 100
 class Cut(namedtuple("Cut", "source,in_out,position,id")):
 
     @staticmethod
-    def test_instance(name="A", start=0, end=5, position=0, id=None, source_id=None):
+    def test_instance(name="A", start=0, end=5, position=0, id=None):
         from rlvideolib.domain.source import TextSource
         return Cut(
             # TODO: source should be self.id
-            source=CutSource(TextSource(id=source_id, text=name)),
+            source=CutSource(TextSource(id=name, text=name)),
             in_out=Region(start=start, end=end),
             position=position,
             id=id
@@ -104,6 +104,9 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
     def get_label(self):
         return self.source.get_label()
 
+    def get_source_id(self):
+        return self.source.get_source_id()
+
     def get_source_cut(self):
         if isinstance(self.source, Cut):
             return self.source.get_source_cut()
@@ -114,15 +117,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
-        Cut(source=CutSource(source=TextSource(id=None, text='A')), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source=TextSource(id='A', text='A')), in_out=Region(start=0, end=20), position=10, id=None)
 
         Contains all:
 
         >>> cut.create_cut(Region(start=0, end=40))
-        Cut(source=CutSource(source=TextSource(id=None, text='A')), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source=TextSource(id='A', text='A')), in_out=Region(start=0, end=20), position=10, id=None)
 
         >>> cut.create_cut(Region(start=10, end=30))
-        Cut(source=CutSource(source=TextSource(id=None, text='A')), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source=TextSource(id='A', text='A')), in_out=Region(start=0, end=20), position=10, id=None)
 
         Subcut left:
 
@@ -247,7 +250,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         if self.starts_at_original_cut():
             context.move_to(rectangle.x+2, rectangle.y+10)
             context.set_source_rgb(0, 0, 0)
-            context.text_path(self.get_label())
+            context.text_path(project.get_label(self.get_source_id()))
             context.fill()
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
@@ -591,6 +594,9 @@ class CutSource(namedtuple("CutSource", "source")):
 
     def ends_at(self, position):
         return True
+
+    def get_source_id(self):
+        return self.source.id
 
     def get_label(self):
         return self.source.get_label()
