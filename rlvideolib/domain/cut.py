@@ -19,8 +19,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
     def test_instance(name="A", start=0, end=5, position=0, id=None):
         from rlvideolib.domain.source import TextSource
         return Cut(
-            # TODO: source should be self.id
-            source=CutSource(TextSource(id=name, text=name)),
+            source=CutSource(source_id=name),
             in_out=Region(start=start, end=end),
             position=position,
             id=id
@@ -114,15 +113,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
-        Cut(source=CutSource(source=TextSource(id='A', text='A')), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         Contains all:
 
         >>> cut.create_cut(Region(start=0, end=40))
-        Cut(source=CutSource(source=TextSource(id='A', text='A')), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         >>> cut.create_cut(Region(start=10, end=30))
-        Cut(source=CutSource(source=TextSource(id='A', text='A')), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         Subcut left:
 
@@ -581,7 +580,7 @@ class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
         """
         return self.region_number_to_cut_ids.get(region_number, [])
 
-class CutSource(namedtuple("CutSource", "source")):
+class CutSource(namedtuple("CutSource", "source_id")):
 
     def to_mlt_producer(self, profile, cache):
         return cache.get_source(self.get_source_id()).to_mlt_producer(profile, cache)
@@ -593,4 +592,4 @@ class CutSource(namedtuple("CutSource", "source")):
         return True
 
     def get_source_id(self):
-        return self.source.id
+        return self.source_id

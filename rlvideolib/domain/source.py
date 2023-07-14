@@ -20,8 +20,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         if start < 0 or end > self.length:
             raise ValueError("Invalid cut.")
         return Cut(
-            # TODO: source should be self.id
-            source=CutSource(source=self),
+            source=CutSource(source_id=self.id),
             in_out=Region(start=start, end=end),
             position=0,
             id=None
@@ -43,8 +42,7 @@ class TextSource(namedtuple("TextSource", "id,text")):
 
     def create_cut(self, start, end):
         return Cut(
-            # TODO: source should be self.id
-            source=CutSource(source=self),
+            source=CutSource(source_id=self.id),
             in_out=Region(start=start, end=end),
             position=0,
             id=None

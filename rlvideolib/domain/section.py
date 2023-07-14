@@ -150,9 +150,9 @@ class MixSection:
         ... ).draw_cairo(context, rectangle, rectangle_map, MockProject())
         >>> rectangle_map
         Rectangle(x=0, y=0, width=300, height=50):
-          Cut(source=CutSource(source=TextSource(id='A', text='A')), in_out=Region(start=0, end=6), position=0, id=None)
+          Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=6), position=0, id=None)
         Rectangle(x=0, y=50, width=300, height=50):
-          Cut(source=CutSource(source=TextSource(id='B', text='B')), in_out=Region(start=0, end=6), position=0, id=None)
+          Cut(source=CutSource(source_id='B'), in_out=Region(start=0, end=6), position=0, id=None)
         """
         for playlist, playlist_rectangle in rectangle.divide_height(
             self.playlists,
