@@ -8,9 +8,6 @@ from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.cut import CutSource
 from rlvideolib.domain.region import Region
 
-# TODO: add some kind of container for source files (caching, background
-# loading)
-
 class FileSource(namedtuple("FileSource", "id,path,length")):
 
     def with_unique_id(self):
