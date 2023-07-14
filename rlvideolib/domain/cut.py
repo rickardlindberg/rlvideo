@@ -16,10 +16,10 @@ DEFAULT_REGION_GROUP_SIZE = 100
 class Cut(namedtuple("Cut", "source,in_out,position,id")):
 
     @staticmethod
-    def test_instance(name="A", start=0, end=5, position=0, id=None):
-        from rlvideolib.domain.source import Source
+    def test_instance(name="A", start=0, end=5, position=0, id=None, source_id=None):
+        from rlvideolib.domain.source import TextSource
         return Cut(
-            source=Source(name=name),
+            source=TextSource(id=source_id, text=name),
             in_out=Region(start=start, end=end),
             position=position,
             id=id
@@ -113,15 +113,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
-        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=TextSource(id=None, text='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         Contains all:
 
         >>> cut.create_cut(Region(start=0, end=40))
-        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=TextSource(id=None, text='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         >>> cut.create_cut(Region(start=10, end=30))
-        Cut(source=Source(name='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=TextSource(id=None, text='A'), in_out=Region(start=0, end=20), position=10, id=None)
 
         Subcut left:
 

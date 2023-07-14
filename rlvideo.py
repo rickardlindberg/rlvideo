@@ -10,7 +10,6 @@ from gi.repository import Gtk, Gdk, GLib
 from rlvideolib.debug import timeit
 from rlvideolib.domain.project import Project
 from rlvideolib.domain.region import Region
-from rlvideolib.domain.source import Source
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
 
@@ -161,7 +160,7 @@ class Timeline:
     ... )
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
     Rectangle(x=10, y=20, width=10, height=20):
-      Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=...)
+      Cut(source=TextSource(id=None, text='hello'), in_out=Region(start=0, end=10), position=0, id=...)
     Rectangle(x=10, y=60, width=7840, height=30):
       position
     >>> timeline.split_into_sections().to_ascii_canvas()
@@ -244,7 +243,7 @@ class Timeline:
         ... )
         >>> timeline.rectangle_map # doctest: +ELLIPSIS
         Rectangle(x=10, y=20, width=10, height=20):
-          Cut(source=Source(name='hello'), in_out=Region(start=0, end=10), position=0, id=...)
+          Cut(source=TextSource(id=None, text='hello'), in_out=Region(start=0, end=10), position=0, id=...)
         Rectangle(x=10, y=60, width=7840, height=30):
           position
         """

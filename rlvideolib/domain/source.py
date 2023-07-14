@@ -39,3 +39,27 @@ class Source(namedtuple("Source", "name")):
 
     def get_label(self):
         return os.path.basename(self.name)
+
+class TextSource(namedtuple("TextSource", "id,text")):
+
+    def create_cut(self, start, end):
+        return Cut(
+            source=self,
+            in_out=Region(start=start, end=end),
+            position=0,
+            id=None
+        ).with_unique_id()
+
+    def to_mlt_producer(self, profile, cache):
+        producer = mlt.Producer(profile, "pango")
+        producer.set("text", self.text)
+        producer.set("bgcolour", "red")
+
+    def starts_at(self, position):
+        return True
+
+    def ends_at(self, position):
+        return True
+
+    def get_label(self):
+        return self.text

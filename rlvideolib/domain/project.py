@@ -5,6 +5,7 @@ import mlt
 from rlvideolib.debug import timeit
 from rlvideolib.domain.cut import Cuts
 from rlvideolib.domain.source import Source
+from rlvideolib.domain.source import TextSource
 
 class Project:
 
@@ -39,7 +40,7 @@ class Project:
 
     def add_text_clip(self, text, length):
         # TODO: move to transaction
-        self.cuts = self.cuts.add(Source(text).create_cut(0, length).move(self.cuts.end))
+        self.cuts = self.cuts.add(TextSource(id=None, text=text).create_cut(0, length).move(self.cuts.end))
 
     def new_transaction(self):
         return Transaction(self)
