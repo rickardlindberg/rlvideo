@@ -148,8 +148,9 @@ class Timeline:
 
     """
     >>> cut = Source("hello").create_cut(0, 10).with_id(5)
-    >>> timeline = Timeline(project=Project.new())
-    >>> timeline.add(cut)
+    >>> project = Project.new()
+    >>> project.add_cut(cut)
+    >>> timeline = Timeline(project=project)
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     >>> context = cairo.Context(surface)
@@ -215,9 +216,6 @@ class Timeline:
     def scroll_down(self, x, y):
         self.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
 
-    def add(self, cut):
-        self.project.add_cut(cut)
-
     def set_zoom_factor(self, zoom_factor):
         self.scrollbar = self.scrollbar._replace(one_length_in_pixels=zoom_factor)
 
@@ -230,8 +228,9 @@ class Timeline:
         >>> width, height = 300, 100
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
-        >>> timeline = Timeline(project=Project.new())
-        >>> timeline.add(Source("hello").create_cut(0, 10).move(0).with_id(5))
+        >>> project = Project.new()
+        >>> project.add_cut(Source("hello").create_cut(0, 10).move(0).with_id(5))
+        >>> timeline = Timeline(project=project)
         >>> timeline.draw_cairo(
         ...     context=context,
         ...     playhead_position=0,
