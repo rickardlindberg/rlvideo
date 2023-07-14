@@ -33,6 +33,7 @@ class Project:
         self.mlt_producer_cache = MltProducerCache()
 
     def add_cut(self, cut):
+        # TODO: convert this to add_source
         self.cuts = self.cuts.add(cut)
 
     def new_transaction(self):
