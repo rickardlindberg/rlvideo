@@ -21,16 +21,20 @@ class Project:
         project = Project.new()
         for i in range(int(os.environ.get("RLVIDEO_PERFORMANCE", "1"))):
             offset = i*50
-            project.add_cut(Source("resources/one-to-five.mp4").create_cut(0, 5).move(offset+0))
-            project.add_cut(Source("resources/one.mp4").create_cut(0, 15).move(offset+5))
-            project.add_cut(Source("resources/two.mp4").create_cut(0, 15).move(offset+20))
-            project.add_cut(Source("resources/three.mp4").create_cut(0, 15).move(offset+35))
+            project.add_source("resources/one-to-five.mp4")
+            project.add_source("resources/one.mp4")
+            project.add_source("resources/two.mp4")
+            project.add_source("resources/three.mp4")
         return project
 
     def __init__(self):
         self.profile = mlt.Profile()
         self.cuts = Cuts.empty()
         self.mlt_producer_cache = MltProducerCache()
+
+    def add_source(self, path):
+        producer = mlt.Producer(self.profile, path)
+        self.cuts = self.cuts.add(Source(path).create_cut(0, producer.get_playtime()).move(self.cuts.end))
 
     def add_cut(self, cut):
         # TODO: convert this to add_source
