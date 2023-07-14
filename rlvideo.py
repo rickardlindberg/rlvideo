@@ -29,7 +29,7 @@ class App:
         >>> isinstance(App().generate_mlt_producer(), mlt.Playlist)
         True
         """
-        x = self.timeline.to_mlt_producer(self.profile, self.mlt_producer_cache)
+        x = self.project.to_mlt_producer(self.profile, self.mlt_producer_cache)
         self.mlt_producer_cache.swap()
         return x
 
@@ -236,10 +236,6 @@ class Timeline:
 
     def split_into_sections(self):
         return self.project.split_into_sections()
-
-    @timeit("Timeline.to_mlt_producer")
-    def to_mlt_producer(self, profile, cache):
-        return self.split_into_sections().to_mlt_producer(profile, cache)
 
     @timeit("Timeline.draw_cairo")
     def draw_cairo(self, context, playhead_position, width, height):

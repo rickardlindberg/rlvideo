@@ -32,3 +32,6 @@ class Project:
     def split_into_sections(self):
         return self.cuts.split_into_sections()
 
+    @timeit("Project.to_mlt_producer")
+    def to_mlt_producer(self, profile, cache):
+        return self.split_into_sections().to_mlt_producer(profile, cache)
