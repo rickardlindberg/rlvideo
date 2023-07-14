@@ -33,10 +33,12 @@ class Project:
         self.mlt_producer_cache = MltProducerCache()
 
     def add_clip(self, path):
+        # TODO: move to transaction
         producer = mlt.Producer(self.profile, path)
         self.cuts = self.cuts.add(Source(path).create_cut(0, producer.get_playtime()).move(self.cuts.end))
 
     def add_text_clip(self, text, length):
+        # TODO: move to transaction
         self.cuts = self.cuts.add(Source(text).create_cut(0, length).move(self.cuts.end))
 
     def new_transaction(self):
