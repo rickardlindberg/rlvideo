@@ -1,5 +1,6 @@
 from collections import namedtuple
 import os
+import subprocess
 import uuid
 
 import mlt
@@ -24,11 +25,38 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         ).with_unique_id()
 
     def load_proxy(self, profile):
-        producer = mlt.Producer(profile, self.path)
+        """
+        >>> _ = mlt.Factory().init()
+        >>> profile = mlt.Profile()
+        >>> source = FileSource(id=None, path="resources/one.mp4", length=15)
+        >>> producer = source.load_proxy(profile)
+        >>> isinstance(producer, mlt.Producer)
+        True
+        """
+        assert self.length == mlt.Producer(profile, self.path).get_playtime()
+        chechsum = md5(self.path)
+        proxy_path = f"/tmp/{chechsum}.mp4"
+        proxy_tmp_path = f"/tmp/{chechsum}.tmp.mp4"
+        if not os.path.exists(proxy_path):
+            subprocess.check_call([
+                "ffmpeg",
+                "-y", # Overwrite output files without asking.
+                "-i", self.path,
+                "-vf", "yadif,scale=960:540",
+                "-qscale", "3",
+                "-vcodec", "mjpeg",
+                proxy_tmp_path
+            ], stderr=subprocess.PIPE)
+            os.rename(proxy_tmp_path, proxy_path)
+        producer = mlt.Producer(profile, proxy_path)
+        assert self.length == producer.get_playtime()
         return producer
 
     def get_label(self):
         return os.path.basename(self.path)
+
+def md5(path):
+    return subprocess.check_output(["md5sum", path])[:32].decode("ascii")
 
 class TextSource(namedtuple("TextSource", "id,text")):
 
