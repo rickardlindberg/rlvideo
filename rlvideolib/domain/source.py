@@ -38,6 +38,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         proxy_path = f"/tmp/{chechsum}.mp4"
         proxy_tmp_path = f"/tmp/{chechsum}.tmp.mp4"
         if not os.path.exists(proxy_path):
+            # TODO: produce proxy with MLT (idea from Flowblade)
             subprocess.check_call([
                 "ffmpeg",
                 "-y", # Overwrite output files without asking.
