@@ -56,6 +56,7 @@ class Project:
         producer = mlt.Producer(self.profile, path)
         source = FileSource(id=None, path=path, length=producer.get_playtime()).with_unique_id()
         self.sources = self.sources.add(source)
+        self.proxy_source_loader.load(source.id)
         self.cuts = self.cuts.add(source.create_cut(0, source.length).move(self.cuts.end))
 
     def add_text_clip(self, text, length, id=None):
@@ -64,6 +65,7 @@ class Project:
         if id is None:
             source = source.with_unique_id()
         self.sources = self.sources.add(source)
+        self.proxy_source_loader.load(source.id)
         self.cuts = self.cuts.add(source.create_cut(0, length).move(self.cuts.end))
 
     def new_transaction(self):
@@ -93,12 +95,23 @@ class ProxySourceLoader:
         self.background_worker = background_worker
         self.mlt_producers = {}
 
+    def load(self, source_id):
+        def store(producer):
+            self.mlt_producers[source_id] = producer
+        self.background_worker.add(
+            store,
+            self.project.get_source(source_id).load_proxy,
+            self.profile
+        )
+
     def get_source_mlt_producer(self, source_id):
         if source_id in self.mlt_producers:
             return self.mlt_producers[source_id]
         else:
-            self.mlt_producers[source_id] = self.project.get_source(source_id).to_mlt_producer(self.profile)
-            return self.mlt_producers[source_id]
+            producer = mlt.Producer(self.profile, "pango")
+            producer.set("text", "Loading...")
+            producer.set("bgcolour", "red")
+            return producer
 
 class Transaction:
 

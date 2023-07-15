@@ -405,8 +405,8 @@ class BackgroundWorker:
             result_fn(*args)
             return False # To only schedule it once
         def worker():
-            GLib.idle_add(result, *work_fn(*args, **kwargs))
-        thread = threading.Thread(worker)
+            GLib.idle_add(result, work_fn(*args, **kwargs))
+        thread = threading.Thread(target=worker)
         thread.daemon = True
         thread.start()
 

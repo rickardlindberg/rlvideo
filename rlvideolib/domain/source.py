@@ -23,7 +23,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
             id=None
         ).with_unique_id()
 
-    def to_mlt_producer(self, profile):
+    def load_proxy(self, profile):
         producer = mlt.Producer(profile, self.path)
         return producer
 
@@ -43,7 +43,7 @@ class TextSource(namedtuple("TextSource", "id,text")):
             id=None
         ).with_unique_id()
 
-    def to_mlt_producer(self, profile):
+    def load_proxy(self, profile):
         producer = mlt.Producer(profile, "pango")
         producer.set("text", self.text)
         producer.set("bgcolour", "red")
