@@ -24,12 +24,12 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
             id=None
         ).with_unique_id()
 
-    def load_proxy(self, profile):
+    def load_proxy(self, profile, width, height):
         """
         >>> _ = mlt.Factory().init()
         >>> profile = mlt.Profile()
         >>> source = FileSource(id=None, path="resources/one.mp4", length=15)
-        >>> producer = source.load_proxy(profile)
+        >>> producer = source.load_proxy(profile, 960, 540)
         >>> isinstance(producer, mlt.Producer)
         True
         """
@@ -43,7 +43,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
                 "ffmpeg",
                 "-y", # Overwrite output files without asking.
                 "-i", self.path,
-                "-vf", "yadif,scale=960:540",
+                "-vf", f"yadif,scale={width}:{height}",
                 "-qscale", "3",
                 "-vcodec", "mjpeg",
                 proxy_tmp_path
@@ -73,7 +73,7 @@ class TextSource(namedtuple("TextSource", "id,text")):
             id=None
         ).with_unique_id()
 
-    def load_proxy(self, profile):
+    def load_proxy(self, profile, width, height):
         producer = mlt.Producer(profile, "pango")
         producer.set("text", self.text)
         producer.set("bgcolour", "red")

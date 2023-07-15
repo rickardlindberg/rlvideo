@@ -120,7 +120,9 @@ class ProxySourceLoader:
         self.background_worker.add(
             store,
             self.project.get_source(source_id).load_proxy,
-            self.profile
+            self.profile,
+            self.project.get_preview_profile().width(),
+            self.project.get_preview_profile().height(),
         )
 
     def get_source_mlt_producer(self, source_id):
