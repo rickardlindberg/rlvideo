@@ -1,5 +1,6 @@
 from collections import namedtuple
 import os
+import threading
 
 import cairo
 import gi
@@ -17,7 +18,7 @@ class App:
 
     def __init__(self):
         mlt.Factory().init()
-        self.project = Project.with_test_clips()
+        self.project = Project.with_test_clips(background_worker=BackgroundWorker())
         self.timeline = Timeline(project=self.project)
         self.timeline.set_zoom_factor(25)
 
@@ -399,7 +400,7 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 
 class BackgroundWorker:
 
-    def add(result_fn, work_fn, *args, **kwargs):
+    def add(self, result_fn, work_fn, *args, **kwargs):
         def result(*args):
             result_fn(*args)
             return False # To only schedule it once

@@ -11,16 +11,22 @@ from rlvideolib.domain.source import TextSource
 class Project:
 
     @staticmethod
-    def new():
+    def new(background_worker=None):
         """
         >>> isinstance(Project.new(), Project)
         True
         """
-        return Project()
+        class NonThreadedBackgroundWorker:
+            def add(self, result_fn, work_fn, *args, **kwargs):
+                result_fn(work_fn(*args, **kwargs))
+        return Project(
+            NonThreadedBackgroundWorker() if background_worker is None
+            else background_worker
+        )
 
     @staticmethod
-    def with_test_clips():
-        project = Project.new()
+    def with_test_clips(background_worker=None):
+        project = Project.new(background_worker)
         for i in range(int(os.environ.get("RLVIDEO_PERFORMANCE", "1"))):
             offset = i*50
             project.add_clip("resources/one-to-five.mp4")
@@ -29,11 +35,15 @@ class Project:
             project.add_clip("resources/three.mp4")
         return project
 
-    def __init__(self):
+    def __init__(self, background_worker):
         self.profile = mlt.Profile()
         self.cuts = Cuts.empty()
         self.sources = Sources.empty()
-        self.proxy_source_loader = ProxySourceLoader(profile=self.profile, project=self)
+        self.proxy_source_loader = ProxySourceLoader(
+            profile=self.profile,
+            project=self,
+            background_worker=background_worker
+        )
 
     def get_label(self, source_id):
         return self.get_source(source_id).get_label()
@@ -77,9 +87,10 @@ class Project:
 
 class ProxySourceLoader:
 
-    def __init__(self, project, profile):
+    def __init__(self, project, profile, background_worker):
         self.project = project
         self.profile = profile
+        self.background_worker = background_worker
         self.mlt_producers = {}
 
     def get_source_mlt_producer(self, source_id):
