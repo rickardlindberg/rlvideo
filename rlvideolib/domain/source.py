@@ -49,6 +49,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
             ], stderr=subprocess.PIPE)
             os.rename(proxy_tmp_path, proxy_path)
         producer = mlt.Producer(profile, proxy_path)
+        # TODO: does it make sense that proxies can get a different playtime?
         assert self.length <= producer.get_playtime() # proxy got larger in one case
         return producer
 
