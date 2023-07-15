@@ -25,6 +25,16 @@ class Project:
         )
 
     @staticmethod
+    def load(args, background_worker=None):
+        if args:
+            project = Project.new(background_worker)
+            for arg in args:
+                project.add_clip(arg)
+            return project
+        else:
+            return Project.with_test_clips(background_worker)
+
+    @staticmethod
     def with_test_clips(background_worker=None):
         project = Project.new(background_worker)
         for i in range(int(os.environ.get("RLVIDEO_PERFORMANCE", "1"))):

@@ -1,5 +1,6 @@
 from collections import namedtuple
 import os
+import sys
 import threading
 
 import cairo
@@ -18,7 +19,10 @@ class App:
 
     def __init__(self):
         mlt.Factory().init()
-        self.project = Project.with_test_clips(background_worker=BackgroundWorker())
+        self.project = Project.load(
+            background_worker=BackgroundWorker(),
+            args=sys.argv[1:]
+        )
         self.timeline = Timeline(project=self.project)
         self.timeline.set_zoom_factor(25)
 
