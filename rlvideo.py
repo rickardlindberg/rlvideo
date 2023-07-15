@@ -147,6 +147,7 @@ class MltPlayer:
 class Timeline:
 
     """
+    >>> _ = mlt.Factory().init()
     >>> project = Project.new()
     >>> project.add_text_clip("hello", length=10, id="hello")
     >>> timeline = Timeline(project=project)
@@ -224,6 +225,7 @@ class Timeline:
     @timeit("Timeline.draw_cairo")
     def draw_cairo(self, context, playhead_position, width, height):
         """
+        >>> _ = mlt.Factory().init()
         >>> width, height = 300, 100
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
