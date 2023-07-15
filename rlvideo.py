@@ -23,8 +23,6 @@ class App:
             background_worker=BackgroundWorker(),
             args=sys.argv[1:]
         )
-        self.timeline = Timeline(project=self.project)
-        self.timeline.set_zoom_factor(25)
 
     def run(self):
 
@@ -99,7 +97,9 @@ class App:
 
         mlt_player = MltPlayer(self.project.get_preview_profile(), preview.get_window().get_xid())
         mlt_player.set_producer(self.project.get_preview_mlt_producer())
-        print(self.timeline.split_into_sections().to_ascii_canvas())
+
+        self.timeline = Timeline(project=self.project, player=mlt_player)
+        self.timeline.set_zoom_factor(25)
 
         Gtk.main()
 
@@ -124,6 +124,11 @@ class MltPlayer:
         else:
             print("Pause")
             self.producer.set_speed(0)
+
+    def scrub(self, position):
+        print("Scrub")
+        self.producer.set_speed(0)
+        self.producer.seek(position)
 
     def seek_left_one_frame(self):
         print("Left")
@@ -154,7 +159,7 @@ class Timeline:
     >>> _ = mlt.Factory().init()
     >>> project = Project.new()
     >>> project.add_text_clip("hello", length=10, id="hello")
-    >>> timeline = Timeline(project=project)
+    >>> timeline = Timeline(project=project, player=None)
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     >>> context = cairo.Context(surface)
@@ -167,6 +172,8 @@ class Timeline:
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
     Rectangle(x=10, y=20, width=10, height=20):
       Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=...)
+    Rectangle(x=10, y=10, width=280, height=20):
+      scrub
     Rectangle(x=10, y=60, width=7840, height=30):
       position
     >>> timeline.split_into_sections().to_ascii_canvas()
@@ -181,8 +188,9 @@ class Timeline:
     |%<-h0----->|
     """
 
-    def __init__(self, project):
+    def __init__(self, project, player):
         self.project = project
+        self.player = player
         self.scrollbar = Scrollbar(
             content_length=0,
             content_desired_start=0,
@@ -203,6 +211,11 @@ class Timeline:
             delta = x-self.tmp_xy[0]
             if self.tmp_cut == "position":
                 self.scrollbar = self.tmp_scrollbar.move_scrollbar(delta)
+            elif self.tmp_cut == "scrub":
+                self.player.scrub(
+                    self.scrollbar.content_start+
+                    int(x/self.scrollbar.one_length_in_pixels)
+                )
             else:
                 self.tmp_transaction.rollback()
                 self.tmp_transaction.modify(self.tmp_cut, lambda x:
@@ -235,7 +248,7 @@ class Timeline:
         >>> context = cairo.Context(surface)
         >>> project = Project.new()
         >>> project.add_text_clip("hello", length=10)
-        >>> timeline = Timeline(project=project)
+        >>> timeline = Timeline(project=project, player=None)
         >>> timeline.draw_cairo(
         ...     context=context,
         ...     playhead_position=0,
@@ -251,6 +264,8 @@ class Timeline:
         >>> timeline.rectangle_map # doctest: +ELLIPSIS
         Rectangle(x=10, y=20, width=10, height=20):
           Cut(source=CutSource(source_id=...), in_out=Region(start=0, end=10), position=0, id=...)
+        Rectangle(x=10, y=10, width=280, height=20):
+          scrub
         Rectangle(x=10, y=60, width=7840, height=30):
           position
         """
@@ -290,6 +305,22 @@ class Timeline:
             context.move_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), 0)
             context.line_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), top_area.height)
             context.stroke()
+
+        scrub_area = area._replace(height=margin*2)
+        x, y, w, h = (
+            scrub_area.x,
+            scrub_area.y,
+            scrub_area.width,
+            scrub_area.height,
+        )
+        rect_x, rect_y = context.user_to_device(x, y)
+        rect_w, rect_h = context.user_to_device_distance(w, h)
+        self.rectangle_map.add(Rectangle(
+            x=int(rect_x),
+            y=int(rect_y),
+            width=int(rect_w),
+            height=int(rect_h)
+        ), "scrub")
 
         with bottom_area.cairo_clip_translate(context) as area:
             x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
