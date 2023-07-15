@@ -33,7 +33,7 @@ class Project:
         self.profile = mlt.Profile()
         self.cuts = Cuts.empty()
         self.sources = Sources.empty()
-        self.mlt_producer_cache = MltProducerCache(self)
+        self.proxy_source_loader = ProxySourceLoader(profile=self.profile, project=self)
 
     def get_label(self, source_id):
         return self.get_source(source_id).get_label()
@@ -70,33 +70,20 @@ class Project:
         >>> isinstance(Project.with_test_clips().get_preview_mlt_producer(), mlt.Playlist)
         True
         """
-        producer = self.split_into_sections().to_mlt_producer(
+        return self.split_into_sections().to_mlt_producer(
             profile=self.profile,
-            cache=self.mlt_producer_cache
+            cache=self.proxy_source_loader
         )
-        self.mlt_producer_cache.swap()
-        return producer
 
-class MltProducerCache:
+class ProxySourceLoader:
 
-    def __init__(self, project):
-        self.previous = {}
-        self.next = {}
+    def __init__(self, project, profile):
         self.project = project
+        self.profile = profile
+        self.mlt_producers = {}
 
-    def get_source(self, source_id):
-        return self.project.get_source(source_id)
-
-    def swap(self):
-        self.previous = self.next
-        self.next = {}
-
-    def get_or_create(self, key, fn):
-        if key in self.previous:
-            self.next[key] = self.previous[key]
-        elif key not in self.next:
-            self.next[key] = fn()
-        return self.next[key]
+    def get_source_mlt_producer(self, source_id):
+        return self.project.get_source(source_id).to_mlt_producer(self.profile)
 
 class Transaction:
 

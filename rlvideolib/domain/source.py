@@ -23,11 +23,9 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
             id=None
         ).with_unique_id()
 
-    def to_mlt_producer(self, profile, cache):
-        def create():
-            producer = mlt.Producer(profile, self.path)
-            return producer
-        return cache.get_or_create(self.path, create)
+    def to_mlt_producer(self, profile):
+        producer = mlt.Producer(profile, self.path)
+        return producer
 
     def get_label(self):
         return os.path.basename(self.path)
@@ -45,7 +43,7 @@ class TextSource(namedtuple("TextSource", "id,text")):
             id=None
         ).with_unique_id()
 
-    def to_mlt_producer(self, profile, cache):
+    def to_mlt_producer(self, profile):
         producer = mlt.Producer(profile, "pango")
         producer.set("text", self.text)
         producer.set("bgcolour", "red")

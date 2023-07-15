@@ -193,12 +193,10 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         playlist.append(self.to_mlt_producer(profile, cache))
 
     def to_mlt_producer(self, profile, cache):
-        def create():
-            return self.source.to_mlt_producer(profile, cache).cut(
-                self.in_out.start,
-                self.in_out.end-1
-            )
-        return cache.get_or_create((self.source, self.in_out), create)
+        return self.source.to_mlt_producer(profile, cache).cut(
+            self.in_out.start,
+            self.in_out.end-1
+        )
 
     def draw_cairo(self, context, rectangle, rectangle_map, project):
         # TODO: make all lines even size
@@ -582,7 +580,7 @@ class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
 class CutSource(namedtuple("CutSource", "source_id")):
 
     def to_mlt_producer(self, profile, cache):
-        return cache.get_source(self.get_source_id()).to_mlt_producer(profile, cache)
+        return cache.get_source_mlt_producer(self.get_source_id())
 
     def starts_at(self, position):
         return True
