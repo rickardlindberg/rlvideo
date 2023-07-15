@@ -46,7 +46,7 @@ class Project:
         return project
 
     def __init__(self, background_worker):
-        self.profile = mlt.Profile()
+        self.profile = self.create_profile()
         self.cuts = Cuts.empty()
         self.sources = Sources.empty()
         self.proxy_source_loader = ProxySourceLoader(
@@ -54,6 +54,15 @@ class Project:
             project=self,
             background_worker=background_worker
         )
+
+    def get_preview_profile(self):
+        profile = self.create_profile()
+        profile.set_width(960)
+        profile.set_height(540)
+        return profile
+
+    def create_profile(self):
+        return mlt.Profile("uhd_2160p_25")
 
     def get_label(self, source_id):
         return self.get_source(source_id).get_label()
