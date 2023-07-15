@@ -83,7 +83,11 @@ class ProxySourceLoader:
         self.mlt_producers = {}
 
     def get_source_mlt_producer(self, source_id):
-        return self.project.get_source(source_id).to_mlt_producer(self.profile)
+        if source_id in self.mlt_producers:
+            return self.mlt_producers[source_id]
+        else:
+            self.mlt_producers[source_id] = self.project.get_source(source_id).to_mlt_producer(self.profile)
+            return self.mlt_producers[source_id]
 
 class Transaction:
 
