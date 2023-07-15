@@ -78,6 +78,9 @@ class Project:
     @timeit("Project.get_preview_mlt_producer")
     def get_preview_mlt_producer(self):
         """
+        >>> _ = mlt.Factory().init()
+        >>> isinstance(Project.with_test_clips().get_preview_mlt_producer(), mlt.Playlist)
+        True
         """
         return self.split_into_sections().to_mlt_producer(
             profile=self.profile,
