@@ -17,14 +17,9 @@ from rlvideolib.graphics.rectangle import RectangleMap
 
 class App:
 
-    def __init__(self):
-        mlt.Factory().init()
-        self.project = Project.load(
-            background_worker=BackgroundWorker(),
-            args=sys.argv[1:]
-        )
-
     def run(self):
+
+        mlt.Factory().init()
 
         def key_press_handler(window, event):
             if event.get_keyval().keyval == Gdk.keyval_from_name("0"):
@@ -102,7 +97,19 @@ class App:
         refresh_id = GLib.timeout_add(100, redraw)
         box.pack_start(timeline, True, True, 0)
 
+        statusbar = Gtk.Statusbar()
+        status_context = statusbar.get_context_id("status")
+        box.pack_start(statusbar, False, True, 0)
+        def display_status(message):
+            statusbar.pop(status_context)
+            statusbar.push(status_context, message)
+
         main_window.show_all()
+
+        self.project = Project.load(
+            background_worker=BackgroundWorker(display_status),
+            args=sys.argv[1:]
+        )
 
         mlt_player = MltPlayer(self.project.get_preview_profile(), preview.get_window().get_xid())
         mlt_player.set_producer(self.project.get_preview_mlt_producer())
@@ -446,15 +453,32 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 
 class BackgroundWorker:
 
-    def add(self, result_fn, work_fn, *args, **kwargs):
+    def __init__(self, display_status):
+        self.display_status = display_status
+        self.jobs = []
+        self.description = None
+
+    def add(self, description, result_fn, work_fn, *args, **kwargs):
+        self.jobs.append((description, result_fn, work_fn, args, kwargs))
+        self.pop()
+
+    def pop(self):
         def result(*args):
             result_fn(*args)
+            self.description = None
+            self.pop()
             return False # To only schedule it once
         def worker():
             GLib.idle_add(result, work_fn(*args, **kwargs))
-        thread = threading.Thread(target=worker)
-        thread.daemon = True
-        thread.start()
+        if self.description is None and self.jobs:
+            self.description, result_fn, work_fn, args, kwargs = self.jobs.pop(-1)
+            thread = threading.Thread(target=worker)
+            thread.daemon = True
+            thread.start()
+        if self.description:
+            self.display_status(f"{self.description} {len(self.jobs)} left in queue...")
+        else:
+            self.display_status("Ready")
 
 if __name__ == "__main__":
     App().run()

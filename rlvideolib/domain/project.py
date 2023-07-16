@@ -20,7 +20,7 @@ class Project:
         True
         """
         class NonThreadedBackgroundWorker:
-            def add(self, result_fn, work_fn, *args, **kwargs):
+            def add(self, description, result_fn, work_fn, *args, **kwargs):
                 result_fn(work_fn(*args, **kwargs))
         return Project(
             NonThreadedBackgroundWorker() if background_worker is None
@@ -145,6 +145,7 @@ class ProxySourceLoader:
         def store(producer):
             self.mlt_producers[source_id] = producer
         self.background_worker.add(
+            f"Generating proxy for {self.project.get_source(source_id).get_label()}.",
             store,
             self.project.get_source(source_id).load_proxy,
             self.profile,
