@@ -162,6 +162,9 @@ class ProxySourceLoader:
         self.profile = profile
         self.background_worker = background_worker
         self.mlt_producers = {}
+        self.load_producer = mlt.Producer(self.profile, "pango")
+        self.load_producer.set("text", "Loading...")
+        self.load_producer.set("bgcolour", "red")
 
     def load(self, source_id):
         def store(producer):
@@ -180,10 +183,7 @@ class ProxySourceLoader:
         if source_id in self.mlt_producers:
             return self.mlt_producers[source_id]
         else:
-            producer = mlt.Producer(self.profile, "pango")
-            producer.set("text", "Loading...")
-            producer.set("bgcolour", "red")
-            return producer
+            return self.load_producer
 
 class Transaction:
 
