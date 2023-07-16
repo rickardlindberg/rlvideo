@@ -185,5 +185,6 @@ class Transaction:
         if source.id is None:
             source = source.with_unique_id()
         self.project.sources = self.project.sources.add(source)
+        # TODO: sync proxy loader clips when sources changes
         self.project.proxy_source_loader.load(source.id)
         self.project.cuts = self.project.cuts.add(source.create_cut(0, length).move(self.project.cuts.end))
