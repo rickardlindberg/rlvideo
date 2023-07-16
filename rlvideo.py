@@ -44,6 +44,7 @@ class App:
 
         def export_click(widget):
             self.project.export()
+            timeline.grab_focus()
         export_button = Gtk.Button(label="Export")
         export_button.connect("clicked", export_click)
         hbox.pack_start(export_button, True, True, 0)
@@ -90,6 +91,8 @@ class App:
             Gdk.EventMask.BUTTON_RELEASE_MASK |
             Gdk.EventMask.POINTER_MOTION_MASK
         )
+        timeline.set_can_focus(True)
+        timeline.grab_focus()
         def redraw():
             timeline.queue_draw()
             return True
