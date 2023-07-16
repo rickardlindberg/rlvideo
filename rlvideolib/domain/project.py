@@ -79,6 +79,11 @@ class Project:
             project=self,
             background_worker=background_worker
         )
+        self.producer_changed_event = Event()
+
+    def on_producer_changed(self, fn):
+        self.producer_changed_event.listen(fn)
+        fn()
 
     def get_preview_profile(self):
         profile = self.create_profile()
@@ -117,6 +122,7 @@ class Project:
         self.sources = self.sources.add(source)
         self.proxy_source_loader.load(source.id)
         self.cuts = self.cuts.add(source.create_cut(0, source.length).move(self.cuts.end))
+        self.producer_changed_event.trigger()
 
     def add_text_clip(self, text, length, id=None):
         # TODO: move to transaction
@@ -126,6 +132,7 @@ class Project:
         self.sources = self.sources.add(source)
         self.proxy_source_loader.load(source.id)
         self.cuts = self.cuts.add(source.create_cut(0, length).move(self.cuts.end))
+        self.producer_changed_event.trigger()
 
     def new_transaction(self):
         return Transaction(self)
@@ -166,6 +173,7 @@ class ProxySourceLoader:
     def load(self, source_id):
         def store(producer):
             self.mlt_producers[source_id] = producer
+            self.project.producer_changed_event.trigger()
         self.background_worker.add(
             f"Generating proxy for {self.project.get_source(source_id).get_label()}.",
             store,
@@ -195,3 +203,6 @@ class Transaction:
 
     def modify(self, cut_to_modify, fn):
         self.project.cuts = self.project.cuts.modify(cut_to_modify, fn)
+
+    def commit(self):
+        self.project.producer_changed_event.trigger()

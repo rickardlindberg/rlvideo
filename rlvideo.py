@@ -71,7 +71,6 @@ class App:
             ))
         def timeline_button_up(widget, event):
             self.timeline.mouse_up()
-            mlt_player.set_producer(self.project.get_preview_mlt_producer())
             print(self.timeline.split_into_sections().to_ascii_canvas())
         def timeline_scroll(widget, event):
             if event.direction == Gdk.ScrollDirection.UP:
@@ -111,8 +110,7 @@ class App:
             args=sys.argv[1:]
         )
 
-        mlt_player = MltPlayer(self.project.get_preview_profile(), preview.get_window().get_xid())
-        mlt_player.set_producer(self.project.get_preview_mlt_producer())
+        mlt_player = MltPlayer(self.project, preview.get_window().get_xid())
 
         self.timeline = Timeline(project=self.project, player=mlt_player)
         self.timeline.set_zoom_factor(25)
@@ -121,13 +119,14 @@ class App:
 
 class MltPlayer:
 
-    def __init__(self, profile, window_id):
+    def __init__(self, project, window_id):
         # TODO: player area outside video don't always refresh
-        self.profile = profile
+        self.project = project
         os.putenv("SDL_WINDOWID", str(window_id))
-        self.consumer = mlt.Consumer(self.profile, "sdl")
+        self.consumer = mlt.Consumer(self.project.get_preview_profile(), "sdl")
         self.consumer.start()
         self.producer = None
+        self.project.on_producer_changed(self.update_producer)
 
     def position(self):
         # TODO: why is this position on the producer and not the consumer?
@@ -160,7 +159,8 @@ class MltPlayer:
         print("Seek 0")
         self.producer.seek(0)
 
-    def set_producer(self, producer):
+    def update_producer(self):
+        producer = self.project.get_preview_mlt_producer()
         if self.producer:
             producer.seek(self.position())
             producer.set_speed(self.producer.get_speed())
@@ -214,6 +214,7 @@ class Timeline:
             ui_size=10,
         )
         self.rectangle_map = RectangleMap()
+        self.tmp_transaction = None
         self.mouse_up()
 
     def mouse_down(self, x, y):
@@ -238,6 +239,8 @@ class Timeline:
                     x.move(int(delta/self.scrollbar.one_length_in_pixels)))
 
     def mouse_up(self):
+        if self.tmp_transaction:
+            self.tmp_transaction.commit()
         self.tmp_xy = None
         self.tmp_scrollbar= None
         self.tmp_transaction = None
