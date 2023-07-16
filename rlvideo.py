@@ -12,6 +12,7 @@ from gi.repository import Gtk, Gdk, GLib
 from rlvideolib.debug import timeit
 from rlvideolib.domain.project import Project
 from rlvideolib.domain.region import Region
+from rlvideolib.events import Event
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
 
@@ -115,6 +116,7 @@ class App:
 
         self.timeline = Timeline(project=self.project, player=mlt_player)
         self.timeline.set_zoom_factor(25)
+        self.timeline.on_scrollbar(timeline.queue_draw)
 
         Gtk.main()
 
@@ -207,17 +209,26 @@ class Timeline:
     """
 
     def __init__(self, project, player):
+        self.scrollbar_event = Event()
         self.project = project
         self.player = player
-        self.scrollbar = Scrollbar(
+        self.set_scrollbar(Scrollbar(
             content_length=0,
             content_desired_start=0,
             one_length_in_pixels=1,
             ui_size=10,
-        )
+        ))
         self.rectangle_map = RectangleMap()
         self.tmp_transaction = None
         self.mouse_up()
+
+    def set_scrollbar(self, scrollbar):
+        self.scrollbar = scrollbar
+        self.scrollbar_event.trigger()
+
+    def on_scrollbar(self, fn):
+        self.scrollbar_event.listen(fn)
+        fn()
 
     def mouse_down(self, x, y):
         self.tmp_xy = (x, y)
@@ -229,7 +240,7 @@ class Timeline:
         if self.tmp_cut:
             delta = x-self.tmp_xy[0]
             if self.tmp_cut == "position":
-                self.scrollbar = self.tmp_scrollbar.move_scrollbar(delta)
+                self.set_scrollbar(self.tmp_scrollbar.move_scrollbar(delta))
             elif self.tmp_cut == "scrub":
                 self.player.scrub(
                     self.scrollbar.content_start+
@@ -255,7 +266,7 @@ class Timeline:
         self.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
 
     def set_zoom_factor(self, zoom_factor):
-        self.scrollbar = self.scrollbar._replace(one_length_in_pixels=zoom_factor)
+        self.set_scrollbar(self.scrollbar._replace(one_length_in_pixels=zoom_factor))
 
     def split_into_sections(self):
         return self.project.split_into_sections()
