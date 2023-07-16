@@ -196,14 +196,14 @@ class Transaction:
 
     def add_clip(self, path):
         producer = mlt.Producer(self.project.profile, path)
-        source = FileSource(id=None, path=path, length=producer.get_playtime()).with_unique_id()
-        self.project.sources = self.project.sources.add(source)
-        self.project.proxy_source_loader.load(source.id)
-        self.project.cuts = self.project.cuts.add(source.create_cut(0, source.length).move(self.project.cuts.end))
+        source = FileSource(id=None, path=path, length=producer.get_playtime())
+        self.add_source(source, source.length)
 
     def add_text_clip(self, text, length, id=None):
-        source = TextSource(id=id, text=text)
-        if id is None:
+        self.add_source(TextSource(id=id, text=text), length)
+
+    def add_source(self, source, length):
+        if source.id is None:
             source = source.with_unique_id()
         self.project.sources = self.project.sources.add(source)
         self.project.proxy_source_loader.load(source.id)
