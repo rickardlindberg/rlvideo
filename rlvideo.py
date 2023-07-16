@@ -71,7 +71,6 @@ class App:
             ))
         def timeline_button_up(widget, event):
             self.timeline.mouse_up()
-            print(self.timeline.split_into_sections().to_ascii_canvas())
         def timeline_scroll(widget, event):
             if event.direction == Gdk.ScrollDirection.UP:
                 self.timeline.scroll_up(event.x, event.y)
