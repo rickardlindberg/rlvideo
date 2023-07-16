@@ -60,6 +60,9 @@ class Project:
         )
         self.producer_changed_event = Event()
 
+    def set_project_data(self, project_data):
+        self.project_data = project_data
+
     def on_producer_changed(self, fn):
         self.producer_changed_event.listen(fn)
         fn()
@@ -193,13 +196,13 @@ class Transaction:
             self.rollback()
 
     def rollback(self):
-        self.project.project_data = self.initial_cata
+        self.project.set_project_data(self.initial_cata)
 
     def commit(self):
         self.project.producer_changed_event.trigger()
 
     def modify(self, cut_id, fn):
-        self.project.project_data = self.project.project_data.modify_cut(cut_id, fn)
+        self.project.set_project_data(self.project.project_data.modify_cut(cut_id, fn))
 
     def add_clip(self, path):
         producer = mlt.Producer(self.project.profile, path)
@@ -212,7 +215,7 @@ class Transaction:
     def add_source(self, source, length):
         if source.id is None:
             source = source.with_unique_id()
-        self.project.project_data = self.project.project_data.add_source(source)
+        self.project.set_project_data(self.project.project_data.add_source(source))
+        self.project.set_project_data(self.project.project_data.add_cut(source.create_cut(0, length).move(self.project.project_data.cuts_end)))
         # TODO: sync proxy loader clips when sources changes
         self.project.proxy_source_loader.load(source.id)
-        self.project.project_data = self.project.project_data.add_cut(source.create_cut(0, length).move(self.project.project_data.cuts_end))
