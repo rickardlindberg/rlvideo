@@ -51,6 +51,8 @@ class Project:
         return project
 
     def __init__(self, background_worker):
+        self.producer_changed_event = Event()
+        self.project_data_event = Event()
         self.profile = self.create_profile()
         self.set_project_data(ProjectData.empty())
         self.proxy_source_loader = ProxySourceLoader(
@@ -58,14 +60,18 @@ class Project:
             project=self,
             background_worker=background_worker
         )
-        self.producer_changed_event = Event()
 
     def set_project_data(self, project_data):
         self.project_data = project_data
         self.sections = project_data.split_into_sections()
+        self.project_data_event.trigger()
 
     def on_producer_changed(self, fn):
         self.producer_changed_event.listen(fn)
+        fn()
+
+    def on_project_data(self, fn):
+        self.project_data_event.listen(fn)
         fn()
 
     def get_preview_profile(self):

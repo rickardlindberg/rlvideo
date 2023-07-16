@@ -109,6 +109,8 @@ class App:
             args=sys.argv[1:]
         )
 
+        self.project.on_project_data(timeline.queue_draw)
+
         mlt_player = MltPlayer(self.project, preview.get_window().get_xid())
 
         self.timeline = Timeline(project=self.project, player=mlt_player)
