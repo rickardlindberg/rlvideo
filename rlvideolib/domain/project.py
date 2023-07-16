@@ -161,8 +161,11 @@ class Transaction:
     def __enter__(self):
         return self
 
-    def __exit__(self, a, b, c):
-        self.commit()
+    def __exit__(self, exc_type, exc_value, traceback):
+        if (exc_type, exc_value, traceback) == (None, None, None):
+            self.commit()
+        else:
+            self.rollback()
 
     def rollback(self):
         self.project.cuts = self.initial_cuts
