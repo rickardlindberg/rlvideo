@@ -234,7 +234,7 @@ class Timeline:
                 )
             else:
                 self.tmp_transaction.rollback()
-                self.tmp_transaction.modify(self.tmp_cut, lambda x:
+                self.tmp_transaction.modify(self.tmp_cut.id, lambda x:
                     x.move(int(delta/self.scrollbar.one_length_in_pixels)))
 
     def mouse_up(self):

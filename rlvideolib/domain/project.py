@@ -199,8 +199,8 @@ class Transaction:
     def rollback(self):
         self.project.cuts = self.initial_cuts
 
-    def modify(self, cut_to_modify, fn):
-        self.project.cuts = self.project.cuts.modify(cut_to_modify, fn)
+    def modify(self, cut_id, fn):
+        self.project.cuts = self.project.cuts.modify(cut_id, fn)
 
     def commit(self):
         self.project.producer_changed_event.trigger()

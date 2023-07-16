@@ -270,7 +270,7 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
     >>> cuts.split_into_sections().to_ascii_canvas()
     |<-A0------|-A10----->|-b10----->|
     |          |<-b0------|          |
-    >>> cuts.modify(b, lambda cut: cut.move(1)).split_into_sections().to_ascii_canvas()
+    >>> cuts.modify(b.id, lambda cut: cut.move(1)).split_into_sections().to_ascii_canvas()
     |<-A0-------|-A11---->|-b9------->|
     |           |<-b0-----|           |
     """
@@ -306,7 +306,7 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
             region_to_cuts=new_region_to_cuts,
         )
 
-    def modify(self, cut_to_modify, fn):
+    def modify(self, cut_id, fn):
         """
         It updates groups correctly:
 
@@ -315,16 +315,15 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         >>> cuts = cuts.add(cut)
         >>> cuts.region_to_cuts
         RegionToCuts(region_number_to_cut_ids={0: [99]})
-        >>> cuts = cuts.modify(cut, lambda cut: cut.move(DEFAULT_REGION_GROUP_SIZE))
+        >>> cuts = cuts.modify(cut.id, lambda cut: cut.move(DEFAULT_REGION_GROUP_SIZE))
         >>> cuts.region_to_cuts
         RegionToCuts(region_number_to_cut_ids={0: [], 1: [99]})
         """
         # TODO: custom exception if not found
-        # TODO: should only take id
-        old_cut = self.cut_map[cut_to_modify.id]
+        old_cut = self.cut_map[cut_id]
         new_cut = fn(old_cut)
         new_cuts = dict(self.cut_map)
-        new_cuts[cut_to_modify.id] = new_cut
+        new_cuts[cut_id] = new_cut
         return self._replace(
             cut_map=new_cuts,
             region_to_cuts=self.region_to_cuts.remove_cut_from_regions(
