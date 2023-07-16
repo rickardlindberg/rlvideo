@@ -23,6 +23,7 @@ if __name__ == "__main__":
             "rlvideolib",
             "rlvideolib.asciicanvas",
             "rlvideolib.debug",
+            "rlvideolib.events",
             "rlvideolib.domain",
             "rlvideolib.domain.region",
             "rlvideolib.domain.source",
