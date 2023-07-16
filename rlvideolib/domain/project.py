@@ -1,4 +1,5 @@
 import os
+import time
 
 import mlt
 
@@ -66,6 +67,21 @@ class Project:
     def create_profile(self):
         return mlt.Profile("uhd_2160p_25")
 
+    def export(self):
+        path = "export.mp4"
+        producer = self.split_into_sections().to_mlt_producer(
+            profile=self.profile,
+            cache=ExportSourceLoader(profile=self.profile, project=self)
+        )
+        consumer = mlt.Consumer(self.profile, "avformat")
+        consumer.set("target", path)
+        consumer.connect(producer)
+        consumer.start()
+        while consumer.is_stopped() == 0:
+            print(f"Progress {producer.position()}/{producer.get_playtime()}")
+            time.sleep(1)
+        print(f"Done: {path}")
+
     def get_label(self, source_id):
         return self.get_source(source_id).get_label()
 
@@ -107,6 +123,15 @@ class Project:
             profile=self.profile,
             cache=self.proxy_source_loader
         )
+
+class ExportSourceLoader:
+
+    def __init__(self, profile, project):
+        self.profile = profile
+        self.project = project
+
+    def get_source_mlt_producer(self, source_id):
+        return self.project.get_source(source_id).load(self.profile)
 
 class ProxySourceLoader:
 

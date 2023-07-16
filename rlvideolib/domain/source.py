@@ -24,6 +24,11 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
             id=None
         ).with_unique_id()
 
+    def load(self, profile):
+        producer = mlt.Producer(profile, self.path)
+        assert self.length == producer.get_playtime()
+        return producer
+
     def load_proxy(self, profile, width, height):
         """
         >>> _ = mlt.Factory().init()
@@ -73,10 +78,17 @@ class TextSource(namedtuple("TextSource", "id,text")):
             id=None
         ).with_unique_id()
 
+    def load(self, profile):
+        producer = mlt.Producer(profile, "pango")
+        producer.set("text", self.text)
+        producer.set("bgcolour", "red")
+        return producer
+
     def load_proxy(self, profile, width, height):
         producer = mlt.Producer(profile, "pango")
         producer.set("text", self.text)
         producer.set("bgcolour", "red")
+        return producer
 
     def get_label(self):
         return self.text

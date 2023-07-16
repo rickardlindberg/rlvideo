@@ -43,8 +43,17 @@ class App:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         main_window.add(box)
 
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        box.pack_start(hbox, True, True, 0)
+
+        def export_click(widget):
+            self.project.export()
+        export_button = Gtk.Button(label="Export")
+        export_button.connect("clicked", export_click)
+        hbox.pack_start(export_button, True, True, 0)
+
         preview = Gtk.DrawingArea()
-        box.pack_start(preview, True, True, 0)
+        hbox.pack_start(preview, True, True, 0)
 
         def timeline_draw(widget, context):
             self.timeline.draw_cairo(
