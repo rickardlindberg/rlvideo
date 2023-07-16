@@ -184,7 +184,7 @@ class Transaction:
 
     def __init__(self, project):
         self.project = project
-        self.initial_cata = self.project.project_data
+        self.initial_data = self.project.project_data
 
     def __enter__(self):
         return self
@@ -196,7 +196,7 @@ class Transaction:
             self.rollback()
 
     def rollback(self):
-        self.project.set_project_data(self.initial_cata)
+        self.project.set_project_data(self.initial_data)
 
     def commit(self):
         self.project.producer_changed_event.trigger()
