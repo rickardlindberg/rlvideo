@@ -52,7 +52,7 @@ class Project:
 
     def __init__(self, background_worker):
         self.profile = self.create_profile()
-        self.project_data = ProjectData.empty()
+        self.set_project_data(ProjectData.empty())
         self.proxy_source_loader = ProxySourceLoader(
             profile=self.profile,
             project=self,
