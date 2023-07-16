@@ -173,7 +173,8 @@ class Timeline:
     """
     >>> _ = mlt.Factory().init()
     >>> project = Project.new()
-    >>> project.add_text_clip("hello", length=10, id="hello")
+    >>> with project.new_transaction() as transaction:
+    ...     transaction.add_text_clip("hello", length=10, id="hello")
     >>> timeline = Timeline(project=project, player=None)
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
@@ -265,7 +266,8 @@ class Timeline:
         >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         >>> context = cairo.Context(surface)
         >>> project = Project.new()
-        >>> project.add_text_clip("hello", length=10)
+        >>> with project.new_transaction() as transaction:
+        ...     transaction.add_text_clip("hello", length=10)
         >>> timeline = Timeline(project=project, player=None)
         >>> timeline.draw_cairo(
         ...     context=context,

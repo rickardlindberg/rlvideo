@@ -51,8 +51,9 @@ class Project:
     def load(args, background_worker=None):
         if args:
             project = Project.new(background_worker)
-            for arg in args:
-                project.add_clip(arg)
+            with project.new_transaction() as transaction:
+                for arg in args:
+                    transaction.add_clip(arg)
             return project
         else:
             return Project.with_test_clips(background_worker)
@@ -60,12 +61,13 @@ class Project:
     @staticmethod
     def with_test_clips(background_worker=None):
         project = Project.new(background_worker)
-        for i in range(int(os.environ.get("RLVIDEO_PERFORMANCE", "1"))):
-            offset = i*50
-            project.add_clip("resources/one-to-five.mp4")
-            project.add_clip("resources/one.mp4")
-            project.add_clip("resources/two.mp4")
-            project.add_clip("resources/three.mp4")
+        with project.new_transaction() as transaction:
+            for i in range(int(os.environ.get("RLVIDEO_PERFORMANCE", "1"))):
+                offset = i*50
+                transaction.add_clip("resources/one-to-five.mp4")
+                transaction.add_clip("resources/one.mp4")
+                transaction.add_clip("resources/two.mp4")
+                transaction.add_clip("resources/three.mp4")
         return project
 
     def __init__(self, background_worker):
@@ -112,25 +114,6 @@ class Project:
 
     def get_source(self, source_id):
         return self.sources.get(source_id)
-
-    def add_clip(self, path):
-        # TODO: move to transaction
-        producer = mlt.Producer(self.profile, path)
-        source = FileSource(id=None, path=path, length=producer.get_playtime()).with_unique_id()
-        self.sources = self.sources.add(source)
-        self.proxy_source_loader.load(source.id)
-        self.cuts = self.cuts.add(source.create_cut(0, source.length).move(self.cuts.end))
-        self.producer_changed_event.trigger()
-
-    def add_text_clip(self, text, length, id=None):
-        # TODO: move to transaction
-        source = TextSource(id=id, text=text)
-        if id is None:
-            source = source.with_unique_id()
-        self.sources = self.sources.add(source)
-        self.proxy_source_loader.load(source.id)
-        self.cuts = self.cuts.add(source.create_cut(0, length).move(self.cuts.end))
-        self.producer_changed_event.trigger()
 
     def new_transaction(self):
         return Transaction(self)
@@ -196,11 +179,32 @@ class Transaction:
         self.project = project
         self.initial_cuts = project.cuts
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, a, b, c):
+        self.commit()
+
     def rollback(self):
         self.project.cuts = self.initial_cuts
+
+    def commit(self):
+        self.project.producer_changed_event.trigger()
 
     def modify(self, cut_id, fn):
         self.project.cuts = self.project.cuts.modify(cut_id, fn)
 
-    def commit(self):
-        self.project.producer_changed_event.trigger()
+    def add_clip(self, path):
+        producer = mlt.Producer(self.project.profile, path)
+        source = FileSource(id=None, path=path, length=producer.get_playtime()).with_unique_id()
+        self.project.sources = self.project.sources.add(source)
+        self.project.proxy_source_loader.load(source.id)
+        self.project.cuts = self.project.cuts.add(source.create_cut(0, source.length).move(self.project.cuts.end))
+
+    def add_text_clip(self, text, length, id=None):
+        source = TextSource(id=id, text=text)
+        if id is None:
+            source = source.with_unique_id()
+        self.project.sources = self.project.sources.add(source)
+        self.project.proxy_source_loader.load(source.id)
+        self.project.cuts = self.project.cuts.add(source.create_cut(0, length).move(self.project.cuts.end))
