@@ -33,8 +33,6 @@ class Event:
 
 class Project:
 
-    # TODO: make observable and GUI listens for change events
-
     @staticmethod
     def new(background_worker=None):
         """
