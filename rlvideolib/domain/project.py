@@ -1,3 +1,4 @@
+from collections import namedtuple
 import os
 import time
 
@@ -51,8 +52,7 @@ class Project:
 
     def __init__(self, background_worker):
         self.profile = self.create_profile()
-        self.cuts = Cuts.empty()
-        self.sources = Sources.empty()
+        self.project_data = ProjectData.empty()
         self.proxy_source_loader = ProxySourceLoader(
             profile=self.profile,
             project=self,
@@ -92,14 +92,14 @@ class Project:
         return self.get_source(source_id).get_label()
 
     def get_source(self, source_id):
-        return self.sources.get(source_id)
+        return self.project_data.get_source(source_id)
 
     def new_transaction(self):
         return Transaction(self)
 
     @timeit("Project.split_into_sections")
     def split_into_sections(self):
-        return self.cuts.split_into_sections()
+        return self.project_data.split_into_sections()
 
     @timeit("Project.get_preview_mlt_producer")
     def get_preview_mlt_producer(self):
@@ -112,6 +112,31 @@ class Project:
             profile=self.profile,
             cache=self.proxy_source_loader
         )
+
+class ProjectData(namedtuple("ProjectData", "sources,cuts")):
+
+    @staticmethod
+    def empty():
+        return ProjectData(sources=Sources.empty(), cuts=Cuts.empty())
+
+    @property
+    def cuts_end(self):
+        return self.cuts.end
+
+    def add_source(self, source):
+        return self._replace(sources=self.sources.add(source))
+
+    def add_cut(self, cut):
+        return self._replace(cuts=self.cuts.add(cut))
+
+    def modify_cut(self, cut_id, fn):
+        return self._replace(cuts=self.cuts.modify(cut_id, fn))
+
+    def get_source(self, source_id):
+        return self.sources.get(source_id)
+
+    def split_into_sections(self):
+        return self.cuts.split_into_sections()
 
 class ExportSourceLoader:
 
@@ -156,7 +181,7 @@ class Transaction:
 
     def __init__(self, project):
         self.project = project
-        self.initial_cuts = project.cuts
+        self.initial_cata = self.project.project_data
 
     def __enter__(self):
         return self
@@ -168,13 +193,13 @@ class Transaction:
             self.rollback()
 
     def rollback(self):
-        self.project.cuts = self.initial_cuts
+        self.project.project_data = self.initial_cata
 
     def commit(self):
         self.project.producer_changed_event.trigger()
 
     def modify(self, cut_id, fn):
-        self.project.cuts = self.project.cuts.modify(cut_id, fn)
+        self.project.project_data = self.project.project_data.modify_cut(cut_id, fn)
 
     def add_clip(self, path):
         producer = mlt.Producer(self.project.profile, path)
@@ -187,7 +212,7 @@ class Transaction:
     def add_source(self, source, length):
         if source.id is None:
             source = source.with_unique_id()
-        self.project.sources = self.project.sources.add(source)
+        self.project.project_data = self.project.project_data.add_source(source)
         # TODO: sync proxy loader clips when sources changes
         self.project.proxy_source_loader.load(source.id)
-        self.project.cuts = self.project.cuts.add(source.create_cut(0, length).move(self.project.cuts.end))
+        self.project.project_data = self.project.project_data.add_cut(source.create_cut(0, length).move(self.project.project_data.cuts_end))
