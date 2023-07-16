@@ -62,6 +62,7 @@ class Project:
 
     def set_project_data(self, project_data):
         self.project_data = project_data
+        self.sections = project_data.split_into_sections()
 
     def on_producer_changed(self, fn):
         self.producer_changed_event.listen(fn)
@@ -100,9 +101,8 @@ class Project:
     def new_transaction(self):
         return Transaction(self)
 
-    @timeit("Project.split_into_sections")
     def split_into_sections(self):
-        return self.project_data.split_into_sections()
+        return self.sections
 
     @timeit("Project.get_preview_mlt_producer")
     def get_preview_mlt_producer(self):
