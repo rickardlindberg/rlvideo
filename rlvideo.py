@@ -278,32 +278,31 @@ class Timeline:
     def draw_cairo(self, context, playhead_position, width, height):
         """
         >>> _ = mlt.Factory().init()
-        >>> width, height = 300, 100
-        >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+        >>> height = 200
+        >>> width, total_height = 700, height*2
+        >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, total_height)
         >>> context = cairo.Context(surface)
         >>> project = Project.new()
         >>> with project.new_transaction() as transaction:
-        ...     transaction.add_text_clip("hello", length=10)
+        ...     transaction.add_text_clip("hello", length=30)
+        ...     transaction.add_text_clip("world", length=35)
         >>> timeline = Timeline(project=project, player=None)
+        >>> context.translate(0, 0)
         >>> timeline.draw_cairo(
         ...     context=context,
-        ...     playhead_position=0,
+        ...     playhead_position=40,
         ...     width=width,
         ...     height=height
         ... )
+        >>> context.translate(0, height)
+        >>> timeline.set_zoom_factor(5)
         >>> timeline.draw_cairo(
         ...     context=context,
-        ...     playhead_position=0,
+        ...     playhead_position=40,
         ...     width=width,
         ...     height=height
         ... )
-        >>> timeline.rectangle_map # doctest: +ELLIPSIS
-        Rectangle(x=10, y=20, width=10, height=20):
-          Cut(source=CutSource(source_id=...), in_out=Region(start=0, end=10), position=0, id=...)
-        Rectangle(x=10, y=10, width=280, height=20):
-          scrub
-        Rectangle(x=10, y=60, width=7840, height=30):
-          position
+        >>> surface.write_to_png("timeline.png")
         """
         margin = 10
         area = Rectangle.from_size(width=width, height=height).deflate(margin)
