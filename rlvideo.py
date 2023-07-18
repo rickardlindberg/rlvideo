@@ -364,6 +364,7 @@ class Timeline:
         with bottom_area.cairo_clip_translate(context) as area:
             x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
             x_end = self.scrollbar.region_shown.end / self.scrollbar.whole_region.length * area.width
+            playhead_x = playhead_position / self.scrollbar.whole_region.length * area.width
 
             # TODO: add callback mechanism in rectangle map
             x, y, w, h = (
@@ -389,6 +390,12 @@ class Timeline:
             context.rectangle(scroll_box.x, scroll_box.y, scroll_box.width, scroll_box.height)
             context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
             context.fill()
+
+            # Playhead
+            context.set_source_rgb(0.1, 0.1, 0.1)
+            context.move_to(playhead_x, area.top)
+            context.line_to(playhead_x, area.bottom)
+            context.stroke()
 
             context.set_source_rgb(0.1, 0.1, 0.1)
             scroll_box.draw_pixel_perfect_border(context, 2)
