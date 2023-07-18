@@ -193,7 +193,7 @@ class Timeline:
     ...     height=height
     ... )
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
-    Rectangle(x=0, y=10, width=10, height=50):
+    Rectangle(x=0, y=20, width=10, height=50):
       Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=...)
     Rectangle(x=0, y=0, width=300, height=20):
       scrub
@@ -325,13 +325,12 @@ class Timeline:
             self.draw_scrollbar(context, area, playhead_position)
 
     def draw_clips(self, context, area, playhead_position, sections):
-        margin = 10
-        context.set_source_rgb(0.9, 0.9, 0.9)
+        ruler_area, clip_area = area.split_height_from_top(top_height=20)
+
+        context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
         context.rectangle(area.x, area.y, area.width, area.height)
         context.fill()
-        with area.deflate_height(
-            amount=margin
-        ).cairo_clip_translate(context) as clip_area:
+        with clip_area.cairo_clip_translate(context) as clip_area:
             with clip_area.move(
                 dx=self.scrollbar.content_to_pixels(-self.scrollbar.content_start)
             ).resize(
@@ -349,12 +348,11 @@ class Timeline:
         context.line_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), area.height)
         context.stroke()
 
-        scrub_area = area._replace(height=margin*2)
         x, y, w, h = (
-            scrub_area.x,
-            scrub_area.y,
-            scrub_area.width,
-            scrub_area.height,
+            ruler_area.x,
+            ruler_area.y,
+            ruler_area.width,
+            ruler_area.height,
         )
         rect_x, rect_y = context.user_to_device(x, y)
         rect_w, rect_h = context.user_to_device_distance(w, h)
