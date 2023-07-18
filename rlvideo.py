@@ -16,6 +16,8 @@ from rlvideolib.events import Event
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
 
+GUI_SPACING = 7
+
 class App:
 
     def run(self):
@@ -36,10 +38,10 @@ class App:
         main_window.connect("destroy", Gtk.main_quit)
         main_window.connect("key_press_event", key_press_handler)
 
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=GUI_SPACING)
         main_window.add(box)
 
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=GUI_SPACING)
         box.pack_start(hbox, True, True, 0)
 
         def export_click(widget):
@@ -364,6 +366,8 @@ class Timeline:
         ), "scrub")
 
     def draw_scrollbar(self, context, area, playhead_position):
+        border_area, area = area.split_height_from_top(GUI_SPACING)
+
         x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
         x_end = self.scrollbar.region_shown.end / self.scrollbar.whole_region.length * area.width
         playhead_x = playhead_position / self.scrollbar.whole_region.length * area.width
