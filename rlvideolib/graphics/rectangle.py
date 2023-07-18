@@ -87,7 +87,7 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
             height=self.height-2*amount,
         )
 
-    def split_height_from_bottom(self, bottom_height, space):
+    def split_height_from_bottom(self, bottom_height, space=0):
         """
         >>> Rectangle(x=0, y=10, width=100, height=100).split_height_from_bottom(10, 5)
         [Rectangle(x=0, y=10, width=100, height=85), Rectangle(x=0, y=100, width=100, height=10)]

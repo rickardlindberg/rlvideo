@@ -308,42 +308,46 @@ class Timeline:
         ... )
         >>> surface.write_to_png("timeline.png")
         """
-        margin = 10
-        area = Rectangle.from_size(width=width, height=height)
-        top_area, scroll_area = area.split_height_from_bottom(
+        clip_area, scroll_area = Rectangle.from_size(
+            width=width,
+            height=height
+        ).split_height_from_bottom(
             bottom_height=30,
-            space=0
         )
         sections = self.split_into_sections()
-
         self.scrollbar = self.scrollbar._replace(
             content_length=sections.length,
-            ui_size=top_area.width
+            ui_size=clip_area.width
         )
+        with clip_area.cairo_clip_translate(context) as area:
+            self.draw_clips(context, area, playhead_position, sections)
+        with scroll_area.cairo_clip_translate(context) as area:
+            self.draw_scrollbar(context, area, playhead_position)
 
-        with top_area.cairo_clip_translate(context) as top_area:
-            context.set_source_rgb(0.9, 0.9, 0.9)
-            context.rectangle(top_area.x, top_area.y, top_area.width, top_area.height)
-            context.fill()
-            with top_area.deflate_height(
-                amount=margin
-            ).cairo_clip_translate(context) as clip_area:
-                with clip_area.move(
-                    dx=self.scrollbar.content_to_pixels(-self.scrollbar.content_start)
-                ).resize(
-                    width=self.scrollbar.content_to_pixels(sections.length)
-                ).cairo_clip_translate(context) as sections_area:
-                    self.rectangle_map.clear()
-                    sections.draw_cairo(
-                        context=context,
-                        rectangle=sections_area,
-                        rectangle_map=self.rectangle_map,
-                        project=self.project
-                    )
-            context.set_source_rgb(0.1, 0.1, 0.1)
-            context.move_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), 0)
-            context.line_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), top_area.height)
-            context.stroke()
+    def draw_clips(self, context, area, playhead_position, sections):
+        margin = 10
+        context.set_source_rgb(0.9, 0.9, 0.9)
+        context.rectangle(area.x, area.y, area.width, area.height)
+        context.fill()
+        with area.deflate_height(
+            amount=margin
+        ).cairo_clip_translate(context) as clip_area:
+            with clip_area.move(
+                dx=self.scrollbar.content_to_pixels(-self.scrollbar.content_start)
+            ).resize(
+                width=self.scrollbar.content_to_pixels(sections.length)
+            ).cairo_clip_translate(context) as sections_area:
+                self.rectangle_map.clear()
+                sections.draw_cairo(
+                    context=context,
+                    rectangle=sections_area,
+                    rectangle_map=self.rectangle_map,
+                    project=self.project
+                )
+        context.set_source_rgb(0.1, 0.1, 0.1)
+        context.move_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), 0)
+        context.line_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), area.height)
+        context.stroke()
 
         scrub_area = area._replace(height=margin*2)
         x, y, w, h = (
@@ -360,9 +364,6 @@ class Timeline:
             width=int(rect_w),
             height=int(rect_h)
         ), "scrub")
-
-        with scroll_area.cairo_clip_translate(context) as area:
-            self.draw_scrollbar(context, area, playhead_position)
 
     def draw_scrollbar(self, context, area, playhead_position):
         x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
