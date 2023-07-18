@@ -125,6 +125,12 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
         yield Rectangle.from_size(width=self.width, height=self.height)
         context.restore()
 
+    def draw_pixel_perfect_border(self, context, size):
+        self.draw_pixel_perfect_line(context, size, "left")
+        self.draw_pixel_perfect_line(context, size, "right")
+        self.draw_pixel_perfect_line(context, size, "top")
+        self.draw_pixel_perfect_line(context, size, "bottom")
+
     def draw_pixel_perfect_line(self, context, size, side):
         if side == "left":
             context.move_to(self.left+size/2, self.top)

@@ -384,9 +384,8 @@ class Timeline:
             context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
             context.fill()
 
-            context.rectangle(area.x, area.y, area.width, area.height)
             context.set_source_rgb(0.1, 0.1, 0.1)
-            context.stroke()
+            area.draw_pixel_perfect_border(context, 2)
 
 class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_size,content_desired_start")):
 
