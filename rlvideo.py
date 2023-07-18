@@ -193,20 +193,20 @@ class Timeline:
     ...     height=height
     ... )
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
-    Rectangle(x=10, y=20, width=10, height=20):
+    Rectangle(x=0, y=10, width=10, height=50):
       Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=...)
-    Rectangle(x=10, y=10, width=280, height=20):
+    Rectangle(x=0, y=0, width=300, height=20):
       scrub
-    Rectangle(x=10, y=60, width=280, height=30):
+    Rectangle(x=0, y=70, width=300, height=30):
       position
     >>> timeline.split_into_sections().to_ascii_canvas()
     |<-h0----->|
-    >>> timeline.mouse_down(15, 25)
-    >>> timeline.mouse_move(16, 26)
+    >>> timeline.mouse_down(5, 25)
+    >>> timeline.mouse_move(6, 26)
     >>> timeline.mouse_up()
     >>> timeline.split_into_sections().to_ascii_canvas()
     |%<-h0----->|
-    >>> timeline.mouse_move(17, 27)
+    >>> timeline.mouse_move(7, 27)
     >>> timeline.split_into_sections().to_ascii_canvas()
     |%<-h0----->|
     """
@@ -309,10 +309,10 @@ class Timeline:
         >>> surface.write_to_png("timeline.png")
         """
         margin = 10
-        area = Rectangle.from_size(width=width, height=height).deflate(margin)
-        top_area, bottom_area = area.split_height_from_bottom(
+        area = Rectangle.from_size(width=width, height=height)
+        top_area, scroll_area = area.split_height_from_bottom(
             bottom_height=30,
-            space=margin
+            space=0
         )
         sections = self.split_into_sections()
 
@@ -361,44 +361,47 @@ class Timeline:
             height=int(rect_h)
         ), "scrub")
 
-        with bottom_area.cairo_clip_translate(context) as area:
-            x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
-            x_end = self.scrollbar.region_shown.end / self.scrollbar.whole_region.length * area.width
-            playhead_x = playhead_position / self.scrollbar.whole_region.length * area.width
+        with scroll_area.cairo_clip_translate(context) as area:
+            self.draw_scrollbar(context, area, playhead_position)
 
-            # TODO: add callback mechanism in rectangle map
-            x, y, w, h = (
-                area.x+x_start,
-                area.y,
-                x_end-x_start,
-                area.height
-            )
-            rect_x, rect_y = context.user_to_device(x, y)
-            rect_w, rect_h = context.user_to_device_distance(w, h)
-            self.rectangle_map.add(Rectangle(
-                x=int(rect_x),
-                y=int(rect_y),
-                width=int(rect_w),
-                height=int(rect_h)
-            ), "position")
+    def draw_scrollbar(self, context, area, playhead_position):
+        x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
+        x_end = self.scrollbar.region_shown.end / self.scrollbar.whole_region.length * area.width
+        playhead_x = playhead_position / self.scrollbar.whole_region.length * area.width
 
-            context.rectangle(area.x, area.y, area.width, area.height)
-            context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
-            context.fill()
+        # TODO: add callback mechanism in rectangle map
+        x, y, w, h = (
+            area.x+x_start,
+            area.y,
+            x_end-x_start,
+            area.height
+        )
+        rect_x, rect_y = context.user_to_device(x, y)
+        rect_w, rect_h = context.user_to_device_distance(w, h)
+        self.rectangle_map.add(Rectangle(
+            x=int(rect_x),
+            y=int(rect_y),
+            width=int(rect_w),
+            height=int(rect_h)
+        ), "position")
 
-            scroll_box = Rectangle(x, y, w, h)
-            context.rectangle(scroll_box.x, scroll_box.y, scroll_box.width, scroll_box.height)
-            context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
-            context.fill()
+        context.rectangle(area.x, area.y, area.width, area.height)
+        context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
+        context.fill()
 
-            # Playhead
-            context.set_source_rgb(0.1, 0.1, 0.1)
-            context.move_to(playhead_x, area.top)
-            context.line_to(playhead_x, area.bottom)
-            context.stroke()
+        scroll_box = Rectangle(x, y, w, h)
+        context.rectangle(scroll_box.x, scroll_box.y, scroll_box.width, scroll_box.height)
+        context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
+        context.fill()
 
-            context.set_source_rgb(0.1, 0.1, 0.1)
-            scroll_box.draw_pixel_perfect_border(context, 2)
+        # Playhead
+        context.set_source_rgb(0.1, 0.1, 0.1)
+        context.move_to(playhead_x, area.top)
+        context.line_to(playhead_x, area.bottom)
+        context.stroke()
+
+        context.set_source_rgb(0.1, 0.1, 0.1)
+        scroll_box.draw_pixel_perfect_border(context, 2)
 
 class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_size,content_desired_start")):
 
