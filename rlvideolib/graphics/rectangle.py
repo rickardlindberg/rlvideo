@@ -125,6 +125,23 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
         yield Rectangle.from_size(width=self.width, height=self.height)
         context.restore()
 
+    def draw_pixel_perfect_line(self, context, size, side):
+        if side == "left":
+            context.move_to(self.left+size/2, self.top)
+            context.line_to(self.left+size/2, self.bottom)
+        elif side == "right":
+            context.move_to(self.right-size/2, self.top)
+            context.line_to(self.right-size/2, self.bottom)
+        elif side == "top":
+            context.move_to(self.left, self.top+size/2)
+            context.line_to(self.right, self.top+size/2)
+        elif side == "bottom":
+            context.move_to(self.left, self.bottom-size/2)
+            context.line_to(self.right, self.bottom-size/2)
+        else:
+            raise ValueError("Invalid size.")
+        context.stroke()
+
 class Distance(namedtuple("Distance", "distance")):
 
     def divide(self, items, size_fn):

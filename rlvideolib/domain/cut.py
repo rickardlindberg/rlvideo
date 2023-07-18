@@ -225,28 +225,11 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
     def draw_border(self, context, rectangle):
         context.set_source_rgb(0, 0, 0)
         if self.starts_at_original_cut():
-            self.draw_pixel_perfect_line(context, 2, rectangle, "left")
+            rectangle.draw_pixel_perfect_line(context, 2, "left")
         if self.ends_at_original_cut():
-            self.draw_pixel_perfect_line(context, 2, rectangle, "right")
-        self.draw_pixel_perfect_line(context, 2, rectangle, "top")
-        self.draw_pixel_perfect_line(context, 2, rectangle, "bottom")
-
-    def draw_pixel_perfect_line(self, context, size, rectangle, side):
-        if side == "left":
-            context.move_to(rectangle.left+size/2, rectangle.top)
-            context.line_to(rectangle.left+size/2, rectangle.bottom)
-        elif side == "right":
-            context.move_to(rectangle.right-size/2, rectangle.top)
-            context.line_to(rectangle.right-size/2, rectangle.bottom)
-        elif side == "top":
-            context.move_to(rectangle.left, rectangle.top+size/2)
-            context.line_to(rectangle.right, rectangle.top+size/2)
-        elif side == "bottom":
-            context.move_to(rectangle.left, rectangle.bottom-size/2)
-            context.line_to(rectangle.right, rectangle.bottom-size/2)
-        else:
-            raise ValueError("Invalid size.")
-        context.stroke()
+            rectangle.draw_pixel_perfect_line(context, 2, "right")
+        rectangle.draw_pixel_perfect_line(context, 2, "top")
+        rectangle.draw_pixel_perfect_line(context, 2, "bottom")
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
 
