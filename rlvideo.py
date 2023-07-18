@@ -291,6 +291,7 @@ class Timeline:
         ...     transaction.modify(x, lambda cut: cut.move(-10))
         >>> timeline = Timeline(project=project, player=None)
         >>> context.translate(0, 0)
+        >>> timeline.set_zoom_factor(5)
         >>> timeline.draw_cairo(
         ...     context=context,
         ...     playhead_position=40,
@@ -298,7 +299,7 @@ class Timeline:
         ...     height=height
         ... )
         >>> context.translate(0, height)
-        >>> timeline.set_zoom_factor(5)
+        >>> timeline.set_zoom_factor(10)
         >>> timeline.draw_cairo(
         ...     context=context,
         ...     playhead_position=40,
@@ -380,12 +381,17 @@ class Timeline:
                 height=int(rect_h)
             ), "position")
 
-            context.rectangle(x, y, w, h)
+            context.rectangle(area.x, area.y, area.width, area.height)
+            context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
+            context.fill()
+
+            scroll_box = Rectangle(x, y, w, h)
+            context.rectangle(scroll_box.x, scroll_box.y, scroll_box.width, scroll_box.height)
             context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
             context.fill()
 
             context.set_source_rgb(0.1, 0.1, 0.1)
-            area.draw_pixel_perfect_border(context, 2)
+            scroll_box.draw_pixel_perfect_border(context, 2)
 
 class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_size,content_desired_start")):
 
