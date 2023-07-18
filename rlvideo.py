@@ -197,7 +197,7 @@ class Timeline:
       Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=...)
     Rectangle(x=10, y=10, width=280, height=20):
       scrub
-    Rectangle(x=10, y=60, width=7840, height=30):
+    Rectangle(x=10, y=60, width=280, height=30):
       position
     >>> timeline.split_into_sections().to_ascii_canvas()
     |<-h0----->|
@@ -436,8 +436,7 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
         90.0
         """
         # TODO: content_start -> x_offset | pixel_offset
-        length_shown = self.ui_size / self.one_length_in_pixels
-        max_start = max(0, self.content_length - length_shown)
+        max_start = max(0, self.content_length - self.length_shown)
         if self.content_desired_start < 0:
             return 0
         elif self.content_desired_start > max_start:
@@ -463,17 +462,21 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 
     @property
     def whole_region(self):
-        if self.content_length > 0:
-            return Region(start=0, end=self.content_length)
-        else:
-            return Region(start=0, end=10)
+        return Region(
+            start=0,
+            end=max(self.content_length, self.length_shown)
+        )
 
     @property
     def region_shown(self):
         return Region(
             start=self.content_start,
-            end=self.content_start+self.ui_size/self.one_length_in_pixels
+            end=self.content_start+self.length_shown
         )
+
+    @property
+    def length_shown(self):
+        return max(1, self.ui_size / self.one_length_in_pixels)
 
     def content_to_pixels(self, length):
         return length * self.one_length_in_pixels
