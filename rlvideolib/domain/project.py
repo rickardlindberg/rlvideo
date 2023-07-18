@@ -212,15 +212,17 @@ class Transaction:
     def add_clip(self, path):
         producer = mlt.Producer(self.project.profile, path)
         source = FileSource(id=None, path=path, length=producer.get_playtime())
-        self.add_source(source, source.length)
+        return self.add_source(source, source.length)
 
     def add_text_clip(self, text, length, id=None):
-        self.add_source(TextSource(id=id, text=text), length)
+        return self.add_source(TextSource(id=id, text=text), length)
 
     def add_source(self, source, length):
         if source.id is None:
             source = source.with_unique_id()
         self.project.set_project_data(self.project.project_data.add_source(source))
-        self.project.set_project_data(self.project.project_data.add_cut(source.create_cut(0, length).move(self.project.project_data.cuts_end)))
+        cut = source.create_cut(0, length).move(self.project.project_data.cuts_end)
+        self.project.set_project_data(self.project.project_data.add_cut(cut))
         # TODO: sync proxy loader clips when sources changes
         self.project.proxy_source_loader.load(source.id)
+        return cut.id
