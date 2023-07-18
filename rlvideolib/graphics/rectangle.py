@@ -20,6 +20,22 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
         if height <= 0:
             raise ValueError("Height must be > 0.")
 
+    @property
+    def left(self):
+        return self.x
+
+    @property
+    def right(self):
+        return self.x+self.width
+
+    @property
+    def top(self):
+        return self.y
+
+    @property
+    def bottom(self):
+        return self.y+self.height
+
     @staticmethod
     def from_size(width, height):
         """

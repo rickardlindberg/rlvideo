@@ -214,37 +214,36 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         context.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
         context.fill()
 
-        if self.starts_at_original_cut():
-            context.set_source_rgb(0, 0, 0)
-        else:
-            context.set_source_rgb(1, 0, 0)
-        context.move_to(rectangle.x, rectangle.y)
-        context.line_to(rectangle.x, rectangle.y+rectangle.height)
-        context.stroke()
-
-        if self.ends_at_original_cut():
-            context.set_source_rgb(0, 0, 0)
-        else:
-            context.set_source_rgb(1, 0, 0)
-        context.move_to(rectangle.x+rectangle.width, rectangle.y)
-        context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
-        context.stroke()
-
-        context.set_source_rgb(0, 0, 0)
-
-        context.move_to(rectangle.x, rectangle.y)
-        context.line_to(rectangle.x+rectangle.width, rectangle.y)
-        context.stroke()
-
-        context.move_to(rectangle.x, rectangle.y+rectangle.height)
-        context.line_to(rectangle.x+rectangle.width, rectangle.y+rectangle.height)
-        context.stroke()
+        self.draw_border(context, rectangle)
 
         if self.starts_at_original_cut():
             context.move_to(rectangle.x+2, rectangle.y+10)
             context.set_source_rgb(0, 0, 0)
             context.text_path(project.get_label(self.get_source_id()))
             context.fill()
+
+    def draw_border(self, context, rectangle):
+        size = 2
+        context.set_line_width(size)
+        context.set_source_rgb(0, 0, 0)
+        # Left
+        if self.starts_at_original_cut():
+            context.move_to(rectangle.left+size/2, rectangle.top)
+            context.line_to(rectangle.left+size/2, rectangle.bottom)
+            context.stroke()
+        # Right
+        if self.ends_at_original_cut():
+            context.move_to(rectangle.right-size/2, rectangle.top)
+            context.line_to(rectangle.right-size/2, rectangle.bottom)
+            context.stroke()
+        # Top
+        context.move_to(rectangle.left, rectangle.top+size/2)
+        context.line_to(rectangle.right, rectangle.top+size/2)
+        context.stroke()
+        # Bottom
+        context.move_to(rectangle.left, rectangle.bottom-size/2)
+        context.line_to(rectangle.right, rectangle.bottom-size/2)
+        context.stroke()
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
 
