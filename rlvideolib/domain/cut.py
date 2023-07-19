@@ -210,6 +210,8 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
                 height=int(rect_h)
             ), self.get_source_cut())
 
+        # TODO: add rectangles for resizing clips
+
         context.set_source_rgb(1, 0, 0)
         context.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
         context.fill()
