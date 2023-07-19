@@ -247,6 +247,7 @@ class Timeline:
             if self.tmp_cut == "position":
                 self.set_scrollbar(self.tmp_scrollbar.move_scrollbar(delta))
             elif self.tmp_cut == "scrub":
+                # TODO: fix inaccurate scrubbing
                 self.player.scrub(
                     self.scrollbar.content_start+
                     int(x/self.scrollbar.one_length_in_pixels)
