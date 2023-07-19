@@ -161,6 +161,7 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
             context.line_to(self.right, self.bottom-size/2)
         else:
             raise ValueError("Invalid size.")
+        context.set_line_width(size)
         context.stroke()
 
 class Distance(namedtuple("Distance", "distance")):
