@@ -317,6 +317,7 @@ class Timeline:
         ).split_height_from_bottom(
             bottom_height=30,
         )
+        border_area, scroll_area = scroll_area.split_height_from_top(GUI_SPACING)
         sections = self.split_into_sections()
         self.scrollbar = self.scrollbar._replace(
             content_length=sections.length,
@@ -368,8 +369,6 @@ class Timeline:
         ), "scrub")
 
     def draw_scrollbar(self, context, area, playhead_position):
-        border_area, area = area.split_height_from_top(GUI_SPACING)
-
         x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
         x_end = self.scrollbar.region_shown.end / self.scrollbar.whole_region.length * area.width
         playhead_x = playhead_position / self.scrollbar.whole_region.length * area.width
