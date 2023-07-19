@@ -332,8 +332,11 @@ class Timeline:
     def draw_clips(self, context, area, playhead_position, sections):
         ruler_area, clip_area = area.split_height_from_top(top_height=20)
 
+        with ruler_area.cairo_clip_translate(context) as ruler_area:
+            self.draw_ruler(context, ruler_area)
+
         context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
-        context.rectangle(area.x, area.y, area.width, area.height)
+        context.rectangle(clip_area.x, clip_area.y, clip_area.width, clip_area.height)
         context.fill()
         with clip_area.cairo_clip_translate(context) as clip_area:
             with clip_area.move(
@@ -367,6 +370,14 @@ class Timeline:
             width=int(rect_w),
             height=int(rect_h)
         ), "scrub")
+
+    def draw_ruler(self, context, area):
+        context.set_source_rgba(0.4, 0.9, 0.9)
+        context.rectangle(area.x, area.y, area.width, area.height)
+        context.fill()
+
+        context.set_source_rgb(0.2, 0.2, 0.2)
+        area.draw_pixel_perfect_line(context, 1, "bottom")
 
     def draw_scrollbar(self, context, area, playhead_position):
         x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
