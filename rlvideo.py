@@ -149,7 +149,7 @@ class MltPlayer:
             self.producer.set_speed(0)
 
     def scrub(self, position):
-        print("Scrub")
+        print(f"Scrub {position}")
         self.producer.set_speed(0)
         self.producer.seek(position)
 
@@ -172,7 +172,6 @@ class MltPlayer:
         if self.producer:
             producer.seek(self.position())
             producer.set_speed(self.producer.get_speed())
-        producer.set("eof", "loop")
         self.producer = producer
         self.consumer.disconnect_all_producers()
         self.consumer.connect(self.producer)
@@ -240,6 +239,7 @@ class Timeline:
         self.tmp_scrollbar = self.scrollbar
         self.tmp_transaction = self.project.new_transaction()
         self.tmp_cut = self.rectangle_map.get(x, y)
+        self.mouse_move(x, y)
 
     def mouse_move(self, x, y):
         if self.tmp_cut:
@@ -247,10 +247,12 @@ class Timeline:
             if self.tmp_cut == "position":
                 self.set_scrollbar(self.tmp_scrollbar.move_scrollbar(delta))
             elif self.tmp_cut == "scrub":
-                # TODO: fix inaccurate scrubbing
                 self.player.scrub(
-                    self.scrollbar.content_start+
-                    int(x/self.scrollbar.one_length_in_pixels)
+                    int(round(
+                        self.scrollbar.content_start
+                        +
+                        x/self.scrollbar.one_length_in_pixels
+                    ))
                 )
             else:
                 self.tmp_transaction.rollback()
