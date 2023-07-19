@@ -93,6 +93,8 @@ class TextSource(namedtuple("TextSource", "id,text")):
     def get_label(self):
         return self.text
 
+# TODO: add image sequence source
+
 class Sources(namedtuple("Sources", "id_to_source")):
 
     @staticmethod
