@@ -376,6 +376,31 @@ class Timeline:
         context.rectangle(area.x, area.y, area.width, area.height)
         context.fill()
 
+        step = 5
+        while self.scrollbar.content_to_pixels(step) < 50:
+            step += 5
+        start = self.scrollbar.region_shown.start
+        end = self.scrollbar.region_shown.end
+        pos = int((start // step) * step)
+
+        while pos <= end:
+            x = self.scrollbar.content_to_pixels(pos-self.scrollbar.content_start)
+
+            text = str(pos)
+            extents = context.text_extents(text)
+
+            context.move_to(x-extents.width/2, area.height/2-1)
+            context.text_path(text)
+            context.set_source_rgb(0.1, 0.1, 0.1)
+            context.fill()
+
+            context.move_to(x, area.height/2)
+            context.line_to(x, area.height)
+            context.set_source_rgb(0.1, 0.1, 0.1)
+            context.stroke()
+
+            pos += step
+
         context.set_source_rgb(0.2, 0.2, 0.2)
         area.draw_pixel_perfect_line(context, 1, "bottom")
 
