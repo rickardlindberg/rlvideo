@@ -92,6 +92,7 @@ class Project:
         consumer.set("target", path)
         consumer.connect(producer)
         consumer.start()
+        # TODO: consumer fails if there are gaps in the timeline?
         while consumer.is_stopped() == 0:
             print(f"Progress {producer.position()}/{producer.get_playtime()}")
             time.sleep(1)
