@@ -321,6 +321,7 @@ class Timeline:
             content_length=sections.length,
             ui_size=clip_area.width
         )
+        # TODO: only update scrollbar on resize and split_into_sections change event
         with clip_area.cairo_clip_translate(context) as area:
             self.draw_clips(context, area, playhead_position, sections)
         with scroll_area.cairo_clip_translate(context) as area:
