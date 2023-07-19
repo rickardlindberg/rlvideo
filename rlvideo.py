@@ -199,7 +199,7 @@ class Timeline:
       Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=...)
     Rectangle(x=0, y=0, width=300, height=20):
       scrub
-    Rectangle(x=0, y=70, width=300, height=30):
+    Rectangle(x=0, y=77, width=300, height=23):
       position
     >>> timeline.split_into_sections().to_ascii_canvas()
     |<-h0----->|
