@@ -41,5 +41,8 @@ if __name__ == "__main__":
             sys.exit(1)
     elif command[0:1] == ["rundev"]:
         sys.exit(subprocess.run([sys.executable, "rlvideo.py"]+command[1:]).returncode)
+    elif command[0:1] == ["commit"]:
+        if subprocess.run([sys.executable, "make.py", "build"]).returncode == 0:
+            subprocess.run(["git", "commit", "-a", "--verbose"]+command[1:])
     else:
         sys.exit("\n".join(usage()))
