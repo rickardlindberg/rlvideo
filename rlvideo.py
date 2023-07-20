@@ -172,8 +172,8 @@ class MltPlayer:
         if self.producer:
             producer.seek(self.position())
             producer.set_speed(self.producer.get_speed())
-        self.producer = producer
         self.consumer.disconnect_all_producers()
+        self.producer = producer
         self.consumer.connect(self.producer)
 
 class Timeline:
