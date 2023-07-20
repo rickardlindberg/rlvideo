@@ -208,18 +208,13 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
 
     def draw_cairo(self, context, rectangles, rectangle_map, project):
         context.save()
-        context.move_to(rectangles[0].left, rectangles[0].top)
-        for r in rectangles:
-            context.line_to(r.left, r.bottom)
-            context.line_to(r.right, r.bottom)
-        for r in reversed(rectangles):
-            context.line_to(r.right, r.top)
-            context.line_to(r.left, r.top)
+        CutRectangles(rectangles).cairo_fill_path(context)
+        context.clip_preserve()
         context.set_source_rgb(0.9, 0.2, 0.2)
-        context.fill_preserve()
+        context.fill()
+        CutRectangles(rectangles).cairo_stroke_path(context, 2)
         context.set_source_rgba(0.1, 0.1, 0.1)
-        context.stroke_preserve()
-        context.clip()
+        context.stroke()
         context.move_to(rectangles[0].x+2, rectangles[0].y+10)
         context.set_source_rgb(0, 0, 0)
         context.text_path(project.get_label(self.get_source_id()))
@@ -612,3 +607,21 @@ class CutSource(namedtuple("CutSource", "source_id")):
 
     def get_source_id(self):
         return self.source_id
+
+class CutRectangles:
+
+    def __init__(self, rectangles):
+        self.rectangles = rectangles
+
+    def cairo_fill_path(self, context):
+        context.move_to(self.rectangles[0].left, self.rectangles[0].top)
+        for r in self.rectangles:
+            context.line_to(r.left, r.bottom)
+            context.line_to(r.right, r.bottom)
+        for r in reversed(self.rectangles):
+            context.line_to(r.right, r.top)
+            context.line_to(r.left, r.top)
+
+    def cairo_stroke_path(self, context, size):
+        # TODO: shrink stroke path so that border is contained within fill path
+        self.cairo_fill_path(context)
