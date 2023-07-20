@@ -212,7 +212,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         context.clip_preserve()
         context.set_source_rgb(0.9, 0.2, 0.2)
         context.fill()
-        context.move_to(rectangles[0].x+2, rectangles[0].y+10)
+        context.move_to(rectangles[0].x+4, rectangles[0].y+13)
         context.set_source_rgb(0, 0, 0)
         context.text_path(project.get_label(self.get_source_id()))
         context.fill()
@@ -637,15 +637,17 @@ class CutRectangles:
                 last_x, last_y = last
                 x, y = point
                 if last_x == x:
+                    y_size = min(size, abs(last_y-y)/2)
                     if y > last_y:
-                        yield (x, last_y+size, x, y-size, x, y)
+                        yield (x, last_y+y_size, x, y-y_size, x, y)
                     else:
-                        yield (x, last_y-size, x, y+size, x, y)
+                        yield (x, last_y-y_size, x, y+y_size, x, y)
                 else:
+                    x_size = min(size, abs(last_x-x)/2)
                     if x > last_x:
-                        yield (last_x+size, y, x-size, y, x, y)
+                        yield (last_x+x_size, y, x-x_size, y, x, y)
                     else:
-                        yield (last_x-size, y, x+size, y, x, y)
+                        yield (last_x-x_size, y, x+x_size, y, x, y)
             last = point
 
     def get_corner_points(self):
