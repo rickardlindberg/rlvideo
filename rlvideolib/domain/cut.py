@@ -631,7 +631,7 @@ class CutRectangles:
         self.cairo_fill_path(context)
 
     def get_segments(self, size):
-        # TODO: fix suttle issues with rounded corders
+        # TODO: fix subtle issues with rounded corners
         last = None
         for point in self.get_corner_points():
             if last is not None:
