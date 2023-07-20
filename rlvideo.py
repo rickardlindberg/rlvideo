@@ -347,12 +347,8 @@ class Timeline:
                 width=self.scrollbar.content_to_pixels(sections.length)
             ).cairo_clip_translate(context) as sections_area:
                 self.rectangle_map.clear()
-                sections.draw_cairo(
-                    context=context,
-                    rectangle=sections_area,
-                    rectangle_map=self.rectangle_map,
-                    project=self.project
-                )
+                for cut, boxes in sections.to_cut_boxes(self.scrollbar.region_shown, sections_area).items():
+                    cut.draw_cairo(context, boxes, self.rectangle_map, self.project)
         context.set_source_rgb(0.1, 0.1, 0.1)
         context.move_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), 0)
         context.line_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), area.height)

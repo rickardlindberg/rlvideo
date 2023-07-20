@@ -198,40 +198,44 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
             self.in_out.end-1
         )
 
-    def draw_cairo(self, context, rectangle, rectangle_map, project):
-        # TODO: make all lines even size
-        rect_x, rect_y = context.user_to_device(rectangle.x, rectangle.y)
-        rect_w, rect_h = context.user_to_device_distance(rectangle.width, rectangle.height)
-        if int(rect_w) > 0 and int(rect_h) > 0:
-            rectangle_map.add(Rectangle(
-                x=int(rect_x),
-                y=int(rect_y),
-                width=int(rect_w),
-                height=int(rect_h)
-            ), self.get_source_cut())
+    def collect_cut_boxes(self, region, boxes, rectangle, pos):
+        if self.get_source_cut() in boxes:
+            if boxes[self.get_source_cut()][-1].right != rectangle.left:
+                raise ValueError("Cut boxes can not have gaps.")
+        else:
+            boxes[self.get_source_cut()] = []
+        boxes[self.get_source_cut()].append(rectangle)
 
-        # TODO: add rectangles for resizing clips
-
-        context.set_source_rgb(1, 0, 0)
-        context.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
-        context.fill()
-
-        self.draw_border(context, rectangle)
-
-        if self.starts_at_original_cut():
-            context.move_to(rectangle.x+2, rectangle.y+10)
-            context.set_source_rgb(0, 0, 0)
-            context.text_path(project.get_label(self.get_source_id()))
-            context.fill()
-
-    def draw_border(self, context, rectangle):
+    def draw_cairo(self, context, rectangles, rectangle_map, project):
+        context.save()
+        context.move_to(rectangles[0].left, rectangles[0].top)
+        for r in rectangles:
+            context.line_to(r.left, r.bottom)
+            context.line_to(r.right, r.bottom)
+        for r in reversed(rectangles):
+            context.line_to(r.right, r.top)
+            context.line_to(r.left, r.top)
+        context.set_source_rgb(0.9, 0.2, 0.2)
+        context.fill_preserve()
+        context.set_source_rgba(0.1, 0.1, 0.1)
+        context.stroke_preserve()
+        context.clip()
+        context.move_to(rectangles[0].x+2, rectangles[0].y+10)
         context.set_source_rgb(0, 0, 0)
-        if self.starts_at_original_cut():
-            rectangle.draw_pixel_perfect_line(context, 2, "left")
-        if self.ends_at_original_cut():
-            rectangle.draw_pixel_perfect_line(context, 2, "right")
-        rectangle.draw_pixel_perfect_line(context, 2, "top")
-        rectangle.draw_pixel_perfect_line(context, 2, "bottom")
+        context.text_path(project.get_label(self.get_source_id()))
+        context.fill()
+        context.restore()
+
+        for rectangle in rectangles:
+            rect_x, rect_y = context.user_to_device(rectangle.x, rectangle.y)
+            rect_w, rect_h = context.user_to_device_distance(rectangle.width, rectangle.height)
+            if int(rect_w) > 0 and int(rect_h) > 0:
+                rectangle_map.add(Rectangle(
+                    x=int(rect_x),
+                    y=int(rect_y),
+                    width=int(rect_w),
+                    height=int(rect_h)
+                ), self.get_source_cut())
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
 
@@ -242,6 +246,9 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
 
     def add_to_mlt_playlist(self, profile, cache, playlist):
         playlist.blank(self.length-1)
+
+    def collect_cut_boxes(self, region, boxes, rectangle, pos):
+        pass
 
     def draw_cairo(self, context, rectangle, rectangle_map, project):
         pass
@@ -260,6 +267,35 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
     >>> cuts.modify(b.id, lambda cut: cut.move(1)).split_into_sections().to_ascii_canvas()
     |<-A0-------|-A11---->|-b9------->|
     |           |<-b0-----|           |
+
+    Cut boxes:
+
+    >>> cut_boxes = cuts.split_into_sections().to_cut_boxes(
+    ...     Region(start=0, end=30),
+    ...     Rectangle.from_size(200, 50)
+    ... )
+    >>> for cut, boxes in cut_boxes.items():
+    ...    print(f"{cut.source}: {boxes}")
+    CutSource(source_id='A'): [Rectangle(x=0, y=0, width=67, height=50), Rectangle(x=67, y=0, width=66, height=25)]
+    CutSource(source_id='b'): [Rectangle(x=67, y=25, width=66, height=25), Rectangle(x=133, y=0, width=67, height=50)]
+
+    >>> cut_boxes = cuts.split_into_sections().to_cut_boxes(
+    ...     Region(start=10, end=30),
+    ...     Rectangle.from_size(200, 50)
+    ... )
+    >>> for cut, boxes in cut_boxes.items():
+    ...    print(f"{cut.source}: {boxes}")
+    CutSource(source_id='A'): [Rectangle(x=67, y=0, width=66, height=25)]
+    CutSource(source_id='b'): [Rectangle(x=67, y=25, width=66, height=25), Rectangle(x=133, y=0, width=67, height=50)]
+
+    >>> cut_boxes = cuts.split_into_sections().to_cut_boxes(
+    ...     Region(start=10, end=20),
+    ...     Rectangle.from_size(200, 50)
+    ... )
+    >>> for cut, boxes in cut_boxes.items():
+    ...    print(f"{cut.source}: {boxes}")
+    CutSource(source_id='A'): [Rectangle(x=67, y=0, width=66, height=25)]
+    CutSource(source_id='b'): [Rectangle(x=67, y=25, width=66, height=25)]
     """
 
     @staticmethod
