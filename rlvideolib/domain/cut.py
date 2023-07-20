@@ -212,15 +212,14 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         context.clip_preserve()
         context.set_source_rgb(0.9, 0.2, 0.2)
         context.fill()
-        CutRectangles(rectangles).cairo_stroke_path(context, 2)
-        context.set_source_rgba(0.1, 0.1, 0.1)
-        context.stroke()
         context.move_to(rectangles[0].x+2, rectangles[0].y+10)
         context.set_source_rgb(0, 0, 0)
         context.text_path(project.get_label(self.get_source_id()))
         context.fill()
         context.restore()
-
+        CutRectangles(rectangles).cairo_stroke_path(context, 2)
+        context.set_source_rgba(0.1, 0.1, 0.1)
+        context.stroke()
         for rectangle in rectangles:
             rect_x, rect_y = context.user_to_device(rectangle.x, rectangle.y)
             rect_w, rect_h = context.user_to_device_distance(rectangle.width, rectangle.height)
@@ -614,14 +613,51 @@ class CutRectangles:
         self.rectangles = rectangles
 
     def cairo_fill_path(self, context):
-        context.move_to(self.rectangles[0].left, self.rectangles[0].top)
-        for r in self.rectangles:
-            context.line_to(r.left, r.bottom)
-            context.line_to(r.right, r.bottom)
-        for r in reversed(self.rectangles):
-            context.line_to(r.right, r.top)
-            context.line_to(r.left, r.top)
+        def curve(endx, endy, x, y):
+            context.curve_to(endx, endy, x, y, x, y)
+        for index, (x1, y1, x2, y2, endx, endy) in enumerate(self.get_segments(7)):
+            if index == 0:
+                start = (x1, y1)
+                context.move_to(x1, y1)
+                context.line_to(x2, y2)
+            else:
+                curve(last[2], last[3], x1, y1)
+                context.line_to(x2, y2)
+            last = (x2, y2, endx, endy)
+        curve(last[2], last[3], start[0], start[1])
 
     def cairo_stroke_path(self, context, size):
         # TODO: shrink stroke path so that border is contained within fill path
         self.cairo_fill_path(context)
+
+    def get_segments(self, size):
+        last = None
+        for point in self.get_corner_points():
+            if last is not None:
+                last_x, last_y = last
+                x, y = point
+                if last_x == x:
+                    if y > last_y:
+                        yield (x, last_y+size, x, y-size, x, y)
+                    else:
+                        yield (x, last_y-size, x, y+size, x, y)
+                else:
+                    if x > last_x:
+                        yield (last_x+size, y, x-size, y, x, y)
+                    else:
+                        yield (last_x-size, y, x+size, y, x, y)
+            last = point
+
+    def get_corner_points(self):
+        def add(point):
+            if point != points[-1]:
+                points.append(point)
+        start = (self.rectangles[0].left, self.rectangles[0].top)
+        points = [start]
+        for r in self.rectangles:
+            add((r.left, r.bottom))
+            add((r.right, r.bottom))
+        for r in reversed(self.rectangles):
+            add((r.right, r.top))
+            add((r.left, r.top))
+        return points
