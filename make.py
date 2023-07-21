@@ -49,6 +49,7 @@ if __name__ == "__main__":
         ensure([sys.executable, "rlvideo.py"]+command[1:])
     elif command[0:1] == ["commit"]:
         ensure([sys.executable, "make.py", "build"])
+        ensure(["bash", "-c", "if git status | grep -A 5 'Untracked files:'; then exit 1; fi"])
         ensure(["git", "commit", "-a", "--verbose"]+command[1:])
     else:
         sys.exit("\n".join(usage()))
