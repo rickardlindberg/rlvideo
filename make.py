@@ -23,6 +23,7 @@ def ensure(command):
 if __name__ == "__main__":
     command = sys.argv[1:]
     if command == ["build"]:
+        ensure(["ctags", "--python-kinds=-i", "--extra=+f", "-R", "."])
         suite = unittest.TestSuite()
         for module in [
             "rlvideo",
