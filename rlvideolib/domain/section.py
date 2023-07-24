@@ -114,9 +114,9 @@ class MixSection:
                 transition = mlt.Transition(profile, "qtblend")
                 tractor.plant_transition(
                     transition,
-                    0,
-                    index,
-                )
+                    0,     # bottom track?
+                    index, # top track?
+                ) # bottom track becomes the composition?
         assert tractor.get_playtime() == self.length
         return tractor
 
