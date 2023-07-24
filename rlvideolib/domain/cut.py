@@ -2,6 +2,8 @@ from collections import namedtuple
 import itertools
 import uuid
 
+import mlt
+
 from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.debug import timeit
 from rlvideolib.domain.region import Region
@@ -239,7 +241,8 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
         return canvas
 
     def add_to_mlt_playlist(self, profile, cache, playlist):
-        playlist.blank(self.length-1)
+        producer = mlt.Producer(profile, "color:transparent")
+        playlist.append(producer.cut(0, self.length-1))
 
     def collect_cut_boxes(self, region, boxes, rectangle, pos):
         pass

@@ -1,5 +1,7 @@
 from collections import namedtuple
 import os
+import sys
+import tempfile
 import time
 
 import mlt
@@ -83,20 +85,30 @@ class Project:
         return mlt.Profile("uhd_2160p_25")
 
     def export(self):
+        """
+        >>> project = Project.new()
+        >>> with project.new_transaction() as transaction:
+        ...     cut_id = transaction.add_clip("resources/one.mp4", id="a")
+        ...     transaction.modify(cut_id, lambda cut: cut.move(1))
+        >>> project.split_into_sections().to_ascii_canvas()
+        |%<-a0---------->|
+        >>> export_log = project.export()
+        >>> doctest_absent(export_log, "NaN")
+        Yes
+        """
         path = "export.mp4"
         producer = self.split_into_sections().to_mlt_producer(
             profile=self.profile,
             cache=ExportSourceLoader(profile=self.profile, project=self)
         )
-        consumer = mlt.Consumer(self.profile, "avformat")
-        consumer.set("target", path)
-        consumer.connect(producer)
-        consumer.start()
-        # TODO: consumer fails if there are gaps in the timeline?
-        while consumer.is_stopped() == 0:
-            print(f"Progress {producer.position()}/{producer.get_playtime()}")
-            time.sleep(1)
-        print(f"Done: {path}")
+        def run_consumer():
+            consumer = mlt.Consumer(self.profile, "avformat")
+            consumer.set("target", path)
+            consumer.connect(producer)
+            consumer.start()
+            while consumer.is_stopped() == 0:
+                time.sleep(0.1)
+        return capture_stdout_stderr(run_consumer)
 
     def get_label(self, source_id):
         return self.get_source(source_id).get_label()
@@ -210,9 +222,9 @@ class Transaction:
     def modify(self, cut_id, fn):
         self.project.set_project_data(self.project.project_data.modify_cut(cut_id, fn))
 
-    def add_clip(self, path):
+    def add_clip(self, path, id=None):
         producer = mlt.Producer(self.project.profile, path)
-        source = FileSource(id=None, path=path, length=producer.get_playtime())
+        source = FileSource(id=id, path=path, length=producer.get_playtime())
         return self.add_source(source, source.length)
 
     def add_text_clip(self, text, length, id=None):
@@ -227,3 +239,28 @@ class Transaction:
         # TODO: sync proxy loader clips when sources changes
         self.project.proxy_source_loader.load(source.id)
         return cut.id
+
+def capture_stdout_stderr(fn):
+    sys.stdout.flush()
+    sys.stderr.flush()
+    FILENO_OUT = 1
+    FILENO_ERR = 2
+    old_stdout = os.dup(FILENO_OUT)
+    old_stderr = os.dup(FILENO_ERR)
+    try:
+        with tempfile.TemporaryFile("w+") as f:
+            os.dup2(f.fileno(), FILENO_OUT)
+            os.dup2(f.fileno(), FILENO_ERR)
+            fn()
+            f.seek(0)
+            return f.read()
+    finally:
+        os.dup2(old_stdout, FILENO_OUT)
+        os.dup2(old_stderr, FILENO_ERR)
+
+def doctest_absent(text, item):
+    if item not in text:
+        print("Yes")
+    else:
+        print(f"{item} found in text:")
+        print(text)
