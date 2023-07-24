@@ -12,6 +12,7 @@ from rlvideolib.domain.source import FileSource
 from rlvideolib.domain.source import Sources
 from rlvideolib.domain.source import TextSource
 from rlvideolib.events import Event
+from rlvideolib.testing import doctest_absent
 
 class Project:
 
@@ -257,10 +258,3 @@ def capture_stdout_stderr(fn):
     finally:
         os.dup2(old_stdout, FILENO_OUT)
         os.dup2(old_stderr, FILENO_ERR)
-
-def doctest_absent(text, item):
-    if item not in text:
-        print("Yes")
-    else:
-        print(f"{item} found in text:")
-        print(text)
