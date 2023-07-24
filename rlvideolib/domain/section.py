@@ -108,6 +108,15 @@ class MixSection:
                 playlist.to_mlt_producer(profile, cache),
                 0
             )
+        # TODO: understand better how transitions work
+        for index in range(len(self.playlists)):
+            if index > 0:
+                transition = mlt.Transition(profile, "qtblend")
+                tractor.plant_transition(
+                    transition,
+                    0,
+                    index,
+                )
         assert tractor.get_playtime() == self.length
         return tractor
 
