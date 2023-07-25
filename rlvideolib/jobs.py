@@ -53,7 +53,6 @@ class BackgroundWorker:
             result_fn(*args)
             self.description = None
             self.start_next_job_if_idle()
-            return False # To only schedule it once
         def worker():
             self.on_main_thread_fn(result, work_fn(*args, **kwargs))
         if self.jobs:
