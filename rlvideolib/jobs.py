@@ -17,19 +17,46 @@ class BackgroundWorker:
     >>> def on_result(result):
     ...     print(f"RESULT = {result}")
 
+    >>> class MockThreading:
+    ...     def __init__(self):
+    ...         self.threads = []
+    ...     def Thread(self, target):
+    ...        class MockThread:
+    ...            daemon = False
+    ...            def start(self):
+    ...               pass
+    ...            def give_time_slot(self):
+    ...               target()
+    ...        self.threads.append(MockThread())
+    ...        return self.threads[-1]
+    ...     def run_one(self):
+    ...        self.threads.pop(0).give_time_slot()
+    >>> mock_threading = MockThreading()
+
     >>> worker = BackgroundWorker(
     ...     display_status=display_status,
-    ...     on_main_thread_fn=on_main_thread_fn
+    ...     on_main_thread_fn=on_main_thread_fn,
+    ...     threading=mock_threading
     ... )
     STATUS = Ready
 
-    >>> worker.add("foo", on_result, lambda a, b: a+b, 1, 2)
+    >>> worker.add("add", on_result, lambda a, b: a+b, 1, 2)
+    STATUS = (0 pending) add
+
+    >>> worker.add("sub", on_result, lambda a, b: a-b, 1, 2)
+    STATUS = (1 pending) add
+
+    >>> mock_threading.run_one()
     RESULT = 3
-    STATUS = Ready
+    STATUS = (0 pending) sub
+
+    >>> mock_threading.run_one()
+    RESULT = -1
     STATUS = Ready
     """
 
-    def __init__(self, display_status, on_main_thread_fn):
+    def __init__(self, display_status, on_main_thread_fn, threading=threading):
+        self.threading = threading
         self.display_status = display_status
         self.jobs = []
         self.current_job = None
@@ -44,7 +71,7 @@ class BackgroundWorker:
         if self.can_start_another_job():
             self.start_next_job()
         if self.is_job_running():
-            self.display_status(f"{self.current_job.description} {len(self.jobs)} left in queue...")
+            self.display_status(f"({len(self.jobs)} pending) {self.current_job.description}")
         else:
             self.display_status("Ready")
 
@@ -63,9 +90,10 @@ class BackgroundWorker:
             self.on_main_thread_fn(on_job_done, job.do_work(self))
         if self.jobs:
             job = self.jobs.pop(-1)
-            thread = threading.Thread(target=worker)
+            thread = self.threading.Thread(target=worker)
             thread.daemon = True
             thread.start()
+            self.current_job = job
 
 class Job:
 
