@@ -1,6 +1,7 @@
 from collections import namedtuple
 import os
 import subprocess
+import time
 import uuid
 
 import mlt
@@ -8,6 +9,7 @@ import mlt
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.cut import CutSource
 from rlvideolib.domain.region import Region
+from rlvideolib.testing import capture_stdout_stderr
 
 class FileSource(namedtuple("FileSource", "id,path,length")):
 
@@ -29,34 +31,36 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         assert self.length == producer.get_playtime()
         return producer
 
-    def load_proxy(self, profile, width, height):
+    def load_proxy(self, profile, proxy_profile, progress):
         """
         >>> _ = mlt.Factory().init()
         >>> profile = mlt.Profile()
+        >>> proxy_profile = mlt.Profile()
         >>> source = FileSource(id=None, path="resources/one.mp4", length=15)
-        >>> producer = source.load_proxy(profile, 960, 540)
+        >>> producer, _ = capture_stdout_stderr(source.load_proxy, profile, proxy_profile, lambda progress: None)
         >>> isinstance(producer, mlt.Producer)
         True
         """
-        assert self.length == mlt.Producer(profile, self.path).get_playtime()
+        producer = mlt.Producer(profile, self.path)
+        assert self.length == producer.get_playtime()
         chechsum = md5(self.path)
-        proxy_path = f"/tmp/{chechsum}.mp4"
-        proxy_tmp_path = f"/tmp/{chechsum}.tmp.mp4"
+        proxy_path = f"/tmp/{chechsum}.mkv"
+        proxy_tmp_path = f"/tmp/{chechsum}.tmp.mkv"
         if not os.path.exists(proxy_path):
-            # TODO: produce proxy with MLT (idea from Flowblade)
-            subprocess.check_call([
-                "ffmpeg",
-                "-y", # Overwrite output files without asking.
-                "-i", self.path,
-                "-vf", f"yadif,scale={width}:{height}",
-                "-qscale", "3",
-                "-vcodec", "mjpeg",
-                proxy_tmp_path
-            ], stderr=subprocess.PIPE)
+            consumer = mlt.Consumer(proxy_profile, "avformat")
+            consumer.set("target", proxy_tmp_path)
+            consumer.set("vcodec", "mjpeg")
+            consumer.set("acodec", "pcm_s16le")
+            consumer.set("qscale", "3")
+            consumer.set("pix_fmt", "yuvj420p")
+            consumer.connect(producer)
+            consumer.start()
+            while consumer.is_stopped() == 0:
+                progress(producer.position()/(producer.get_playtime()+2))
+                time.sleep(0.5)
             os.rename(proxy_tmp_path, proxy_path)
         producer = mlt.Producer(profile, proxy_path)
-        # TODO: does it make sense that proxies can get a different playtime?
-        assert self.length <= producer.get_playtime() # proxy got larger in one case
+        assert self.length == producer.get_playtime()
         return producer
 
     def get_label(self):
@@ -84,7 +88,7 @@ class TextSource(namedtuple("TextSource", "id,text")):
         producer.set("bgcolour", "red")
         return producer
 
-    def load_proxy(self, profile, width, height):
+    def load_proxy(self, profile, proxy_profile, progress):
         producer = mlt.Producer(profile, "pango")
         producer.set("text", self.text)
         producer.set("bgcolour", "red")

@@ -1,7 +1,5 @@
 from collections import namedtuple
 import os
-import sys
-import tempfile
 import time
 
 import mlt
@@ -14,6 +12,7 @@ from rlvideolib.domain.source import Sources
 from rlvideolib.domain.source import TextSource
 from rlvideolib.events import Event
 from rlvideolib.jobs import NonThreadedBackgroundWorker
+from rlvideolib.testing import capture_stdout_stderr
 from rlvideolib.testing import doctest_absent
 
 class Project:
@@ -93,7 +92,7 @@ class Project:
         ...     transaction.modify(cut_id, lambda cut: cut.move(1))
         >>> project.split_into_sections().to_ascii_canvas()
         |%<-a0---------->|
-        >>> export_log = capture_stdout_stderr(project.export)
+        >>> _, export_log = capture_stdout_stderr(project.export)
         >>> doctest_absent(export_log, "NaN")
         Yes
         """
@@ -132,7 +131,8 @@ class Project:
     def get_preview_mlt_producer(self):
         """
         >>> _ = mlt.Factory().init()
-        >>> isinstance(Project.with_test_clips().get_preview_mlt_producer(), mlt.Playlist)
+        >>> project, _ = capture_stdout_stderr(Project.with_test_clips)
+        >>> isinstance(project.get_preview_mlt_producer(), mlt.Playlist)
         True
         """
         playlist = self.split_into_sections().to_mlt_producer(
@@ -201,8 +201,8 @@ class ProxySourceLoader:
         def work(progress):
             return self.project.get_source(source_id).load_proxy(
                 self.profile,
-                self.project.get_preview_profile().width(),
-                self.project.get_preview_profile().height(),
+                self.project.get_preview_profile(),
+                progress
             )
         self.background_worker.add(
             f"Generating proxy for {self.project.get_source(source_id).get_label()}",
@@ -257,21 +257,3 @@ class Transaction:
         # TODO: sync proxy loader clips when sources changes
         self.project.proxy_source_loader.load(source.id)
         return cut.id
-
-def capture_stdout_stderr(fn):
-    sys.stdout.flush()
-    sys.stderr.flush()
-    FILENO_OUT = 1
-    FILENO_ERR = 2
-    old_stdout = os.dup(FILENO_OUT)
-    old_stderr = os.dup(FILENO_ERR)
-    try:
-        with tempfile.TemporaryFile("w+") as f:
-            os.dup2(f.fileno(), FILENO_OUT)
-            os.dup2(f.fileno(), FILENO_ERR)
-            fn()
-            f.seek(0)
-            return f.read()
-    finally:
-        os.dup2(old_stdout, FILENO_OUT)
-        os.dup2(old_stderr, FILENO_ERR)
