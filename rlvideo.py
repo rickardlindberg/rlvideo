@@ -1,7 +1,6 @@
 from collections import namedtuple
 import os
 import sys
-import threading
 
 import cairo
 import gi
@@ -15,6 +14,7 @@ from rlvideolib.domain.region import Region
 from rlvideolib.events import Event
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
+from rlvideolib.jobs import BackgroundWorker
 
 GUI_SPACING = 7
 
@@ -111,7 +111,7 @@ class App:
         main_window.show_all()
 
         self.project = Project.load(
-            background_worker=BackgroundWorker(display_status),
+            background_worker=BackgroundWorker(display_status, GLib.idle_add),
             args=sys.argv[1:]
         )
 
@@ -526,35 +526,6 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 
     def content_to_pixels(self, length):
         return length * self.one_length_in_pixels
-
-class BackgroundWorker:
-
-    def __init__(self, display_status):
-        self.display_status = display_status
-        self.jobs = []
-        self.description = None
-
-    def add(self, description, result_fn, work_fn, *args, **kwargs):
-        self.jobs.append((description, result_fn, work_fn, args, kwargs))
-        self.pop()
-
-    def pop(self):
-        def result(*args):
-            result_fn(*args)
-            self.description = None
-            self.pop()
-            return False # To only schedule it once
-        def worker():
-            GLib.idle_add(result, work_fn(*args, **kwargs))
-        if self.description is None and self.jobs:
-            self.description, result_fn, work_fn, args, kwargs = self.jobs.pop(-1)
-            thread = threading.Thread(target=worker)
-            thread.daemon = True
-            thread.start()
-        if self.description:
-            self.display_status(f"{self.description} {len(self.jobs)} left in queue...")
-        else:
-            self.display_status("Ready")
 
 if __name__ == "__main__":
     App().run()

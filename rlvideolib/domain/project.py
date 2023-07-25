@@ -13,6 +13,7 @@ from rlvideolib.domain.source import FileSource
 from rlvideolib.domain.source import Sources
 from rlvideolib.domain.source import TextSource
 from rlvideolib.events import Event
+from rlvideolib.jobs import NonThreadedBackgroundWorker
 from rlvideolib.testing import doctest_absent
 
 class Project:
@@ -23,9 +24,6 @@ class Project:
         >>> isinstance(Project.new(), Project)
         True
         """
-        class NonThreadedBackgroundWorker:
-            def add(self, description, result_fn, work_fn, *args, **kwargs):
-                result_fn(work_fn(*args, **kwargs))
         return Project(
             NonThreadedBackgroundWorker() if background_worker is None
             else background_worker
