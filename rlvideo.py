@@ -110,8 +110,13 @@ class App:
 
         main_window.show_all()
 
+        def gtk_on_main_thread(fn, *args):
+            def callback():
+                fn(*args)
+                return False # To only schedule it once
+            GLib.idle_add(callback)
         self.project = Project.load(
-            background_worker=BackgroundWorker(display_status, GLib.idle_add),
+            background_worker=BackgroundWorker(display_status, gtk_on_main_thread),
             args=sys.argv[1:]
         )
 
