@@ -7,6 +7,27 @@ class NonThreadedBackgroundWorker:
 
 class BackgroundWorker:
 
+    """
+    >>> def display_status(text):
+    ...     print(f"STATUS = {text}")
+
+    >>> def on_main_thread_fn(fn, *args):
+    ...     fn(*args)
+
+    >>> def on_result(result):
+    ...     print(f"RESULT = {result}")
+
+    >>> worker = BackgroundWorker(
+    ...     display_status=display_status,
+    ...     on_main_thread_fn=on_main_thread_fn
+    ... )
+
+    >>> worker.add("foo", on_result, lambda a, b: a+b, 1, 2)
+    RESULT = 3
+    STATUS = Ready
+    STATUS = Ready
+    """
+
     def __init__(self, display_status, on_main_thread_fn):
         self.display_status = display_status
         self.jobs = []
