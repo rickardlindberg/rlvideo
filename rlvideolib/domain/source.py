@@ -88,10 +88,7 @@ class TextSource(namedtuple("TextSource", "id,text")):
         return producer
 
     def load_proxy(self, profile, proxy_profile, progress):
-        producer = mlt.Producer(profile, "pango")
-        producer.set("text", self.text)
-        producer.set("bgcolour", "red")
-        return producer
+        return self.load(profile)
 
     def get_label(self):
         return self.text
