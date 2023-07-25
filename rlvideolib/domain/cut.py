@@ -241,7 +241,7 @@ class SpaceCut(namedtuple("SpaceCut", "length")):
         return canvas
 
     def add_to_mlt_playlist(self, profile, cache, playlist):
-        producer = mlt.Producer(profile, "color:transparent")
+        producer = mlt.Producer(profile, "color:#00000000") # transparent
         playlist.append(producer.cut(0, self.length-1))
 
     def collect_cut_boxes(self, region, boxes, rectangle, pos):
