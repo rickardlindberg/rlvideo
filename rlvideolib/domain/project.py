@@ -62,6 +62,7 @@ class Project:
             project=self,
             background_worker=background_worker
         )
+        self.background_worker = background_worker
 
     def set_project_data(self, project_data):
         self.project_data = project_data
@@ -92,7 +93,7 @@ class Project:
         ...     transaction.modify(cut_id, lambda cut: cut.move(1))
         >>> project.split_into_sections().to_ascii_canvas()
         |%<-a0---------->|
-        >>> export_log = project.export()
+        >>> export_log = capture_stdout_stderr(project.export)
         >>> doctest_absent(export_log, "NaN")
         Yes
         """
@@ -101,14 +102,18 @@ class Project:
             profile=self.profile,
             cache=ExportSourceLoader(profile=self.profile, project=self)
         )
-        def run_consumer():
+        def work():
             consumer = mlt.Consumer(self.profile, "avformat")
             consumer.set("target", path)
             consumer.connect(producer)
             consumer.start()
             while consumer.is_stopped() == 0:
                 time.sleep(0.1)
-        return capture_stdout_stderr(run_consumer)
+        self.background_worker.add(
+            f"Exporting {path}.",
+            lambda result: None,
+            work,
+        )
 
     def get_label(self, source_id):
         return self.get_source(source_id).get_label()
