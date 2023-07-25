@@ -21,6 +21,7 @@ class BackgroundWorker:
     ...     display_status=display_status,
     ...     on_main_thread_fn=on_main_thread_fn
     ... )
+    STATUS = Ready
 
     >>> worker.add("foo", on_result, lambda a, b: a+b, 1, 2)
     RESULT = 3
@@ -33,25 +34,30 @@ class BackgroundWorker:
         self.jobs = []
         self.description = None
         self.on_main_thread_fn = on_main_thread_fn
+        self.start_next_job_if_idle()
 
     def add(self, description, result_fn, work_fn, *args, **kwargs):
         self.jobs.append((description, result_fn, work_fn, args, kwargs))
-        self.pop()
+        self.start_next_job_if_idle()
 
-    def pop(self):
-        def result(*args):
-            result_fn(*args)
-            self.description = None
-            self.pop()
-            return False # To only schedule it once
-        def worker():
-            self.on_main_thread_fn(result, work_fn(*args, **kwargs))
-        if self.description is None and self.jobs:
-            self.description, result_fn, work_fn, args, kwargs = self.jobs.pop(-1)
-            thread = threading.Thread(target=worker)
-            thread.daemon = True
-            thread.start()
+    def start_next_job_if_idle(self):
+        if self.description is None:
+            self.start_next_job()
         if self.description:
             self.display_status(f"{self.description} {len(self.jobs)} left in queue...")
         else:
             self.display_status("Ready")
+
+    def start_next_job(self):
+        def result(*args):
+            result_fn(*args)
+            self.description = None
+            self.start_next_job_if_idle()
+            return False # To only schedule it once
+        def worker():
+            self.on_main_thread_fn(result, work_fn(*args, **kwargs))
+        if self.jobs:
+            self.description, result_fn, work_fn, args, kwargs = self.jobs.pop(-1)
+            thread = threading.Thread(target=worker)
+            thread.daemon = True
+            thread.start()
