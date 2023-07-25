@@ -41,12 +41,18 @@ class BackgroundWorker:
         self.on_jobs_changed()
 
     def on_jobs_changed(self):
-        if self.description is None:
+        if self.can_start_another_job():
             self.start_next_job()
-        if self.description:
+        if self.is_job_running():
             self.display_status(f"{self.description} {len(self.jobs)} left in queue...")
         else:
             self.display_status("Ready")
+
+    def can_start_another_job(self):
+        return self.description is None
+
+    def is_job_running(self):
+        return self.description is not None
 
     def start_next_job(self):
         def result(*args):
