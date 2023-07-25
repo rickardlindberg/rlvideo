@@ -2,8 +2,8 @@ import threading
 
 class NonThreadedBackgroundWorker:
 
-    def add(self, description, result_fn, work_fn, *args, **kwargs):
-        result_fn(work_fn(*args, **kwargs))
+    def add(self, description, result_fn, work_fn, *args):
+        result_fn(work_fn(*args))
 
 class BackgroundWorker:
 
@@ -36,8 +36,8 @@ class BackgroundWorker:
         self.on_main_thread_fn = on_main_thread_fn
         self.on_jobs_changed()
 
-    def add(self, description, result_fn, work_fn, *args, **kwargs):
-        self.jobs.append(Job(description, result_fn, work_fn, args, kwargs))
+    def add(self, description, result_fn, work_fn, *args):
+        self.jobs.append(Job(description, result_fn, work_fn, args))
         self.on_jobs_changed()
 
     def on_jobs_changed(self):
@@ -60,7 +60,7 @@ class BackgroundWorker:
             self.current_job = None
             self.on_jobs_changed()
         def worker():
-            self.on_main_thread_fn(result, job.work_fn(*job.args, **job.kwargs))
+            self.on_main_thread_fn(result, job.work_fn(*job.args))
         if self.jobs:
             job = self.jobs.pop(-1)
             thread = threading.Thread(target=worker)
@@ -69,9 +69,8 @@ class BackgroundWorker:
 
 class Job:
 
-    def __init__(self, description, result_fn, work_fn, args, kwargs):
+    def __init__(self, description, result_fn, work_fn, args):
         self.description = description
         self.result_fn = result_fn
         self.work_fn = work_fn
         self.args = args
-        self.kwargs = kwargs
