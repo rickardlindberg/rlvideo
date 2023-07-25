@@ -9,9 +9,7 @@ def doctest_absent(text, item):
         print(f"{item} found in text:")
         print(text)
 
-def capture_stdout_stderr(fn, *args):
-    sys.stdout.flush()
-    sys.stderr.flush()
+def capture_stdout_stderr(fn, *args, **kwargs):
     FILENO_OUT = 1
     FILENO_ERR = 2
     old_stdout = os.dup(FILENO_OUT)
@@ -20,7 +18,7 @@ def capture_stdout_stderr(fn, *args):
         with tempfile.TemporaryFile("w+") as f:
             os.dup2(f.fileno(), FILENO_OUT)
             os.dup2(f.fileno(), FILENO_ERR)
-            return_value = fn(*args)
+            return_value = fn(*args, **kwargs)
             f.seek(0)
             return (return_value, f.read())
     finally:

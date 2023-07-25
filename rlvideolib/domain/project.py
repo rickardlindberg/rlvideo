@@ -88,7 +88,7 @@ class Project:
         """
         >>> project = Project.new()
         >>> with project.new_transaction() as transaction:
-        ...     cut_id = transaction.add_clip("resources/one.mp4", id="a")
+        ...     cut_id, _ = capture_stdout_stderr(transaction.add_clip, "resources/one.mp4", id="a")
         ...     transaction.modify(cut_id, lambda cut: cut.move(1))
         >>> project.split_into_sections().to_ascii_canvas()
         |%<-a0---------->|
