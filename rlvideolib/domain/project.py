@@ -197,13 +197,16 @@ class ProxySourceLoader:
         def store(producer):
             self.mlt_producers[source_id] = producer
             self.project.producer_changed_event.trigger()
+        def work():
+            return self.project.get_source(source_id).load_proxy(
+                self.profile,
+                self.project.get_preview_profile().width(),
+                self.project.get_preview_profile().height(),
+            )
         self.background_worker.add(
             f"Generating proxy for {self.project.get_source(source_id).get_label()}.",
             store,
-            self.project.get_source(source_id).load_proxy,
-            self.profile,
-            self.project.get_preview_profile().width(),
-            self.project.get_preview_profile().height(),
+            work
         )
 
     def get_source_mlt_producer(self, source_id):
