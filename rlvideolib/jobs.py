@@ -55,12 +55,12 @@ class BackgroundWorker:
         return self.current_job is not None
 
     def start_next_job(self):
-        def result(*args):
+        def on_job_done(*args):
             job.result_fn(*args)
             self.current_job = None
             self.on_jobs_changed()
         def worker():
-            self.on_main_thread_fn(result, job.work_fn(*job.args))
+            self.on_main_thread_fn(on_job_done, job.do_work(self))
         if self.jobs:
             job = self.jobs.pop(-1)
             thread = threading.Thread(target=worker)
@@ -74,3 +74,6 @@ class Job:
         self.result_fn = result_fn
         self.work_fn = work_fn
         self.args = args
+
+    def do_work(self, worker):
+        return self.work_fn(*self.args)
