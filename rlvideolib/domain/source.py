@@ -52,7 +52,6 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
             consumer.set("vcodec", "mjpeg")
             consumer.set("acodec", "pcm_s16le")
             consumer.set("qscale", "3")
-            consumer.set("pix_fmt", "yuvj420p")
             consumer.connect(producer)
             consumer.start()
             while consumer.is_stopped() == 0:
