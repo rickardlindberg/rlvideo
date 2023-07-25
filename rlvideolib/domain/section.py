@@ -102,21 +102,50 @@ class MixSection:
         return canvas
 
     def to_mlt_producer(self, profile, cache):
+        """
+        How do transitions work?
+
+        From https://sourceforge.net/p/mlt/mailman/message/35244309/:
+
+        > a transition merges the b_track onto the a_track
+
+        So the b_track "disappears".
+
+        Example:
+
+        |-a-------| index=2
+        |-b-------| index=1
+        |-c-------| index=0
+
+        transition(a=0, b=1) ->
+
+        |-a-------| index=2
+        |         | index=1
+        |-bc------| index=0
+
+        transition(a=0, b=2) ->
+
+        |         | index=2
+        |         | index=1
+        |-abc-----| index=0
+
+        The only track left now is that with index 0.
+        """
         tractor = mlt.Tractor()
         for playlist in self.playlists:
             tractor.insert_track(
                 playlist.to_mlt_producer(profile, cache),
                 0
             )
-        # TODO: understand better how transitions work
         for index in range(len(self.playlists)):
             if index > 0:
+                # TODO: need transition to mix audio?
                 transition = mlt.Transition(profile, "qtblend")
                 tractor.plant_transition(
                     transition,
-                    0,     # bottom track?
-                    index, # top track?
-                ) # bottom track becomes the composition?
+                    0,     # a_track
+                    index, # b_track
+                )
         assert tractor.get_playtime() == self.length
         return tractor
 
