@@ -8,6 +8,7 @@ import mlt
 
 from rlvideolib.debug import timeit
 from rlvideolib.domain.cut import Cuts
+from rlvideolib.domain.cut import SpaceCut
 from rlvideolib.domain.source import FileSource
 from rlvideolib.domain.source import Sources
 from rlvideolib.domain.source import TextSource
@@ -130,10 +131,19 @@ class Project:
         >>> isinstance(Project.with_test_clips().get_preview_mlt_producer(), mlt.Playlist)
         True
         """
-        return self.split_into_sections().to_mlt_producer(
+        playlist = self.split_into_sections().to_mlt_producer(
             profile=self.profile,
             cache=self.proxy_source_loader
         )
+        # The one-length space cut allows the playhead cursor to be positioned
+        # right after the last clip.
+        # TODO: is this the right place to put it?
+        SpaceCut(1).add_to_mlt_playlist(
+            profile=self.profile,
+            cache=self.proxy_source_loader,
+            playlist=playlist
+        )
+        return playlist
 
 class ProjectData(namedtuple("ProjectData", "sources,cuts")):
 
