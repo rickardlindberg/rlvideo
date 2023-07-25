@@ -499,6 +499,7 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         %<-A0--->%%%%%%
         %%%%%<-B0--->%%
         """
+        # TODO: sort based on cut (j-cut, l-cut, overlay, background).
         playlists = []
         for cut in self.create_cut(region).cut_map.values():
             playlists.append(Cuts.empty().add(cut).extract_playlist_section(region))
