@@ -34,13 +34,13 @@ class BackgroundWorker:
         self.jobs = []
         self.description = None
         self.on_main_thread_fn = on_main_thread_fn
-        self.start_next_job_if_idle()
+        self.on_jobs_changed()
 
     def add(self, description, result_fn, work_fn, *args, **kwargs):
         self.jobs.append((description, result_fn, work_fn, args, kwargs))
-        self.start_next_job_if_idle()
+        self.on_jobs_changed()
 
-    def start_next_job_if_idle(self):
+    def on_jobs_changed(self):
         if self.description is None:
             self.start_next_job()
         if self.description:
@@ -52,7 +52,7 @@ class BackgroundWorker:
         def result(*args):
             result_fn(*args)
             self.description = None
-            self.start_next_job_if_idle()
+            self.on_jobs_changed()
         def worker():
             self.on_main_thread_fn(result, work_fn(*args, **kwargs))
         if self.jobs:
