@@ -32,37 +32,46 @@ class BackgroundWorker:
     def __init__(self, display_status, on_main_thread_fn):
         self.display_status = display_status
         self.jobs = []
-        self.description = None
+        self.current_job = None
         self.on_main_thread_fn = on_main_thread_fn
         self.on_jobs_changed()
 
     def add(self, description, result_fn, work_fn, *args, **kwargs):
-        self.jobs.append((description, result_fn, work_fn, args, kwargs))
+        self.jobs.append(Job(description, result_fn, work_fn, args, kwargs))
         self.on_jobs_changed()
 
     def on_jobs_changed(self):
         if self.can_start_another_job():
             self.start_next_job()
         if self.is_job_running():
-            self.display_status(f"{self.description} {len(self.jobs)} left in queue...")
+            self.display_status(f"{self.current_job.description} {len(self.jobs)} left in queue...")
         else:
             self.display_status("Ready")
 
     def can_start_another_job(self):
-        return self.description is None
+        return self.current_job is None
 
     def is_job_running(self):
-        return self.description is not None
+        return self.current_job is not None
 
     def start_next_job(self):
         def result(*args):
-            result_fn(*args)
-            self.description = None
+            job.result_fn(*args)
+            self.current_job = None
             self.on_jobs_changed()
         def worker():
-            self.on_main_thread_fn(result, work_fn(*args, **kwargs))
+            self.on_main_thread_fn(result, job.work_fn(*job.args, **job.kwargs))
         if self.jobs:
-            self.description, result_fn, work_fn, args, kwargs = self.jobs.pop(-1)
+            job = self.jobs.pop(-1)
             thread = threading.Thread(target=worker)
             thread.daemon = True
             thread.start()
+
+class Job:
+
+    def __init__(self, description, result_fn, work_fn, args, kwargs):
+        self.description = description
+        self.result_fn = result_fn
+        self.work_fn = work_fn
+        self.args = args
+        self.kwargs = kwargs
