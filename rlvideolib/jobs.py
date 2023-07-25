@@ -3,7 +3,7 @@ import threading
 class NonThreadedBackgroundWorker:
 
     def add(self, description, result_fn, work_fn):
-        result_fn(work_fn())
+        result_fn(work_fn(lambda progress: None))
 
 class BackgroundWorker:
 
@@ -40,17 +40,18 @@ class BackgroundWorker:
     ... )
     STATUS = Ready
 
-    >>> worker.add("add", on_result, lambda: 1+2)
-    STATUS = (0 pending) add
+    >>> worker.add("add", on_result, lambda progress: 1+2)
+    STATUS = add | 0 jobs pending
 
-    >>> worker.add("sub", on_result, lambda: 1-2)
-    STATUS = (1 pending) add
+    >>> worker.add("sub", on_result, lambda progress: progress(0.5) or 1-2)
+    STATUS = add | 1 jobs pending
 
     >>> mock_threading.run_one()
     RESULT = 3
-    STATUS = (0 pending) sub
+    STATUS = sub | 0 jobs pending
 
     >>> mock_threading.run_one()
+    STATUS = sub (50%) | 0 jobs pending
     RESULT = -1
     STATUS = Ready
     """
@@ -71,7 +72,7 @@ class BackgroundWorker:
         if self.can_start_another_job():
             self.start_next_job()
         if self.is_job_running():
-            self.display_status(f"({len(self.jobs)} pending) {self.current_job.description}")
+            self.display_status(f"{self.current_job.render_description()} | {len(self.jobs)} jobs pending")
         else:
             self.display_status("Ready")
 
@@ -87,7 +88,12 @@ class BackgroundWorker:
             self.current_job = None
             self.on_jobs_changed()
         def worker():
-            self.on_main_thread_fn(on_job_done, job.work_fn())
+            self.on_main_thread_fn(on_job_done, job.work_fn(progress))
+        def progress(progress):
+            def foo():
+                job.set_progress(progress)
+                self.on_jobs_changed()
+            self.on_main_thread_fn(foo)
         if self.jobs:
             job = self.jobs.pop(-1)
             thread = self.threading.Thread(target=worker)
@@ -101,3 +107,21 @@ class Job:
         self.description = description
         self.result_fn = result_fn
         self.work_fn = work_fn
+        self.progress = None
+
+    def set_progress(self, progress):
+        self.progress = progress
+
+    def render_description(self):
+        """
+        >>> job = Job("Render foo.mp4", None, None)
+        >>> job.render_description()
+        'Render foo.mp4'
+        >>> job.set_progress(0.4)
+        >>> job.render_description()
+        'Render foo.mp4 (40%)'
+        """
+        if self.progress is not None:
+            return f"{self.description} ({int(self.progress*100)}%)"
+        else:
+            return self.description

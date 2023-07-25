@@ -102,15 +102,16 @@ class Project:
             profile=self.profile,
             cache=ExportSourceLoader(profile=self.profile, project=self)
         )
-        def work():
+        def work(progress):
             consumer = mlt.Consumer(self.profile, "avformat")
             consumer.set("target", path)
             consumer.connect(producer)
             consumer.start()
             while consumer.is_stopped() == 0:
-                time.sleep(0.1)
+                progress(producer.position()/producer.get_playtime())
+                time.sleep(0.5)
         self.background_worker.add(
-            f"Exporting {path}.",
+            f"Exporting {path}",
             lambda result: None,
             work,
         )
@@ -197,14 +198,14 @@ class ProxySourceLoader:
         def store(producer):
             self.mlt_producers[source_id] = producer
             self.project.producer_changed_event.trigger()
-        def work():
+        def work(progress):
             return self.project.get_source(source_id).load_proxy(
                 self.profile,
                 self.project.get_preview_profile().width(),
                 self.project.get_preview_profile().height(),
             )
         self.background_worker.add(
-            f"Generating proxy for {self.project.get_source(source_id).get_label()}.",
+            f"Generating proxy for {self.project.get_source(source_id).get_label()}",
             store,
             work
         )
