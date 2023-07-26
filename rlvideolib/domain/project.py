@@ -13,7 +13,6 @@ from rlvideolib.domain.source import TextSource
 from rlvideolib.events import Event
 from rlvideolib.jobs import NonThreadedBackgroundWorker
 from rlvideolib.testing import capture_stdout_stderr
-from rlvideolib.testing import doctest_absent
 
 class Project:
 
@@ -95,7 +94,7 @@ class Project:
         |%<-a0---------->|
         >>> with capture_stdout_stderr() as export_log:
         ...     project.export()
-        >>> doctest_absent(export_log.value, "NaN")
+        >>> export_log.is_absent("NaN")
         Yes
         """
         path = "export.mp4"

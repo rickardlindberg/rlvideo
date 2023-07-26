@@ -3,13 +3,6 @@ import os
 import sys
 import tempfile
 
-def doctest_absent(text, item):
-    if item not in text:
-        print("Yes")
-    else:
-        print(f"{item} found in text:")
-        print(text)
-
 @contextlib.contextmanager
 def capture_stdout_stderr():
     FILENO_OUT = 1
@@ -29,4 +22,17 @@ def capture_stdout_stderr():
         os.dup2(old_stderr, FILENO_ERR)
 
 class CaptureResult:
-    value = ""
+
+    def __init__(self):
+        self.value = ""
+
+    def is_absent(self, item):
+        doctest_absent(self.value, item)
+
+def doctest_absent(text, item):
+    if item not in text:
+        print("Yes")
+    else:
+        print(f"{item} found in text:")
+        print(text)
+
