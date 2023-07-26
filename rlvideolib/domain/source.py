@@ -56,7 +56,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
             consumer.connect(producer)
             consumer.start()
             while consumer.is_stopped() == 0:
-                progress(producer.position()/(producer.get_playtime()+2))
+                progress(producer.position()/producer.get_playtime())
                 time.sleep(0.5)
             os.rename(proxy_tmp_path, proxy_path)
         producer = mlt.Producer(profile, proxy_path)
