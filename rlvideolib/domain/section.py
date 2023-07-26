@@ -139,13 +139,13 @@ class MixSection:
             )
         for index in range(len(self.playlists)):
             if index > 0:
-                # TODO: need transition to mix audio?
-                transition = mlt.Transition(profile, "qtblend")
-                tractor.plant_transition(
-                    transition,
-                    0,     # a_track
-                    index, # b_track
-                )
+                a_track = 0
+                b_track = index
+                mix_video = mlt.Transition(profile, "qtblend")
+                tractor.plant_transition(mix_video, a_track, b_track)
+                mix_audio = mlt.Transition(profile, "mix")
+                mix_audio.set("sum", "1")
+                tractor.plant_transition(mix_audio, a_track, b_track)
         assert tractor.get_playtime() == self.length
         return tractor
 
