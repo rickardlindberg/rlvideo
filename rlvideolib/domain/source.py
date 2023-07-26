@@ -42,6 +42,8 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         >>> isinstance(producer, mlt.Producer)
         True
         """
+        # TODO: generate proxy with same profile as source clip (same colorspace, etc,
+        # but with smaller size)
         producer = mlt.Producer(profile, self.path)
         assert self.length == producer.get_playtime()
         chechsum = md5(self.path)
