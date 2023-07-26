@@ -37,7 +37,8 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         >>> profile = mlt.Profile()
         >>> proxy_profile = mlt.Profile()
         >>> source = FileSource(id=None, path="resources/one.mp4", length=15)
-        >>> producer, _ = capture_stdout_stderr(source.load_proxy, profile, proxy_profile, lambda progress: None)
+        >>> with capture_stdout_stderr():
+        ...     producer = source.load_proxy(profile, proxy_profile, lambda progress: None)
         >>> isinstance(producer, mlt.Producer)
         True
         """
@@ -100,6 +101,9 @@ class Sources(namedtuple("Sources", "id_to_source")):
     @staticmethod
     def empty():
         return Sources({})
+
+    def get_ids(self):
+        return list(self.id_to_source.keys())
 
     def add(self, source):
         if source.id in self.id_to_source:

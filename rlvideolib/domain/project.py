@@ -87,13 +87,15 @@ class Project:
     def export(self):
         """
         >>> project = Project.new()
-        >>> with project.new_transaction() as transaction:
-        ...     cut_id, _ = capture_stdout_stderr(transaction.add_clip, "resources/one.mp4", id="a")
-        ...     transaction.modify(cut_id, lambda cut: cut.move(1))
+        >>> with capture_stdout_stderr():
+        ...     with project.new_transaction() as transaction:
+        ...         cut_id = transaction.add_clip("resources/one.mp4", id="a")
+        ...         transaction.modify(cut_id, lambda cut: cut.move(1))
         >>> project.split_into_sections().to_ascii_canvas()
         |%<-a0---------->|
-        >>> _, export_log = capture_stdout_stderr(project.export)
-        >>> doctest_absent(export_log, "NaN")
+        >>> with capture_stdout_stderr() as export_log:
+        ...     project.export()
+        >>> doctest_absent(export_log.value, "NaN")
         Yes
         """
         path = "export.mp4"
@@ -131,7 +133,8 @@ class Project:
     def get_preview_mlt_producer(self):
         """
         >>> _ = mlt.Factory().init()
-        >>> project, _ = capture_stdout_stderr(Project.with_test_clips)
+        >>> with capture_stdout_stderr():
+        ...     project = Project.with_test_clips()
         >>> isinstance(project.get_preview_mlt_producer(), mlt.Playlist)
         True
         """
@@ -174,6 +177,9 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
     def split_into_sections(self):
         return self.cuts.split_into_sections()
 
+    def get_source_ids(self):
+        return self.sources.get_ids()
+
 class ExportSourceLoader:
 
     def __init__(self, profile, project):
@@ -194,6 +200,15 @@ class ProxySourceLoader:
         self.load_producer.set("text", "Loading...")
         self.load_producer.set("bgcolour", "red")
 
+    def ensure_present(self, source_ids):
+        for source_id in list(self.mlt_producers.keys()):
+            if source_id not in source_ids:
+                # TODO: test removal
+                self.mlt_producers.pop(source_id)
+        for source_id in source_ids:
+            if source_id not in self.mlt_producers:
+                self.load(source_id)
+
     def load(self, source_id):
         def store(producer):
             self.mlt_producers[source_id] = producer
@@ -204,6 +219,7 @@ class ProxySourceLoader:
                 self.project.get_preview_profile(),
                 progress
             )
+        self.mlt_producers[source_id] = self.load_producer
         self.background_worker.add(
             f"Generating proxy for {self.project.get_source(source_id).get_label()}",
             store,
@@ -211,10 +227,7 @@ class ProxySourceLoader:
         )
 
     def get_source_mlt_producer(self, source_id):
-        if source_id in self.mlt_producers:
-            return self.mlt_producers[source_id]
-        else:
-            return self.load_producer
+        return self.mlt_producers[source_id]
 
 class Transaction:
 
@@ -235,6 +248,7 @@ class Transaction:
         self.project.set_project_data(self.initial_data)
 
     def commit(self):
+        self.project.proxy_source_loader.ensure_present(self.project.project_data.get_source_ids())
         self.project.producer_changed_event.trigger()
 
     def modify(self, cut_id, fn):
@@ -254,6 +268,4 @@ class Transaction:
         self.project.set_project_data(self.project.project_data.add_source(source))
         cut = source.create_cut(0, length).move(self.project.project_data.cuts_end)
         self.project.set_project_data(self.project.project_data.add_cut(cut))
-        # TODO: sync proxy loader clips when sources changes
-        self.project.proxy_source_loader.load(source.id)
         return cut.id

@@ -1,3 +1,4 @@
+import contextlib
 import os
 import sys
 import tempfile
@@ -9,7 +10,8 @@ def doctest_absent(text, item):
         print(f"{item} found in text:")
         print(text)
 
-def capture_stdout_stderr(fn, *args, **kwargs):
+@contextlib.contextmanager
+def capture_stdout_stderr():
     FILENO_OUT = 1
     FILENO_ERR = 2
     old_stdout = os.dup(FILENO_OUT)
@@ -18,9 +20,13 @@ def capture_stdout_stderr(fn, *args, **kwargs):
         with tempfile.TemporaryFile("w+") as f:
             os.dup2(f.fileno(), FILENO_OUT)
             os.dup2(f.fileno(), FILENO_ERR)
-            return_value = fn(*args, **kwargs)
+            result = CaptureResult()
+            yield result
             f.seek(0)
-            return (return_value, f.read())
+            result.value = f.read()
     finally:
         os.dup2(old_stdout, FILENO_OUT)
         os.dup2(old_stderr, FILENO_ERR)
+
+class CaptureResult:
+    value = ""
