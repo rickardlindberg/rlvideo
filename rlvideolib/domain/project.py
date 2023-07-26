@@ -247,6 +247,7 @@ class Transaction:
         self.project.set_project_data(self.initial_data)
 
     def commit(self):
+        # TODO: retrieval of proxy clip will not work within transaction
         self.project.proxy_source_loader.ensure_present(self.project.project_data.get_source_ids())
         self.project.producer_changed_event.trigger()
 
