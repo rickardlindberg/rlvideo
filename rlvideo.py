@@ -134,6 +134,7 @@ class MltPlayer:
 
     def __init__(self, project, window_id):
         # TODO: player area outside video don't always refresh
+        # TODO: figure out why SDL consumer seems to produce brighter images (black -> grey)
         self.project = project
         os.putenv("SDL_WINDOWID", str(window_id))
         self.consumer = mlt.Consumer(self.project.get_preview_profile(), "sdl")
