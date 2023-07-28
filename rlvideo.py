@@ -68,11 +68,18 @@ class App:
                 event.y
             ))
         def timeline_button(widget, event):
-            self.timeline.mouse_down(*timeline.translate_coordinates(
-                main_window,
-                event.x,
-                event.y
-            ))
+            if event.button == 1:
+                self.timeline.left_mouse_down(*timeline.translate_coordinates(
+                    main_window,
+                    event.x,
+                    event.y
+                ))
+            elif event.button == 3:
+                self.timeline.right_mouse_down(*timeline.translate_coordinates(
+                    main_window,
+                    event.x,
+                    event.y
+                ))
         def timeline_button_up(widget, event):
             self.timeline.mouse_up()
         def timeline_scroll(widget, event):
@@ -206,7 +213,7 @@ class Timeline:
       position
     >>> timeline.split_into_sections().to_ascii_canvas()
     |<-h0----->|
-    >>> timeline.mouse_down(5, 25)
+    >>> timeline.left_mouse_down(5, 25)
     >>> timeline.mouse_move(6, 26)
     >>> timeline.mouse_up()
     >>> timeline.split_into_sections().to_ascii_canvas()
@@ -238,12 +245,15 @@ class Timeline:
         self.scrollbar_event.listen(fn)
         fn()
 
-    def mouse_down(self, x, y):
+    def left_mouse_down(self, x, y):
         self.tmp_xy = (x, y)
         self.tmp_scrollbar = self.scrollbar
         self.tmp_transaction = self.project.new_transaction()
         self.tmp_cut = self.rectangle_map.get(x, y)
         self.mouse_move(x, y)
+
+    def right_mouse_down(self, x, y):
+        print("Right mouse down")
 
     def mouse_move(self, x, y):
         if self.tmp_cut:
