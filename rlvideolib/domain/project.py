@@ -230,6 +230,8 @@ class ProxySourceLoader:
 
 class Transaction:
 
+    # TODO: support slowdown of clip and make sure it works with proxies
+
     def __init__(self, project):
         self.project = project
         self.initial_data = self.project.project_data
