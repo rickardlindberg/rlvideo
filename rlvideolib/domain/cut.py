@@ -516,6 +516,13 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         ... ]).extract_mix_section(region).to_ascii_canvas()
         %<-A0--->%%%%%%
         %%%%%<-B0--->%%
+
+        >>> Cuts.from_list([
+        ...     Cut.test_instance(name="A", start=0, end=8, position=0),
+        ...     Cut.test_instance(name="B", start=0, end=7, position=0),
+        ... ]).extract_mix_section(Region(start=0, end=10)).to_ascii_canvas()
+        <-B0-->%%%
+        <-A0--->%%
         """
         # TODO: sort based on cut (j-cut, l-cut, overlay, background).
         playlists = []
@@ -524,7 +531,10 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         return MixSection(length=region.length, playlists=playlists)
 
     def sort_cuts(self, cuts):
-        return sorted(cuts, key=lambda cut: cut.get_source_cut().start)
+        return sorted(cuts, key=lambda cut: (
+            cut.get_source_cut().start,
+            cut.get_source_cut().end
+        ))
 
     @timeit("Cuts.get_regions_with_overlap")
     def get_regions_with_overlap(self):
