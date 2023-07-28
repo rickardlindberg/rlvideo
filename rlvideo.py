@@ -18,6 +18,19 @@ from rlvideolib.jobs import BackgroundWorker
 
 GUI_SPACING = 7
 
+class GtkGui:
+
+    def show_context_menu(self, menu):
+        """
+        >>> GtkGui().show_context_menu([
+        ...     MenuItem(label="over", action=lambda: print("over")),
+        ...     MenuItem(label="under", action=lambda: print("under")),
+        ... ])
+        """
+
+class MenuItem(namedtuple("MenuItem", "label,action")):
+    pass
+
 class App:
 
     def run(self):
