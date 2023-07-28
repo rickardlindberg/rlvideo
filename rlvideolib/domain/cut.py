@@ -15,26 +15,26 @@ from rlvideolib.graphics.rectangle import Rectangle
 
 DEFAULT_REGION_GROUP_SIZE = 100
 
-class Cut(namedtuple("Cut", "source,in_out,position,id,cut")):
+class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
 
     @staticmethod
-    def test_instance(name="A", start=0, end=5, position=0, id=None, cut="under"):
+    def test_instance(name="A", start=0, end=5, position=0, id=None, mix_strategy="under"):
         return Cut(
             source=CutSource(source_id=name),
             in_out=Region(start=start, end=end),
             position=position,
             id=id,
-            cut=cut
+            mix_strategy=mix_strategy
         )
 
     @staticmethod
-    def new(source, in_out, position=0, id=None, cut="under"):
+    def new(source, in_out, position=0, id=None, mix_strategy="under"):
         return Cut(
             source=source,
             in_out=in_out,
             position=position,
             id=id,
-            cut=cut
+            mix_strategy=mix_strategy
         )
 
     def get_region_groups(self, group_size):
@@ -125,15 +125,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,cut")):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, cut='under')
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under')
 
         Contains all:
 
         >>> cut.create_cut(Region(start=0, end=40))
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, cut='under')
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under')
 
         >>> cut.create_cut(Region(start=10, end=30))
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, cut='under')
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under')
 
         Subcut left:
 
@@ -536,7 +536,7 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         <-A0--->%%
 
         >>> Cuts.from_list([
-        ...     Cut.test_instance(name="A", start=0, end=8, position=0, cut="over"),
+        ...     Cut.test_instance(name="A", start=0, end=8, position=0, mix_strategy="over"),
         ...     Cut.test_instance(name="B", start=0, end=7, position=0),
         ... ]).extract_mix_section(Region(start=0, end=10)).to_ascii_canvas()
         <-A0--->%%
@@ -554,10 +554,10 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
             cut.get_source_cut().start,
             cut.get_source_cut().end
         )):
-            if cut.cut == "over":
+            if cut.mix_strategy == "over":
                 sorted_cuts.insert(0, cut)
             else:
-                assert cut.cut == "under"
+                assert cut.mix_strategy == "under"
                 sorted_cuts.append(cut)
         return sorted_cuts
 
