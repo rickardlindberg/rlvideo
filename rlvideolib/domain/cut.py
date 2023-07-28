@@ -531,10 +531,13 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         return MixSection(length=region.length, playlists=playlists)
 
     def sort_cuts(self, cuts):
-        return sorted(cuts, key=lambda cut: (
+        sorted_cuts = []
+        for cut in sorted(cuts, key=lambda cut: (
             cut.get_source_cut().start,
             cut.get_source_cut().end
-        ))
+        )):
+            sorted_cuts.append(cut)
+        return sorted_cuts
 
     @timeit("Cuts.get_regions_with_overlap")
     def get_regions_with_overlap(self):
