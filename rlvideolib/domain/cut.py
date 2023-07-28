@@ -27,6 +27,16 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,cut")):
             cut=cut
         )
 
+    @staticmethod
+    def new(source, in_out, position=0, id=None, cut="under"):
+        return Cut(
+            source=source,
+            in_out=in_out,
+            position=position,
+            id=id,
+            cut=cut
+        )
+
     def get_region_groups(self, group_size):
         """
         >>> Cut.test_instance(start=0, end=10).get_region_groups(5)

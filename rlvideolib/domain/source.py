@@ -19,12 +19,9 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
     def create_cut(self, start, end):
         if start < 0 or end > self.length:
             raise ValueError("Invalid cut.")
-        return Cut(
+        return Cut.new(
             source=CutSource(source_id=self.id),
             in_out=Region(start=start, end=end),
-            position=0,
-            id=None,
-            cut="under"
         ).with_unique_id()
 
     def load(self, profile):
@@ -78,12 +75,9 @@ class TextSource(namedtuple("TextSource", "id,text")):
         return self._replace(id=uuid.uuid4().hex)
 
     def create_cut(self, start, end):
-        return Cut(
+        return Cut.new(
             source=CutSource(source_id=self.id),
             in_out=Region(start=start, end=end),
-            position=0,
-            id=None,
-            cut="under"
         ).with_unique_id()
 
     def load(self, profile):
