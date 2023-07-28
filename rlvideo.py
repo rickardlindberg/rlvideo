@@ -68,6 +68,7 @@ class App:
                 event.y
             ))
         def timeline_button(widget, event):
+            # TODO: clarify what translate_coordinates do
             if event.button == 1:
                 self.timeline.left_mouse_down(*timeline.translate_coordinates(
                     main_window,
