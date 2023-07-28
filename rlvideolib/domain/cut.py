@@ -15,15 +15,16 @@ from rlvideolib.graphics.rectangle import Rectangle
 
 DEFAULT_REGION_GROUP_SIZE = 100
 
-class Cut(namedtuple("Cut", "source,in_out,position,id")):
+class Cut(namedtuple("Cut", "source,in_out,position,id,cut")):
 
     @staticmethod
-    def test_instance(name="A", start=0, end=5, position=0, id=None):
+    def test_instance(name="A", start=0, end=5, position=0, id=None, cut="under"):
         return Cut(
             source=CutSource(source_id=name),
             in_out=Region(start=start, end=end),
             position=position,
-            id=id
+            id=id,
+            cut=cut
         )
 
     def get_region_groups(self, group_size):
@@ -114,15 +115,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id")):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, cut='under')
 
         Contains all:
 
         >>> cut.create_cut(Region(start=0, end=40))
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, cut='under')
 
         >>> cut.create_cut(Region(start=10, end=30))
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None)
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, cut='under')
 
         Subcut left:
 
@@ -523,6 +524,13 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         ... ]).extract_mix_section(Region(start=0, end=10)).to_ascii_canvas()
         <-B0-->%%%
         <-A0--->%%
+
+        >>> Cuts.from_list([
+        ...     Cut.test_instance(name="A", start=0, end=8, position=0, cut="over"),
+        ...     Cut.test_instance(name="B", start=0, end=7, position=0),
+        ... ]).extract_mix_section(Region(start=0, end=10)).to_ascii_canvas()
+        <-A0--->%%
+        <-B0-->%%%
         """
         # TODO: sort based on cut (j-cut, l-cut, overlay, background).
         playlists = []
@@ -536,7 +544,11 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
             cut.get_source_cut().start,
             cut.get_source_cut().end
         )):
-            sorted_cuts.append(cut)
+            if cut.cut == "over":
+                sorted_cuts.insert(0, cut)
+            else:
+                assert cut.cut == "under"
+                sorted_cuts.append(cut)
         return sorted_cuts
 
     @timeit("Cuts.get_regions_with_overlap")

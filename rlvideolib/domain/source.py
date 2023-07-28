@@ -23,7 +23,8 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
             source=CutSource(source_id=self.id),
             in_out=Region(start=start, end=end),
             position=0,
-            id=None
+            id=None,
+            cut="under"
         ).with_unique_id()
 
     def load(self, profile):
@@ -81,7 +82,8 @@ class TextSource(namedtuple("TextSource", "id,text")):
             source=CutSource(source_id=self.id),
             in_out=Region(start=start, end=end),
             position=0,
-            id=None
+            id=None,
+            cut="under"
         ).with_unique_id()
 
     def load(self, profile):
