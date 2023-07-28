@@ -498,6 +498,24 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         >>> cuts.extract_mix_section(Region(start=0, end=15)).to_ascii_canvas()
         %<-A0--->%%%%%%
         %%%%%<-B0--->%%
+
+        >>> region = Region(start=0, end=15)
+        >>> a_cut = Cut.test_instance(name="A", start=0, end=8, position=1)
+        >>> b_cut = Cut.test_instance(name="B", start=0, end=8, position=5)
+
+        >>> Cuts.from_list([
+        ...     a_cut,
+        ...     b_cut,
+        ... ]).extract_mix_section(region).to_ascii_canvas()
+        %<-A0--->%%%%%%
+        %%%%%<-B0--->%%
+
+        >>> Cuts.from_list([
+        ...     b_cut,
+        ...     a_cut,
+        ... ]).extract_mix_section(region).to_ascii_canvas()
+        %%%%%<-B0--->%%
+        %<-A0--->%%%%%%
         """
         # TODO: sort based on cut (j-cut, l-cut, overlay, background).
         playlists = []
