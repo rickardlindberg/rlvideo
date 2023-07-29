@@ -20,13 +20,28 @@ GUI_SPACING = 7
 
 class GtkGui:
 
+    def __init__(self, event):
+        self.event = event
+
     def show_context_menu(self, menu):
         """
-        >>> GtkGui().show_context_menu([
+        >>> event = namedtuple("FakeEvent", "button,time")(3, 0)
+        >>> GtkGui(event).show_context_menu([
         ...     MenuItem(label="over", action=lambda: print("over")),
         ...     MenuItem(label="under", action=lambda: print("under")),
         ... ])
         """
+        def create_gtk_handler(menu_item):
+            def handler(widget):
+                menu_item.action()
+            return handler
+        gtk_menu = Gtk.Menu()
+        for menu_item in menu:
+            gtk_menu_item = Gtk.MenuItem(label=menu_item.label)
+            gtk_menu_item.connect("activate", create_gtk_handler(menu_item))
+            gtk_menu_item.show()
+            gtk_menu.append(gtk_menu_item)
+        gtk_menu.popup(None, None, None, None, self.event.button, self.event.time)
 
 class MenuItem(namedtuple("MenuItem", "label,action")):
     pass
@@ -95,7 +110,7 @@ class App:
                     main_window,
                     event.x,
                     event.y
-                ))
+                ), GtkGui(event))
         def timeline_button_up(widget, event):
             self.timeline.mouse_up()
         def timeline_scroll(widget, event):
@@ -268,8 +283,11 @@ class Timeline:
         self.tmp_cut = self.rectangle_map.get(x, y)
         self.mouse_move(x, y)
 
-    def right_mouse_down(self, x, y):
-        print("Right mouse down")
+    def right_mouse_down(self, x, y, gui):
+        gui.show_context_menu([
+            MenuItem(label="over", action=lambda: print("over")),
+            MenuItem(label="under", action=lambda: print("under")),
+        ])
 
     def mouse_move(self, x, y):
         if self.tmp_cut:
