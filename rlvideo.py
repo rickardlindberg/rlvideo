@@ -38,6 +38,7 @@ class App:
         mlt.Factory().init()
 
         def key_press_handler(window, event):
+            # TODO: return True to mark event as handled?
             if event.get_keyval().keyval == Gdk.keyval_from_name("0"):
                 mlt_player.seek_beginning()
             elif event.get_keyval().keyval == Gdk.keyval_from_name("space"):
