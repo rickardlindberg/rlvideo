@@ -9,6 +9,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
 from rlvideolib.debug import timeit
+from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.project import Project
 from rlvideolib.domain.region import Region
 from rlvideolib.events import Event
@@ -17,6 +18,17 @@ from rlvideolib.graphics.rectangle import RectangleMap
 from rlvideolib.jobs import BackgroundWorker
 
 GUI_SPACING = 7
+
+class FakeGui:
+
+    def __init__(self, click_context_menu=None):
+        self.click_context_menu = click_context_menu
+
+    def show_context_menu(self, menu):
+        for item in menu:
+            if item.label == self.click_context_menu:
+                item.action()
+                return
 
 class GtkGui:
 
@@ -222,9 +234,11 @@ class Timeline:
 
     """
     >>> _ = mlt.Factory().init()
+
     >>> project = Project.new()
     >>> with project.new_transaction() as transaction:
     ...     _ = transaction.add_text_clip("hello", length=10, id="hello")
+
     >>> timeline = Timeline(project=project, player=None)
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
@@ -235,15 +249,25 @@ class Timeline:
     ...     width=width,
     ...     height=height
     ... )
+
+    >>> timeline.split_into_sections().to_ascii_canvas()
+    |<-h0----->|
+
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
     Rectangle(x=0, y=20, width=10, height=50):
-      Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=...)
+      Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=..., mix_strategy='under')
     Rectangle(x=0, y=0, width=300, height=20):
       scrub
     Rectangle(x=0, y=77, width=300, height=23):
       position
-    >>> timeline.split_into_sections().to_ascii_canvas()
-    |<-h0----->|
+
+    Right click event:
+
+    >>> timeline.right_mouse_down(5, 25, FakeGui(click_context_menu="over"))
+    over
+
+    Drag event:
+
     >>> timeline.left_mouse_down(5, 25)
     >>> timeline.mouse_move(6, 26)
     >>> timeline.mouse_up()
@@ -284,10 +308,12 @@ class Timeline:
         self.mouse_move(x, y)
 
     def right_mouse_down(self, x, y, gui):
-        gui.show_context_menu([
-            MenuItem(label="over", action=lambda: print("over")),
-            MenuItem(label="under", action=lambda: print("under")),
-        ])
+        cut = self.rectangle_map.get(x, y)
+        if isinstance(cut, Cut):
+            gui.show_context_menu([
+                MenuItem(label="over", action=lambda: print("over")),
+                MenuItem(label="under", action=lambda: print("under")),
+            ])
 
     def mouse_move(self, x, y):
         if self.tmp_cut:
