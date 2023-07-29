@@ -41,6 +41,8 @@ if __name__ == "__main__":
             "rlvideolib.graphics.rectangle",
             "rlvideolib.testing",
             "rlvideolib.jobs",
+            "rlvideolib.gui",
+            "rlvideolib.gui.testing",
         ]:
             suite.addTest(doctest.DocTestSuite(
                 importlib.import_module(module),

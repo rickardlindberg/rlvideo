@@ -15,20 +15,10 @@ from rlvideolib.domain.region import Region
 from rlvideolib.events import Event
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
+from rlvideolib.gui.testing import TestGui
 from rlvideolib.jobs import BackgroundWorker
 
 GUI_SPACING = 7
-
-class FakeGui:
-
-    def __init__(self, click_context_menu=None):
-        self.click_context_menu = click_context_menu
-
-    def show_context_menu(self, menu):
-        for item in menu:
-            if item.label == self.click_context_menu:
-                item.action()
-                return
 
 class GtkGui:
 
@@ -263,7 +253,7 @@ class Timeline:
 
     Right click event:
 
-    >>> timeline.right_mouse_down(5, 25, FakeGui(click_context_menu="over"))
+    >>> timeline.right_mouse_down(5, 25, TestGui(click_context_menu="over"))
     >>> timeline.get_cut(cut_id).mix_strategy
     'over'
 
