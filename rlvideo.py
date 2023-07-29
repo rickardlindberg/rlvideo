@@ -237,7 +237,7 @@ class Timeline:
 
     >>> project = Project.new()
     >>> with project.new_transaction() as transaction:
-    ...     _ = transaction.add_text_clip("hello", length=10, id="hello")
+    ...     cut_id = transaction.add_text_clip("hello", length=10, id="hello")
 
     >>> timeline = Timeline(project=project, player=None)
     >>> width, height = 300, 100
@@ -264,7 +264,8 @@ class Timeline:
     Right click event:
 
     >>> timeline.right_mouse_down(5, 25, FakeGui(click_context_menu="over"))
-    over
+    >>> timeline.get_cut(cut_id).mix_strategy
+    'over'
 
     Drag event:
 
@@ -292,6 +293,9 @@ class Timeline:
         self.tmp_transaction = None
         self.mouse_up()
 
+    def get_cut(self, cut_id):
+        return self.project.get_cut(cut_id)
+
     def set_scrollbar(self, scrollbar):
         self.scrollbar = scrollbar
         self.scrollbar_event.trigger()
@@ -310,9 +314,15 @@ class Timeline:
     def right_mouse_down(self, x, y, gui):
         cut = self.rectangle_map.get(x, y)
         if isinstance(cut, Cut):
+            def mix_strategy_updater(value):
+                def update():
+                    with self.project.new_transaction() as transaction:
+                        transaction.modify(cut.id, lambda cut:
+                            cut.with_mix_strategy(value))
+                return update
             gui.show_context_menu([
-                MenuItem(label="over", action=lambda: print("over")),
-                MenuItem(label="under", action=lambda: print("under")),
+                MenuItem(label="over", action=mix_strategy_updater("over")),
+                MenuItem(label="under", action=mix_strategy_updater("under")),
             ])
 
     def mouse_move(self, x, y):

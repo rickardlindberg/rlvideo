@@ -122,6 +122,9 @@ class Project:
     def get_source(self, source_id):
         return self.project_data.get_source(source_id)
 
+    def get_cut(self, cut_id):
+        return self.project_data.get_cut(cut_id)
+
     def new_transaction(self):
         return Transaction(self)
 
@@ -172,6 +175,9 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
 
     def get_source(self, source_id):
         return self.sources.get(source_id)
+
+    def get_cut(self, cut_id):
+        return self.cuts.get(cut_id)
 
     def split_into_sections(self):
         return self.cuts.split_into_sections()

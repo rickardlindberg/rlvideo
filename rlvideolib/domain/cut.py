@@ -37,6 +37,9 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
             mix_strategy=mix_strategy
         )
 
+    def with_mix_strategy(self, mix_strategy):
+        return self._replace(mix_strategy=mix_strategy)
+
     def get_region_groups(self, group_size):
         """
         >>> Cut.test_instance(start=0, end=10).get_region_groups(5)
@@ -320,6 +323,9 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
             region_to_cuts=RegionToCuts.empty(),
             region_group_size=DEFAULT_REGION_GROUP_SIZE
         )
+
+    def get(self, id):
+        return self.cut_map[id]
 
     def add(self, *cuts):
         new_region_to_cuts = self.region_to_cuts
