@@ -1,5 +1,7 @@
 from collections import namedtuple
+import json
 import os
+import tempfile
 import time
 
 import mlt
@@ -13,18 +15,33 @@ from rlvideolib.domain.source import TextSource
 from rlvideolib.events import Event
 from rlvideolib.jobs import NonThreadedBackgroundWorker
 from rlvideolib.testing import capture_stdout_stderr
+from rlvideolib.testing import doctest_equal
 
 class Project:
 
+    """
+    >>> tmp = tempfile.TemporaryDirectory()
+    >>> path = os.path.join(tmp.name, "foo.rlvideo")
+    >>> project = Project.new(path=path)
+    >>> with project.new_transaction() as transaction:
+    ...     _ = transaction.add_text_clip("hello", length=10)
+    ...     _ = transaction.add_clip("resources/one.mp4")
+    >>> saved_json = json.loads(open(path).read())
+    >>> loaded_json = Project.new(path=path).project_data.to_json()
+    >>> doctest_equal(loaded_json, saved_json)
+    Yes
+    """
+
     @staticmethod
-    def new(background_worker=None):
+    def new(background_worker=None, path=None):
         """
         >>> isinstance(Project.new(), Project)
         True
         """
         return Project(
             NonThreadedBackgroundWorker() if background_worker is None
-            else background_worker
+            else background_worker,
+            path=path
         )
 
     @staticmethod
@@ -50,17 +67,24 @@ class Project:
                 transaction.add_clip("resources/three.mp4")
         return project
 
-    def __init__(self, background_worker):
+    def __init__(self, background_worker, path):
         self.producer_changed_event = Event()
         self.project_data_event = Event()
         self.profile = self.create_profile()
-        self.set_project_data(ProjectData.empty())
+        self.set_project_data(ProjectData.load(path=path))
         self.proxy_source_loader = ProxySourceLoader(
             profile=self.profile,
             project=self,
             background_worker=background_worker
         )
         self.background_worker = background_worker
+        self.path = path
+
+    def save(self):
+        if self.path:
+            tmp_path = self.path + ".tmp"
+            self.project_data.write(tmp_path)
+            os.rename(tmp_path, self.path)
 
     def set_project_data(self, project_data):
         self.project_data = project_data
@@ -160,6 +184,31 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
     def empty():
         return ProjectData(sources=Sources.empty(), cuts=Cuts.empty())
 
+    @staticmethod
+    def load(path):
+        if path and os.path.exists(path):
+            with open(path) as f:
+                return ProjectData.from_json(json.load(f))
+        else:
+            return ProjectData.empty()
+
+    def write(self, path):
+        with open(path, "w") as f:
+            json.dump(self.to_json(), f)
+
+    @staticmethod
+    def from_json(json):
+        return ProjectData(
+            sources=Sources.from_json(json["sources"]),
+            cuts=Cuts.from_json(json["cuts"])
+        )
+
+    def to_json(self):
+        return {
+            "sources": self.sources.to_json(),
+            "cuts": self.cuts.to_json(),
+        }
+
     @property
     def cuts_end(self):
         return self.cuts.end
@@ -168,6 +217,7 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
         return self._replace(sources=self.sources.add(source))
 
     def add_cut(self, cut):
+        # TODO: assert that source id exists (even for json loading)
         return self._replace(cuts=self.cuts.add(cut))
 
     def modify_cut(self, cut_id, fn):
@@ -258,6 +308,7 @@ class Transaction:
         # TODO: retrieval of proxy clip will not work within transaction
         self.project.proxy_source_loader.ensure_present(self.project.project_data.get_source_ids())
         self.project.producer_changed_event.trigger()
+        self.project.save()
 
     def modify(self, cut_id, fn):
         self.project.set_project_data(self.project.project_data.modify_cut(cut_id, fn))

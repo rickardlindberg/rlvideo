@@ -36,3 +36,12 @@ def doctest_absent(text, item):
         print(f"{item} found in text:")
         print(text)
 
+def doctest_equal(a, b):
+    if a == b:
+        print("Yes")
+    else:
+        print("Items not equal:")
+        print("")
+        print(a)
+        print("")
+        print(b)

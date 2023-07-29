@@ -13,6 +13,21 @@ from rlvideolib.testing import capture_stdout_stderr
 
 class FileSource(namedtuple("FileSource", "id,path,length")):
 
+    @staticmethod
+    def from_json(id, json):
+        return FileSource(
+            id=id,
+            path=json["path"],
+            length=json["length"],
+        )
+
+    def to_json(self):
+        return {
+            "type": "file",
+            "path": self.path,
+            "length": self.length,
+        }
+
     def with_unique_id(self):
         return self._replace(id=uuid.uuid4().hex)
 
@@ -71,6 +86,19 @@ def md5(path):
 
 class TextSource(namedtuple("TextSource", "id,text")):
 
+    @staticmethod
+    def from_json(id, json):
+        return TextSource(
+            id=id,
+            text=json["text"],
+        )
+
+    def to_json(self):
+        return {
+            "type": "text",
+            "text": self.text,
+        }
+
     def with_unique_id(self):
         return self._replace(id=uuid.uuid4().hex)
 
@@ -94,11 +122,35 @@ class TextSource(namedtuple("TextSource", "id,text")):
 
 # TODO: add image sequence source
 
+class Source:
+
+    @staticmethod
+    def from_json(id, json):
+        if json["type"] == "text":
+            return TextSource.from_json(id, json)
+        elif json["type"] == "file":
+            return FileSource.from_json(id, json)
+        else:
+            raise ValueError("unknown source type")
+
 class Sources(namedtuple("Sources", "id_to_source")):
 
     @staticmethod
     def empty():
         return Sources({})
+
+    @staticmethod
+    def from_json(json):
+        sources = Sources.empty()
+        for id, json in json.items():
+            sources = sources.add(Source.from_json(id, json))
+        return sources
+
+    def to_json(self):
+        json = {}
+        for key, value in self.id_to_source.items():
+            json[key] = value.to_json()
+        return json
 
     def get_ids(self):
         return list(self.id_to_source.keys())

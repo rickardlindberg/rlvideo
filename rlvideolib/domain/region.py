@@ -12,6 +12,19 @@ class Region(namedtuple("Region", "start,end")):
         if start >= end:
             raise ValueError(f"Invalid region: start ({start}) >= end ({end}).")
 
+    @staticmethod
+    def from_json(json):
+        return Region(
+            start=json["start"],
+            end=json["end"],
+        )
+
+    def to_json(self):
+        return {
+            "start": self.start,
+            "end": self.end,
+        }
+
     @property
     def length(self):
         return self.end - self.start

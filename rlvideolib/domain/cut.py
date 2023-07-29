@@ -37,6 +37,25 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
             mix_strategy=mix_strategy
         )
 
+    @staticmethod
+    def from_json(id, json):
+        return Cut(
+            source=CutSource(source_id=json["source"]),
+            in_out=Region.from_json(json["in_out"]),
+            position=json["position"],
+            id=id,
+            mix_strategy=json["mix_strategy"],
+        )
+
+    def to_json(self):
+        assert isinstance(self.source, CutSource)
+        return {
+            "source": self.source.source_id,
+            "in_out": self.in_out.to_json(),
+            "position": self.position,
+            "mix_strategy": self.mix_strategy,
+        }
+
     def with_mix_strategy(self, mix_strategy):
         return self._replace(mix_strategy=mix_strategy)
 
@@ -310,6 +329,13 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
     """
 
     @staticmethod
+    def from_json(json):
+        cuts = Cuts.empty()
+        for id, json in json.items():
+            cuts = cuts.add(Cut.from_json(id, json))
+        return cuts
+
+    @staticmethod
     def from_list(cuts):
         return Cuts.empty().add(*[
             cut.with_unique_id()
@@ -323,6 +349,12 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
             region_to_cuts=RegionToCuts.empty(),
             region_group_size=DEFAULT_REGION_GROUP_SIZE
         )
+
+    def to_json(self):
+        json = {}
+        for key, value in self.cut_map.items():
+            json[key] = value.to_json()
+        return json
 
     def get(self, id):
         return self.cut_map[id]
