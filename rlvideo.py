@@ -49,6 +49,7 @@ class App:
                 mlt_player.seek_right_one_frame()
 
         main_window = Gtk.Window()
+        main_window.set_default_size(700, 400)
         main_window.connect("destroy", Gtk.main_quit)
         main_window.connect("key_press_event", key_press_handler)
 
