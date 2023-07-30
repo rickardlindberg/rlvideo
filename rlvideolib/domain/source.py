@@ -47,14 +47,19 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
     def load(self, profile):
         return self.get_file_info(profile).get_mlt_producer(profile)
 
-    def load_proxy(self, profile, proxy_profile, progress):
+    def load_proxy(self, profile, proxy_profile, progress, testing=False):
         """
         >>> _ = mlt.Factory().init()
         >>> profile = mlt.Profile()
         >>> proxy_profile = mlt.Profile()
         >>> source = FileSource(id=None, path="resources/one.mp4", number_of_frames_at_project_fps=15)
         >>> with capture_stdout_stderr():
-        ...     producer = source.load_proxy(profile, proxy_profile, lambda progress: None)
+        ...     producer = source.load_proxy(
+        ...         profile=profile,
+        ...         proxy_profile=proxy_profile,
+        ...         progress=lambda progress: None,
+        ...         testing=True
+        ...     )
         >>> isinstance(producer, mlt.Producer)
         True
         """
@@ -64,7 +69,7 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         chechsum = md5(self.path)
         proxy_path = f"/tmp/{chechsum}.mkv"
         proxy_tmp_path = f"/tmp/{chechsum}.tmp.mkv"
-        if not os.path.exists(proxy_path):
+        if not os.path.exists(proxy_path) or testing:
             producer = file_info.get_mlt_producer(profile)
             consumer = mlt.Consumer(proxy_profile, "avformat")
             consumer.set("target", proxy_tmp_path)
