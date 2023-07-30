@@ -45,6 +45,7 @@ if __name__ == "__main__":
             "rlvideolib.gui.testing",
             "rlvideolib.gui.generic",
             "rlvideolib.gui.gtk",
+            "rlvideolib.mlthelpers",
         ]:
             suite.addTest(doctest.DocTestSuite(
                 importlib.import_module(module),

@@ -9,6 +9,7 @@ import mlt
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.cut import CutSource
 from rlvideolib.domain.region import Region
+from rlvideolib.mlthelpers import FileInfo
 from rlvideolib.testing import capture_stdout_stderr
 
 class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_fps")):
@@ -44,9 +45,9 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         ).with_unique_id()
 
     def load(self, profile):
-        producer = mlt.Producer(profile, self.path)
-        assert self.number_of_frames_at_project_fps == producer.get_playtime()
-        return producer
+        file_info = FileInfo(self.path)
+        assert self.number_of_frames_at_project_fps == file_info.get_number_of_frames(profile)
+        return file_info.get_mlt_producer(profile)
 
     def load_proxy(self, profile, proxy_profile, progress):
         """

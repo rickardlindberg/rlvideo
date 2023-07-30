@@ -14,6 +14,7 @@ from rlvideolib.domain.source import Sources
 from rlvideolib.domain.source import TextSource
 from rlvideolib.events import Event
 from rlvideolib.jobs import NonThreadedBackgroundWorker
+from rlvideolib.mlthelpers import FileInfo
 from rlvideolib.testing import capture_stdout_stderr
 from rlvideolib.testing import doctest_equal
 
@@ -334,11 +335,3 @@ class Transaction:
         cut = source.create_cut(0, length).move(self.project.project_data.cuts_end)
         self.project.set_project_data(self.project.project_data.add_cut(cut))
         return cut.id
-
-class FileInfo:
-
-    def __init__(self, path):
-        self.path = path
-
-    def get_number_of_frames(self, profile):
-        return mlt.Producer(profile, self.path).get_playtime()
