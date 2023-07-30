@@ -8,10 +8,7 @@ class FileInfo:
         self.path = path
 
     def get_number_of_frames(self, profile):
-        return self.get_mlt_producer(profile).get_playtime()
-
-    def get_mlt_producer(self, profile):
-        return mlt.Producer(profile, self.path)
+        return mlt.Producer(profile, self.path).get_playtime()
 
 def run_consumer(consumer, producer, progress):
     consumer.connect(producer)

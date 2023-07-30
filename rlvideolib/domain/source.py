@@ -45,7 +45,7 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         ).with_unique_id()
 
     def load(self, profile):
-        return self.get_file_info(profile).get_mlt_producer(profile)
+        return self.validate_producer(mlt.Producer(profile, self.path))
 
     def load_proxy(self, profile, proxy_profile, progress, testing=False):
         """
@@ -65,12 +65,11 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         """
         # TODO: generate proxy with same profile as source clip (same colorspace, etc,
         # but with smaller size)
-        file_info = self.get_file_info(profile)
+        producer = self.validate_producer(mlt.Producer(profile, self.path))
         chechsum = md5(self.path)
         proxy_path = f"/tmp/{chechsum}.mkv"
         proxy_tmp_path = f"/tmp/{chechsum}.tmp.mkv"
         if not os.path.exists(proxy_path) or testing:
-            producer = file_info.get_mlt_producer(profile)
             consumer = mlt.Consumer(proxy_profile, "avformat")
             consumer.set("target", proxy_tmp_path)
             consumer.set("vcodec", "mjpeg")
@@ -78,14 +77,11 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
             consumer.set("qscale", "3")
             run_consumer(consumer, producer, progress)
             os.rename(proxy_tmp_path, proxy_path)
-        producer = mlt.Producer(profile, proxy_path)
-        assert self.number_of_frames_at_project_fps == producer.get_playtime()
-        return producer
+        return self.validate_producer(mlt.Producer(profile, proxy_path))
 
-    def get_file_info(self, profile):
-        file_info = FileInfo(self.path)
-        assert self.number_of_frames_at_project_fps == file_info.get_number_of_frames(profile)
-        return file_info
+    def validate_producer(self, producer):
+        assert producer.get_playtime() == self.number_of_frames_at_project_fps
+        return producer
 
     def get_label(self):
         return os.path.basename(self.path)
