@@ -119,7 +119,7 @@ class TextSource(namedtuple("TextSource", "id,text")):
         producer.set("bgcolour", "red")
         return producer
 
-    def load_proxy(self, profile, height, progress):
+    def load_proxy(self, profile, proxy_spec, progress):
         return self.load(profile)
 
     def get_label(self):
