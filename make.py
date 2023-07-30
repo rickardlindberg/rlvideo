@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 importlib.import_module(module),
                 optionflags=doctest.REPORT_NDIFF|doctest.FAIL_FAST
             ))
-        if not unittest.TextTestRunner().run(suite).wasSuccessful():
+        if not unittest.TextTestRunner(verbosity=1).run(suite).wasSuccessful():
             sys.exit(1)
     elif command[0:1] == ["rundev"]:
         ensure([sys.executable, "rlvideo.py"]+command[1:])
