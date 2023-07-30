@@ -63,14 +63,17 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         >>> isinstance(producer, mlt.Producer)
         True
         """
-        # TODO: generate proxy with same profile as source clip (same colorspace, etc,
-        # but with smaller size)
         producer = self.validate_producer(mlt.Producer(profile, self.path))
         chechsum = md5(self.path)
         proxy_path = f"/tmp/{chechsum}.mkv"
         proxy_tmp_path = f"/tmp/{chechsum}.tmp.mkv"
         if not os.path.exists(proxy_path) or testing:
-            consumer = mlt.Consumer(proxy_profile, "avformat")
+            p = mlt.Profile()
+            p.from_producer(producer)
+            p.set_width(proxy_profile.width())
+            p.set_height(proxy_profile.height())
+            producer = mlt.Producer(p, self.path)
+            consumer = mlt.Consumer(p, "avformat")
             consumer.set("target", proxy_tmp_path)
             consumer.set("vcodec", "mjpeg")
             consumer.set("acodec", "pcm_s16le")
