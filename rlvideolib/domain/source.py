@@ -1,7 +1,6 @@
 from collections import namedtuple
 import os
 import subprocess
-import time
 import uuid
 
 import mlt
@@ -10,6 +9,7 @@ from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.cut import CutSource
 from rlvideolib.domain.region import Region
 from rlvideolib.mlthelpers import FileInfo
+from rlvideolib.mlthelpers import run_consumer
 from rlvideolib.testing import capture_stdout_stderr
 
 class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_fps")):
@@ -45,9 +45,7 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         ).with_unique_id()
 
     def load(self, profile):
-        file_info = FileInfo(self.path)
-        assert self.number_of_frames_at_project_fps == file_info.get_number_of_frames(profile)
-        return file_info.get_mlt_producer(profile)
+        return self.get_file_info(profile).get_mlt_producer(profile)
 
     def load_proxy(self, profile, proxy_profile, progress):
         """
@@ -62,26 +60,27 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         """
         # TODO: generate proxy with same profile as source clip (same colorspace, etc,
         # but with smaller size)
-        producer = mlt.Producer(profile, self.path)
-        assert self.number_of_frames_at_project_fps == producer.get_playtime()
+        file_info = self.get_file_info(profile)
         chechsum = md5(self.path)
         proxy_path = f"/tmp/{chechsum}.mkv"
         proxy_tmp_path = f"/tmp/{chechsum}.tmp.mkv"
         if not os.path.exists(proxy_path):
+            producer = file_info.get_mlt_producer(profile)
             consumer = mlt.Consumer(proxy_profile, "avformat")
             consumer.set("target", proxy_tmp_path)
             consumer.set("vcodec", "mjpeg")
             consumer.set("acodec", "pcm_s16le")
             consumer.set("qscale", "3")
-            consumer.connect(producer)
-            consumer.start()
-            while consumer.is_stopped() == 0:
-                progress(producer.position()/producer.get_playtime())
-                time.sleep(0.5)
+            run_consumer(consumer, producer, progress)
             os.rename(proxy_tmp_path, proxy_path)
         producer = mlt.Producer(profile, proxy_path)
         assert self.number_of_frames_at_project_fps == producer.get_playtime()
         return producer
+
+    def get_file_info(self, profile):
+        file_info = FileInfo(self.path)
+        assert self.number_of_frames_at_project_fps == file_info.get_number_of_frames(profile)
+        return file_info
 
     def get_label(self):
         return os.path.basename(self.path)

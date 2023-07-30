@@ -1,3 +1,5 @@
+import time
+
 import mlt
 
 class FileInfo:
@@ -10,3 +12,11 @@ class FileInfo:
 
     def get_mlt_producer(self, profile):
         return mlt.Producer(profile, self.path)
+
+def run_consumer(consumer, producer, progress):
+    consumer.connect(producer)
+    consumer.start()
+    while consumer.is_stopped() == 0:
+        progress(producer.position()/producer.get_playtime())
+        time.sleep(0.5)
+
