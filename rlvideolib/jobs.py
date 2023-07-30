@@ -88,6 +88,7 @@ class BackgroundWorker:
             self.current_job = None
             self.on_jobs_changed()
         def worker():
+            # TODO: call on_job_done even on exception
             self.on_main_thread_fn(on_job_done, job.work_fn(progress))
         def progress(progress):
             def foo():
