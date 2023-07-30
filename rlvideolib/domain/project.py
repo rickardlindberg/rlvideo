@@ -49,7 +49,11 @@ class Project:
     @staticmethod
     def load(args, background_worker=None):
         if args:
-            project = Project.new(background_worker)
+            if args[0].endswith(".rlvideo"):
+                path = args.pop(0)
+            else:
+                path = None
+            project = Project.new(background_worker=background_worker, path=path)
             with project.new_transaction() as transaction:
                 for arg in args:
                     transaction.add_clip(arg)
