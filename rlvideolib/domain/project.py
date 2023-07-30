@@ -365,8 +365,4 @@ class ProxySpec:
         return self.get_path(f"{name}.tmp")
 
     def get_path(self, name):
-        return os.path.join(self.get_dir(), f"{name}.{self.extension}")
-
-    def get_dir(self):
-        return self.dir
-
+        return os.path.join(self.dir, f"{name}.{self.extension}")
