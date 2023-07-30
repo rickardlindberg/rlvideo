@@ -46,7 +46,7 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         ).with_unique_id()
 
     def load(self, profile):
-        return self.validate_producer(mlt.Producer(profile, self.path))
+        return self.create_producer(profile, self.path)
 
     def load_proxy(self, profile, proxy_spec, progress):
         """
@@ -64,7 +64,7 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         >>> isinstance(producer, mlt.Producer)
         True
         """
-        producer = self.validate_producer(mlt.Producer(profile, self.path))
+        producer = self.create_producer(profile, self.path)
         checksum = md5(self.path)
         proxy_path = proxy_spec.get_path(checksum)
         proxy_tmp_path = proxy_spec.get_tmp_path(checksum)
@@ -78,11 +78,14 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
             consumer.set("target", proxy_tmp_path)
             proxy_spec.adjust_consumer(consumer)
             run_consumer(consumer, producer, progress)
+            self.create_producer(profile, proxy_tmp_path)
             os.rename(proxy_tmp_path, proxy_path)
-        return self.validate_producer(mlt.Producer(profile, proxy_path))
+        return self.create_producer(profile, proxy_path)
 
-    def validate_producer(self, producer):
-        assert producer.get_playtime() == self.number_of_frames_at_project_fps
+    def create_producer(self, profile, path):
+        producer = mlt.Producer(profile, path)
+        if producer.get_playtime() != self.number_of_frames_at_project_fps:
+            raise ValueError(f"Producer {path} (original {self.path}) has a playtime of {producer.get_playtime()}, but number_of_frames_at_project_fps is {self.number_of_frames_at_project_fps}")
         return producer
 
     def get_label(self):
