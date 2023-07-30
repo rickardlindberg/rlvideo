@@ -315,8 +315,13 @@ class Transaction:
         self.project.set_project_data(self.project.project_data.modify_cut(cut_id, fn))
 
     def add_clip(self, path, id=None):
-        producer = mlt.Producer(self.project.profile, path)
-        source = FileSource(id=id, path=path, number_of_frames_at_project_fps=producer.get_playtime())
+        source = FileSource(
+            id=id,
+            path=path,
+            number_of_frames_at_project_fps=FileInfo(
+                path
+            ).get_number_of_frames(self.project.profile)
+        )
         return self.add_source(source, source.number_of_frames_at_project_fps)
 
     def add_text_clip(self, text, length, id=None):
@@ -329,3 +334,11 @@ class Transaction:
         cut = source.create_cut(0, length).move(self.project.project_data.cuts_end)
         self.project.set_project_data(self.project.project_data.add_cut(cut))
         return cut.id
+
+class FileInfo:
+
+    def __init__(self, path):
+        self.path = path
+
+    def get_number_of_frames(self, profile):
+        return mlt.Producer(profile, self.path).get_playtime()
