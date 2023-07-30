@@ -338,11 +338,12 @@ class Transaction:
 
 class ProxySpec:
 
-    def __init__(self):
+    def __init__(self, dir="/tmp"):
         self.height = 540
         self.vcodec = "mjpeg"
         self.acodec = "pcm_s16le"
         self.qscale = "3"
+        self.dir = dir
 
     def adjust_profile(self, profile):
         ratio = profile.width() / profile.height()
@@ -354,3 +355,16 @@ class ProxySpec:
         consumer.set("vcodec", self.vcodec)
         consumer.set("acodec", self.acodec)
         consumer.set("qscale", self.qscale)
+
+    def get_tmp_path(self, name):
+        return self.get_path(f"{name}.tmp")
+
+    def get_path(self, name):
+        return os.path.join(self.get_dir(), f"{name}.{self.get_extension()}")
+
+    def get_dir(self):
+        return self.dir
+
+    def get_extension(self):
+        return "mkv"
+

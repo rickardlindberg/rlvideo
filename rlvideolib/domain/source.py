@@ -1,6 +1,7 @@
 from collections import namedtuple
 import os
 import subprocess
+import tempfile
 import uuid
 
 import mlt
@@ -47,27 +48,27 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
     def load(self, profile):
         return self.validate_producer(mlt.Producer(profile, self.path))
 
-    def load_proxy(self, profile, proxy_spec, progress, testing=False):
+    def load_proxy(self, profile, proxy_spec, progress):
         """
         >>> _ = mlt.Factory().init()
+        >>> tmp = tempfile.TemporaryDirectory()
         >>> profile = mlt.Profile()
         >>> source = FileSource(id=None, path="resources/one.mp4", number_of_frames_at_project_fps=15)
         >>> from rlvideolib.domain.project import ProxySpec
         >>> with capture_stdout_stderr():
         ...     producer = source.load_proxy(
         ...         profile=profile,
-        ...         proxy_spec=ProxySpec(),
+        ...         proxy_spec=ProxySpec(dir=tmp.name),
         ...         progress=lambda progress: None,
-        ...         testing=True
         ...     )
         >>> isinstance(producer, mlt.Producer)
         True
         """
         producer = self.validate_producer(mlt.Producer(profile, self.path))
-        chechsum = md5(self.path)
-        proxy_path = f"/tmp/{chechsum}.mkv"
-        proxy_tmp_path = f"/tmp/{chechsum}.tmp.mkv"
-        if not os.path.exists(proxy_path) or testing:
+        checksum = md5(self.path)
+        proxy_path = proxy_spec.get_path(checksum)
+        proxy_tmp_path = proxy_spec.get_tmp_path(checksum)
+        if not os.path.exists(proxy_path):
             p = mlt.Profile()
             p.from_producer(producer)
             proxy_spec.adjust_profile(p)
