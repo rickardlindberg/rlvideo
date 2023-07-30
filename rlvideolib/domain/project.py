@@ -23,9 +23,10 @@ class Project:
     >>> tmp = tempfile.TemporaryDirectory()
     >>> path = os.path.join(tmp.name, "foo.rlvideo")
     >>> project = Project.new(path=path)
-    >>> with project.new_transaction() as transaction:
-    ...     _ = transaction.add_text_clip("hello", length=10)
-    ...     _ = transaction.add_clip("resources/one.mp4")
+    >>> with capture_stdout_stderr():
+    ...     with project.new_transaction() as transaction:
+    ...         _ = transaction.add_text_clip("hello", length=10)
+    ...         _ = transaction.add_clip("resources/one.mp4")
     >>> saved_json = json.loads(open(path).read())
     >>> loaded_json = Project.new(path=path).project_data.to_json()
     >>> doctest_equal(loaded_json, saved_json)
