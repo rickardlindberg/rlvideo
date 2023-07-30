@@ -13,6 +13,10 @@ from rlvideolib.testing import capture_stdout_stderr
 
 class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_fps")):
 
+    # NOTE: The number_of_frames_at_project_fps depends on the FPS of the
+    # project. Once the first FileSource is added to the project, the FPS of
+    # the project can not be changed.
+
     @staticmethod
     def from_json(id, json):
         return FileSource(
