@@ -47,16 +47,16 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
     def load(self, profile):
         return self.validate_producer(mlt.Producer(profile, self.path))
 
-    def load_proxy(self, profile, proxy_profile, progress, testing=False):
+    def load_proxy(self, profile, proxy_spec, progress, testing=False):
         """
         >>> _ = mlt.Factory().init()
         >>> profile = mlt.Profile()
-        >>> proxy_profile = mlt.Profile()
         >>> source = FileSource(id=None, path="resources/one.mp4", number_of_frames_at_project_fps=15)
+        >>> from rlvideolib.domain.project import ProxySpec
         >>> with capture_stdout_stderr():
         ...     producer = source.load_proxy(
         ...         profile=profile,
-        ...         proxy_profile=proxy_profile,
+        ...         proxy_spec=ProxySpec(),
         ...         progress=lambda progress: None,
         ...         testing=True
         ...     )
@@ -70,14 +70,11 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         if not os.path.exists(proxy_path) or testing:
             p = mlt.Profile()
             p.from_producer(producer)
-            p.set_width(proxy_profile.width())
-            p.set_height(proxy_profile.height())
+            proxy_spec.adjust_profile(p)
             producer = mlt.Producer(p, self.path)
             consumer = mlt.Consumer(p, "avformat")
             consumer.set("target", proxy_tmp_path)
-            consumer.set("vcodec", "mjpeg")
-            consumer.set("acodec", "pcm_s16le")
-            consumer.set("qscale", "3")
+            proxy_spec.adjust_consumer(consumer)
             run_consumer(consumer, producer, progress)
             os.rename(proxy_tmp_path, proxy_path)
         return self.validate_producer(mlt.Producer(profile, proxy_path))
@@ -122,7 +119,7 @@ class TextSource(namedtuple("TextSource", "id,text")):
         producer.set("bgcolour", "red")
         return producer
 
-    def load_proxy(self, profile, proxy_profile, progress):
+    def load_proxy(self, profile, height, progress):
         return self.load(profile)
 
     def get_label(self):

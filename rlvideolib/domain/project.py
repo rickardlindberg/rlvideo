@@ -74,10 +74,12 @@ class Project:
         self.project_data_event = Event()
         self.profile = self.create_profile()
         self.set_project_data(ProjectData.load(path=path))
+        self.proxy_spec = ProxySpec()
         self.proxy_source_loader = ProxySourceLoader(
             profile=self.profile,
             project=self,
-            background_worker=background_worker
+            background_worker=background_worker,
+            proxy_spec=self.proxy_spec
         )
         self.background_worker = background_worker
         self.path = path
@@ -101,10 +103,7 @@ class Project:
         fn()
 
     def get_preview_profile(self):
-        profile = self.create_profile()
-        profile.set_width(960)
-        profile.set_height(540)
-        return profile
+        return self.proxy_spec.adjust_profile(self.create_profile())
 
     def create_profile(self):
         return mlt.Profile("uhd_2160p_25")
@@ -248,7 +247,7 @@ class ExportSourceLoader:
 
 class ProxySourceLoader:
 
-    def __init__(self, project, profile, background_worker):
+    def __init__(self, project, profile, background_worker, proxy_spec):
         self.project = project
         self.profile = profile
         self.background_worker = background_worker
@@ -256,6 +255,7 @@ class ProxySourceLoader:
         self.load_producer = mlt.Producer(self.profile, "pango")
         self.load_producer.set("text", "Loading...")
         self.load_producer.set("bgcolour", "red")
+        self.proxy_spec = proxy_spec
 
     def ensure_present(self, source_ids):
         for source_id in list(self.mlt_producers.keys()):
@@ -273,7 +273,7 @@ class ProxySourceLoader:
         def work(progress):
             return self.project.get_source(source_id).load_proxy(
                 self.profile,
-                self.project.get_preview_profile(),
+                self.proxy_spec,
                 progress
             )
         self.mlt_producers[source_id] = self.load_producer
@@ -335,3 +335,22 @@ class Transaction:
         cut = source.create_cut(0, length).move(self.project.project_data.cuts_end)
         self.project.set_project_data(self.project.project_data.add_cut(cut))
         return cut.id
+
+class ProxySpec:
+
+    def __init__(self):
+        self.height = 540
+        self.vcodec = "mjpeg"
+        self.acodec = "pcm_s16le"
+        self.qscale = "3"
+
+    def adjust_profile(self, profile):
+        ratio = profile.width() / profile.height()
+        profile.set_width(int(self.height*ratio))
+        profile.set_height(self.height)
+        return profile
+
+    def adjust_consumer(self, consumer):
+        consumer.set("vcodec", self.vcodec)
+        consumer.set("acodec", self.acodec)
+        consumer.set("qscale", self.qscale)
