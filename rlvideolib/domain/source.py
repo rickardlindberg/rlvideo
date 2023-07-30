@@ -69,6 +69,7 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         proxy_path = proxy_spec.get_path(checksum)
         proxy_tmp_path = proxy_spec.get_tmp_path(checksum)
         if not os.path.exists(proxy_path):
+            proxy_spec.ensure_dir()
             p = mlt.Profile()
             p.from_producer(producer)
             proxy_spec.adjust_profile(p)

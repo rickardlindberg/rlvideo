@@ -74,7 +74,7 @@ class Project:
         self.project_data_event = Event()
         self.profile = self.create_profile()
         self.set_project_data(ProjectData.load(path=path))
-        self.proxy_spec = ProxySpec()
+        self.proxy_spec = ProxySpec.from_path(path)
         self.proxy_source_loader = ProxySourceLoader(
             profile=self.profile,
             project=self,
@@ -338,6 +338,20 @@ class Transaction:
 
 class ProxySpec:
 
+    @staticmethod
+    def from_path(path):
+        """
+        >>> ProxySpec.from_path(None).dir
+        '/tmp'
+
+        >>> ProxySpec.from_path("a/file.rlvideo").dir
+        'a/.cache'
+        """
+        if path is None:
+            return ProxySpec()
+        else:
+            return ProxySpec(dir=os.path.join(os.path.dirname(path), ".cache"))
+
     def __init__(self, dir="/tmp"):
         self.extension = "mkv"
         self.height = 540
@@ -366,3 +380,7 @@ class ProxySpec:
 
     def get_path(self, name):
         return os.path.join(self.dir, f"{name}.{self.extension}")
+
+    def ensure_dir(self):
+        if not os.path.exists(self.dir):
+            os.mkdir(self.dir)
