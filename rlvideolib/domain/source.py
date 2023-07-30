@@ -11,28 +11,28 @@ from rlvideolib.domain.cut import CutSource
 from rlvideolib.domain.region import Region
 from rlvideolib.testing import capture_stdout_stderr
 
-class FileSource(namedtuple("FileSource", "id,path,length")):
+class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_fps")):
 
     @staticmethod
     def from_json(id, json):
         return FileSource(
             id=id,
             path=json["path"],
-            length=json["length"],
+            number_of_frames_at_project_fps=json["number_of_frames_at_project_fps"],
         )
 
     def to_json(self):
         return {
             "type": "file",
             "path": self.path,
-            "length": self.length,
+            "number_of_frames_at_project_fps": self.number_of_frames_at_project_fps,
         }
 
     def with_unique_id(self):
         return self._replace(id=uuid.uuid4().hex)
 
     def create_cut(self, start, end):
-        if start < 0 or end > self.length:
+        if start < 0 or end > self.number_of_frames_at_project_fps:
             raise ValueError("Invalid cut.")
         return Cut.new(
             source=CutSource(source_id=self.id),
@@ -41,7 +41,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
 
     def load(self, profile):
         producer = mlt.Producer(profile, self.path)
-        assert self.length == producer.get_playtime()
+        assert self.number_of_frames_at_project_fps == producer.get_playtime()
         return producer
 
     def load_proxy(self, profile, proxy_profile, progress):
@@ -49,7 +49,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         >>> _ = mlt.Factory().init()
         >>> profile = mlt.Profile()
         >>> proxy_profile = mlt.Profile()
-        >>> source = FileSource(id=None, path="resources/one.mp4", length=15)
+        >>> source = FileSource(id=None, path="resources/one.mp4", number_of_frames_at_project_fps=15)
         >>> with capture_stdout_stderr():
         ...     producer = source.load_proxy(profile, proxy_profile, lambda progress: None)
         >>> isinstance(producer, mlt.Producer)
@@ -58,7 +58,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         # TODO: generate proxy with same profile as source clip (same colorspace, etc,
         # but with smaller size)
         producer = mlt.Producer(profile, self.path)
-        assert self.length == producer.get_playtime()
+        assert self.number_of_frames_at_project_fps == producer.get_playtime()
         chechsum = md5(self.path)
         proxy_path = f"/tmp/{chechsum}.mkv"
         proxy_tmp_path = f"/tmp/{chechsum}.tmp.mkv"
@@ -75,7 +75,7 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
                 time.sleep(0.5)
             os.rename(proxy_tmp_path, proxy_path)
         producer = mlt.Producer(profile, proxy_path)
-        assert self.length == producer.get_playtime()
+        assert self.number_of_frames_at_project_fps == producer.get_playtime()
         return producer
 
     def get_label(self):

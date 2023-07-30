@@ -316,8 +316,8 @@ class Transaction:
 
     def add_clip(self, path, id=None):
         producer = mlt.Producer(self.project.profile, path)
-        source = FileSource(id=id, path=path, length=producer.get_playtime())
-        return self.add_source(source, source.length)
+        source = FileSource(id=id, path=path, number_of_frames_at_project_fps=producer.get_playtime())
+        return self.add_source(source, source.number_of_frames_at_project_fps)
 
     def add_text_clip(self, text, length, id=None):
         return self.add_source(TextSource(id=id, text=text), length)
