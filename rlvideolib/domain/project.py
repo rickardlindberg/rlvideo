@@ -1,4 +1,5 @@
 from collections import namedtuple
+import contextlib
 import json
 import os
 import tempfile
@@ -88,6 +89,7 @@ class Project:
         )
         self.background_worker = background_worker
         self.path = path
+        self.current_transaction = None
 
     def save(self):
         if self.path:
@@ -156,7 +158,18 @@ class Project:
         return self.project_data.get_cut(cut_id)
 
     def new_transaction(self):
-        return Transaction(self)
+        """
+        >>> project = Project.new()
+        >>> transaction = project.new_transaction()
+        >>> transaction = project.new_transaction()
+        Traceback (most recent call last):
+          ...
+        ValueError: transaction already in progress
+        """
+        if self.current_transaction is not None:
+            raise ValueError("transaction already in progress")
+        self.current_transaction = Transaction(self)
+        return self.current_transaction
 
     def split_into_sections(self):
         return self.project_data.split_into_sections()
@@ -309,13 +322,27 @@ class Transaction:
             self.rollback()
 
     def rollback(self):
-        self.project.set_project_data(self.initial_data)
+        with self.cleanup():
+            self.reset()
 
     def commit(self):
-        # TODO: retrieval of proxy clip will not work within transaction
-        self.project.proxy_source_loader.ensure_present(self.project.project_data.get_source_ids())
-        self.project.producer_changed_event.trigger()
-        self.project.save()
+        with self.cleanup():
+            # TODO: retrieval of proxy clip will not work within transaction
+            self.project.proxy_source_loader.ensure_present(self.project.project_data.get_source_ids())
+            self.project.producer_changed_event.trigger()
+            self.project.save()
+
+    def reset(self):
+        self.project.set_project_data(self.initial_data)
+
+    @contextlib.contextmanager
+    def cleanup(self):
+        try:
+            yield
+        finally:
+            self.project.current_transaction = None
+            self.project = None
+            self.initial_data = None
 
     def modify(self, cut_id, fn):
         self.project.set_project_data(self.project.project_data.modify_cut(cut_id, fn))

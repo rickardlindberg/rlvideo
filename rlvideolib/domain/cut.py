@@ -310,7 +310,7 @@ class CutAction(Action):
 
     def mouse_move(self, x, y):
         if self.transaction is not None:
-            self.transaction.rollback()
+            self.transaction.reset()
             self.transaction.modify(self.cut.id, lambda cut:
                 cut.move(int((x-self.x)/self.scrollbar.one_length_in_pixels)))
 
