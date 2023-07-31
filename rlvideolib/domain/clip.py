@@ -21,16 +21,19 @@ class Clip:
         proxy_tmp_path = proxy_spec.get_tmp_path(checksum)
         if not os.path.exists(proxy_path):
             proxy_spec.ensure_dir()
-            subprocess.check_call([
-                "ffmpeg",
-                "-y",
-                "-i", self.path,
-                "-vf", "yadif,scale=960:540",
-                "-q:v", "3",
-                "-vcodec", "mjpeg",
-                "-acodec", "pcm_s16le",
-                proxy_tmp_path
-            ])
+            subprocess.check_call(
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-i", self.path,
+                ]
+                +
+                proxy_spec.get_ffmpeg_arguments()
+                +
+                [
+                    proxy_tmp_path
+                ]
+            )
             os.rename(proxy_tmp_path, proxy_path)
         return proxy_path
 
@@ -64,10 +67,13 @@ class ProxySpec:
         profile.set_height(self.height)
         return profile
 
-    def adjust_consumer(self, consumer):
-        consumer.set("vcodec", self.vcodec)
-        consumer.set("acodec", self.acodec)
-        consumer.set("qscale", self.qscale)
+    def get_ffmpeg_arguments(self):
+        return [
+            "-vf", f"yadif,scale=-1:{self.height}",
+            "-q:v", self.qscale,
+            "-vcodec", self.vcodec,
+            "-acodec", self.acodec,
+        ]
 
     def get_tmp_path(self, name):
         """
