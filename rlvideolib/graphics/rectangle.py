@@ -206,10 +206,11 @@ class RectangleMap:
     def add(self, rectangle, item):
         self.map.append((rectangle, item))
 
-    def get(self, x, y):
+    def get(self, x, y, default=None):
         for rectangle, item in self.map:
             if rectangle.contains(x, y):
                 return item
+        return default
 
     def __repr__(self):
         return "\n".join(f"{rectangle}:\n  {item}" for rectangle, item in self.map)

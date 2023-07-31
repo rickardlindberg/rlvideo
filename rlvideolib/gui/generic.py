@@ -75,9 +75,7 @@ class Timeline:
             ui_size=10,
         ))
         self.rectangle_map = RectangleMap()
-        self.tmp_transaction = None
-        self.down_item = None
-        self.mouse_up()
+        self.down_action = None
 
     def get_cut(self, cut_id):
         return self.project.get_cut(cut_id)
@@ -91,72 +89,23 @@ class Timeline:
         fn()
 
     def left_mouse_down(self, x, y):
-        item = self.rectangle_map.get(x, y)
-        if isinstance(item, Action):
-            item.left_mouse_down(x, y)
-            self.down_item = item
-            return
-        self.tmp_xy = (x, y)
-        self.tmp_scrollbar = self.scrollbar
-        self.tmp_transaction = self.project.new_transaction()
-        self.tmp_cut = self.rectangle_map.get(x, y)
-        self.mouse_move(x, y)
+        self.down_action = self.rectangle_map.get(x, y, Action())
+        self.down_action.left_mouse_down(x, y)
 
     def right_mouse_down(self, x, y, gui):
-        item = self.rectangle_map.get(x, y)
-        if isinstance(item, Action):
-            item.right_mouse_down(x, y, gui)
-            self.down_item = item
-            return
-        cut = self.rectangle_map.get(x, y)
-        if isinstance(cut, Cut):
-            def mix_strategy_updater(value):
-                def update():
-                    with self.project.new_transaction() as transaction:
-                        transaction.modify(cut.id, lambda cut:
-                            cut.with_mix_strategy(value))
-                return update
-            gui.show_context_menu([
-                MenuItem(label="over", action=mix_strategy_updater("over")),
-                MenuItem(label="under", action=mix_strategy_updater("under")),
-            ])
+        self.down_action = self.rectangle_map.get(x, y, Action())
+        self.down_action.right_mouse_down(x, y, gui)
 
     def mouse_move(self, x, y):
-        if self.down_item:
-            self.down_item.mouse_move(x, y)
-            return
-        item = self.rectangle_map.get(x, y)
-        if isinstance(item, Action):
-            item.mouse_move(x, y)
-            return
-        if self.tmp_cut:
-            delta = x-self.tmp_xy[0]
-            if self.tmp_cut == "position":
-                self.set_scrollbar(self.tmp_scrollbar.move_scrollbar(delta))
-            elif self.tmp_cut == "scrub":
-                self.player.scrub(
-                    int(round(
-                        self.scrollbar.content_start
-                        +
-                        x/self.scrollbar.one_length_in_pixels
-                    ))
-                )
-            else:
-                self.tmp_transaction.rollback()
-                self.tmp_transaction.modify(self.tmp_cut.id, lambda x:
-                    x.move(int(delta/self.scrollbar.one_length_in_pixels)))
+        if self.down_action:
+            self.down_action.mouse_move(x, y)
+        else:
+            self.rectangle_map.get(x, y, Action()).mouse_move(x, y)
 
     def mouse_up(self):
-        if self.down_item:
-            self.down_item.mouse_up()
-            self.down_item = None
-            return
-        if self.tmp_transaction:
-            self.tmp_transaction.commit()
-        self.tmp_xy = None
-        self.tmp_scrollbar= None
-        self.tmp_transaction = None
-        self.tmp_cut = None
+        if self.down_action:
+            self.down_action.mouse_up()
+            self.down_action = None
 
     def scroll_up(self, x, y):
         self.set_zoom_factor(self.scrollbar.one_length_in_pixels*1.5)
