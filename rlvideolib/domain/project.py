@@ -7,6 +7,7 @@ import time
 import mlt
 
 from rlvideolib.debug import timeit
+from rlvideolib.domain.clip import Clip
 from rlvideolib.domain.cut import Cuts
 from rlvideolib.domain.cut import SpaceCut
 from rlvideolib.domain.source import FileSource
@@ -14,7 +15,6 @@ from rlvideolib.domain.source import Sources
 from rlvideolib.domain.source import TextSource
 from rlvideolib.events import Event
 from rlvideolib.jobs import NonThreadedBackgroundWorker
-from rlvideolib.mlthelpers import FileInfo
 from rlvideolib.testing import capture_stdout_stderr
 from rlvideolib.testing import doctest_equal
 
@@ -323,7 +323,7 @@ class Transaction:
         source = FileSource(
             id=id,
             path=path,
-            number_of_frames_at_project_fps=FileInfo(
+            number_of_frames_at_project_fps=Clip(
                 path
             ).get_number_of_frames(self.project.profile)
         )
