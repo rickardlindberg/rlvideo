@@ -12,32 +12,32 @@ from rlvideolib.domain.cut import CutSource
 from rlvideolib.domain.region import Region
 from rlvideolib.testing import capture_stdout_stderr
 
-class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_fps")):
+class FileSource(namedtuple("FileSource", "id,path,length")):
 
-    # NOTE: The number_of_frames_at_project_fps depends on the FPS of the
-    # project. Once the first FileSource is added to the project, the FPS of
-    # the project can not be changed.
+    # NOTE: The length depends on the FPS of the project. Once the first
+    # FileSource is added to the project, the FPS of the project can not be
+    # changed.
 
     @staticmethod
     def from_json(id, json):
         return FileSource(
             id=id,
             path=json["path"],
-            number_of_frames_at_project_fps=json["number_of_frames_at_project_fps"],
+            length=json["length"],
         )
 
     def to_json(self):
         return {
             "type": "file",
             "path": self.path,
-            "number_of_frames_at_project_fps": self.number_of_frames_at_project_fps,
+            "length": self.length,
         }
 
     def with_unique_id(self):
         return self._replace(id=uuid.uuid4().hex)
 
     def create_cut(self, start, end):
-        if start < 0 or end > self.number_of_frames_at_project_fps:
+        if start < 0 or end > self.length:
             raise ValueError("Invalid cut.")
         return Cut.new(
             source=CutSource(source_id=self.id),
@@ -52,7 +52,7 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         >>> _ = mlt.Factory().init()
         >>> tmp = tempfile.TemporaryDirectory()
         >>> profile = mlt.Profile()
-        >>> source = FileSource(id=None, path="resources/one.mp4", number_of_frames_at_project_fps=15)
+        >>> source = FileSource(id=None, path="resources/one.mp4", length=15)
         >>> from rlvideolib.domain.project import ProxySpec
         >>> with capture_stdout_stderr():
         ...     producer = source.load_proxy(
@@ -84,8 +84,8 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
 
     def create_producer(self, profile, path):
         producer = mlt.Producer(profile, path)
-        if producer.get_playtime() != self.number_of_frames_at_project_fps:
-            raise ValueError(f"Producer {path} (original {self.path}) has a playtime of {producer.get_playtime()}, but number_of_frames_at_project_fps is {self.number_of_frames_at_project_fps}")
+        if producer.get_playtime() != self.length:
+            raise ValueError(f"Producer {path} (original {self.path}) has a playtime of {producer.get_playtime()}, but length is {self.length}")
         return producer
 
     def get_label(self):
