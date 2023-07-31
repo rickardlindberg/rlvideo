@@ -12,6 +12,8 @@ from rlvideolib.domain.section import MixSection
 from rlvideolib.domain.section import PlaylistSection
 from rlvideolib.domain.section import Sections
 from rlvideolib.graphics.rectangle import Rectangle
+from rlvideolib.gui.framework import Action
+from rlvideolib.gui.framework import MenuItem
 
 DEFAULT_REGION_GROUP_SIZE = 100
 
@@ -266,20 +268,6 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
                     height=int(rect_h)
                 ), CutAction(project, self.get_source_cut(), scrollbar))
 
-class Action:
-
-    def left_mouse_down(self, x, y):
-        pass
-
-    def right_mouse_down(self, x, y, gui):
-        pass
-
-    def mouse_move(self, x, y):
-        pass
-
-    def mouse_up(self):
-        pass
-
 class CutAction(Action):
 
     def __init__(self, project, cut, scrollbar):
@@ -318,9 +306,6 @@ class CutAction(Action):
             self.transaction.reset()
             self.transaction.modify(self.cut.id, lambda cut:
                 cut.move(int((x-self.x)/self.scrollbar.one_length_in_pixels)))
-
-class MenuItem(namedtuple("MenuItem", "label,action")):
-    pass
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
 

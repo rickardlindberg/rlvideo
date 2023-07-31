@@ -4,13 +4,13 @@ import cairo
 import mlt
 
 from rlvideolib.debug import timeit
-from rlvideolib.domain.cut import Action
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.project import Project
 from rlvideolib.domain.region import Region
 from rlvideolib.events import Event
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
+from rlvideolib.gui.framework import Action
 from rlvideolib.gui.testing import TestGui
 
 GUI_SPACING = 7
