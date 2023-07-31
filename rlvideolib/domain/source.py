@@ -6,6 +6,7 @@ import uuid
 
 import mlt
 
+from rlvideolib.domain.clip import Clip
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.cut import CutSource
 from rlvideolib.domain.region import Region
@@ -65,7 +66,7 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         True
         """
         producer = self.create_producer(profile, self.path)
-        checksum = md5(self.path)
+        checksum = Clip(self.path).md5()
         proxy_path = proxy_spec.get_path(checksum)
         proxy_tmp_path = proxy_spec.get_tmp_path(checksum)
         if not os.path.exists(proxy_path):
@@ -91,9 +92,6 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
 
     def get_label(self):
         return os.path.basename(self.path)
-
-def md5(path):
-    return subprocess.check_output(["md5sum", path])[:32].decode("ascii")
 
 class TextSource(namedtuple("TextSource", "id,text")):
 
