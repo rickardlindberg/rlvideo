@@ -59,24 +59,10 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         >>> isinstance(producer, mlt.Producer)
         True
         """
-        producer = self.create_producer(profile, self.path)
-        checksum = Clip(self.path).md5()
-        proxy_path = proxy_spec.get_path(checksum)
-        proxy_tmp_path = proxy_spec.get_tmp_path(checksum)
-        if not os.path.exists(proxy_path):
-            proxy_spec.ensure_dir()
-            subprocess.check_call([
-                "ffmpeg",
-                "-y",
-                "-i", self.path,
-                "-vf", "yadif,scale=960:540",
-                "-q:v", "3",
-                "-vcodec", "mjpeg",
-                "-acodec", "pcm_s16le",
-                proxy_tmp_path
-            ])
-            os.rename(proxy_tmp_path, proxy_path)
-        return self.create_producer(profile, proxy_path)
+        return self.create_producer(
+            profile,
+            Clip(self.path).generate_proxy(proxy_spec, progress)
+        )
 
     def create_producer(self, profile, path):
         producer = mlt.Producer(profile, path)
