@@ -247,7 +247,6 @@ class Timeline:
         x_end = self.scrollbar.region_shown.end / self.scrollbar.whole_region.length * area.width
         playhead_x = playhead_position / self.scrollbar.whole_region.length * area.width
 
-        # TODO: add callback mechanism in rectangle map
         x, y, w, h = (
             area.x+x_start,
             area.y,
