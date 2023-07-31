@@ -10,7 +10,6 @@ from rlvideolib.domain.clip import Clip
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.cut import CutSource
 from rlvideolib.domain.region import Region
-from rlvideolib.mlthelpers import FileInfo
 from rlvideolib.testing import capture_stdout_stderr
 
 class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_fps")):
