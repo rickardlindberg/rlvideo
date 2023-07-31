@@ -203,6 +203,20 @@ class RectangleMap:
     def clear(self):
         self.map.clear()
 
+    def add_from_context(self, x, y, w, h, context, item):
+        rect_x, rect_y = context.user_to_device(x, y)
+        rect_w, rect_h = context.user_to_device_distance(w, h)
+        if int(rect_w) > 0 and int(rect_h) > 0:
+            self.add(
+                Rectangle(
+                    x=int(rect_x),
+                    y=int(rect_y),
+                    width=int(rect_w),
+                    height=int(rect_h)
+                ),
+                item
+            )
+
     def add(self, rectangle, item):
         self.map.append((rectangle, item))
 
