@@ -307,6 +307,8 @@ class CutAction(Action):
 
     def mouse_up(self):
         if self.transaction:
+            # TODO: how to ensure that transactions that we create are
+            # committed or rolled back?
             self.transaction.commit()
         self.transaction = None
         self.x = None
