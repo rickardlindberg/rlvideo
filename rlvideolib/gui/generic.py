@@ -4,6 +4,7 @@ import cairo
 import mlt
 
 from rlvideolib.debug import timeit
+from rlvideolib.domain.cut import Action
 from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.project import Project
 from rlvideolib.domain.region import Region
@@ -39,7 +40,7 @@ class Timeline:
 
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
     Rectangle(x=0, y=20, width=10, height=50):
-      Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=..., mix_strategy='under')
+      <rlvideolib.domain.cut.CutAction object at ...>
     Rectangle(x=0, y=0, width=300, height=20):
       <rlvideolib.gui.generic.ScrubAction object at ...>
     Rectangle(x=0, y=77, width=300, height=23):
@@ -238,7 +239,7 @@ class Timeline:
             ).cairo_clip_translate(context) as sections_area:
                 self.rectangle_map.clear()
                 for cut, boxes in sections.to_cut_boxes(self.scrollbar.region_shown, sections_area).items():
-                    cut.draw_cairo(context, boxes, self.rectangle_map, self.project)
+                    cut.draw_cairo(context, boxes, self.rectangle_map, self.project, self.scrollbar)
         context.set_source_rgb(0.1, 0.1, 0.1)
         context.move_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), 0)
         context.line_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), area.height)
@@ -418,23 +419,6 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 
     def content_to_pixels(self, length):
         return length * self.one_length_in_pixels
-
-class MenuItem(namedtuple("MenuItem", "label,action")):
-    pass
-
-class Action:
-
-    def left_mouse_down(self, x, y):
-        pass
-
-    def right_mouse_down(self, x, y, gui):
-        pass
-
-    def mouse_move(self, x, y):
-        pass
-
-    def mouse_up(self):
-        pass
 
 class ScrollbarDragAction(Action):
 

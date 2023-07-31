@@ -7,9 +7,9 @@ import mlt
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
+from rlvideolib.domain.cut import MenuItem
 from rlvideolib.domain.project import Project
 from rlvideolib.gui.generic import GUI_SPACING
-from rlvideolib.gui.generic import MenuItem
 from rlvideolib.gui.generic import Timeline
 from rlvideolib.jobs import BackgroundWorker
 

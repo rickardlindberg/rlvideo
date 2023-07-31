@@ -241,7 +241,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
             boxes[self.get_source_cut()] = []
         boxes[self.get_source_cut()].append(rectangle)
 
-    def draw_cairo(self, context, rectangles, rectangle_map, project):
+    def draw_cairo(self, context, rectangles, rectangle_map, project, scrollbar):
         context.save()
         CutRectangles(rectangles).cairo_fill_path(context)
         context.clip_preserve()
@@ -264,7 +264,58 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
                     y=int(rect_y),
                     width=int(rect_w),
                     height=int(rect_h)
-                ), self.get_source_cut())
+                ), CutAction(project, self.get_source_cut(), scrollbar))
+
+class Action:
+
+    def left_mouse_down(self, x, y):
+        pass
+
+    def right_mouse_down(self, x, y, gui):
+        pass
+
+    def mouse_move(self, x, y):
+        pass
+
+    def mouse_up(self):
+        pass
+
+class CutAction(Action):
+
+    def __init__(self, project, cut, scrollbar):
+        self.project = project
+        self.cut = cut
+        self.scrollbar = scrollbar
+        self.mouse_up()
+
+    def left_mouse_down(self, x, y):
+        self.transaction = self.project.new_transaction()
+        self.x = x
+
+    def right_mouse_down(self, x, y, gui):
+        def mix_strategy_updater(value):
+            def update():
+                with self.project.new_transaction() as transaction:
+                    transaction.modify(self.cut.id, lambda cut:
+                        cut.with_mix_strategy(value))
+            return update
+        gui.show_context_menu([
+            MenuItem(label="over", action=mix_strategy_updater("over")),
+            MenuItem(label="under", action=mix_strategy_updater("under")),
+        ])
+
+    def mouse_up(self):
+        self.transaction = None
+        self.x = None
+
+    def mouse_move(self, x, y):
+        if self.transaction is not None:
+            self.transaction.rollback()
+            self.transaction.modify(self.cut.id, lambda cut:
+                cut.move(int((x-self.x)/self.scrollbar.one_length_in_pixels)))
+
+class MenuItem(namedtuple("MenuItem", "label,action")):
+    pass
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
 
