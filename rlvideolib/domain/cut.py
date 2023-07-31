@@ -286,7 +286,8 @@ class CutAction(Action):
         self.project = project
         self.cut = cut
         self.scrollbar = scrollbar
-        self.mouse_up()
+        self.transaction = None
+        self.x = None
 
     def left_mouse_down(self, x, y):
         self.transaction = self.project.new_transaction()
@@ -305,6 +306,8 @@ class CutAction(Action):
         ])
 
     def mouse_up(self):
+        if self.transaction:
+            self.transaction.commit()
         self.transaction = None
         self.x = None
 
