@@ -325,7 +325,7 @@ class Transaction:
             path=path,
             number_of_frames_at_project_fps=Clip(
                 path
-            ).get_number_of_frames(self.project.profile)
+            ).calculate_length_at_fps(mlt_profile=self.project.profile)
         )
         return self.add_source(source, source.number_of_frames_at_project_fps)
 
