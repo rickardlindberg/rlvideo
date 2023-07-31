@@ -43,7 +43,7 @@ class Timeline:
     Rectangle(x=0, y=0, width=300, height=20):
       scrub
     Rectangle(x=0, y=77, width=300, height=23):
-      position
+      <rlvideolib.gui.generic.ScrollbarDragAction object at ...>
 
     Right click event:
 
@@ -75,6 +75,7 @@ class Timeline:
         ))
         self.rectangle_map = RectangleMap()
         self.tmp_transaction = None
+        self.down_item = None
         self.mouse_up()
 
     def get_cut(self, cut_id):
@@ -89,6 +90,11 @@ class Timeline:
         fn()
 
     def left_mouse_down(self, x, y):
+        item = self.rectangle_map.get(x, y)
+        if isinstance(item, Action):
+            item.left_mouse_down(x, y)
+            self.down_item = item
+            return
         self.tmp_xy = (x, y)
         self.tmp_scrollbar = self.scrollbar
         self.tmp_transaction = self.project.new_transaction()
@@ -96,6 +102,11 @@ class Timeline:
         self.mouse_move(x, y)
 
     def right_mouse_down(self, x, y, gui):
+        item = self.rectangle_map.get(x, y)
+        if isinstance(item, Action):
+            item.right_mouse_down(x, y, gui)
+            self.down_item = item
+            return
         cut = self.rectangle_map.get(x, y)
         if isinstance(cut, Cut):
             def mix_strategy_updater(value):
@@ -110,6 +121,13 @@ class Timeline:
             ])
 
     def mouse_move(self, x, y):
+        if self.down_item:
+            self.down_item.mouse_move(x, y)
+            return
+        item = self.rectangle_map.get(x, y)
+        if isinstance(item, Action):
+            item.mouse_move(x, y)
+            return
         if self.tmp_cut:
             delta = x-self.tmp_xy[0]
             if self.tmp_cut == "position":
@@ -128,6 +146,10 @@ class Timeline:
                     x.move(int(delta/self.scrollbar.one_length_in_pixels)))
 
     def mouse_up(self):
+        if self.down_item:
+            self.down_item.mouse_up()
+            self.down_item = None
+            return
         if self.tmp_transaction:
             self.tmp_transaction.commit()
         self.tmp_xy = None
@@ -289,7 +311,7 @@ class Timeline:
             y=int(rect_y),
             width=int(rect_w),
             height=int(rect_h)
-        ), "position")
+        ), ScrollbarDragAction(self, self.scrollbar))
 
         context.rectangle(area.x, area.y, area.width, area.height)
         context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
@@ -399,3 +421,38 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
 
 class MenuItem(namedtuple("MenuItem", "label,action")):
     pass
+
+class Action:
+
+    def left_mouse_down(self, x, y):
+        pass
+
+    def right_mouse_down(self, x, y, gui):
+        pass
+
+    def mouse_move(self, x, y):
+        pass
+
+    def mouse_up(self):
+        pass
+
+class ScrollbarDragAction(Action):
+
+    def __init__(self, timeline, scrollbar):
+        self.timeline = timeline
+        self.scrollbar = scrollbar
+        self.mouse_up()
+
+    def left_mouse_down(self, x, y):
+        self.x = x
+
+    def mouse_up(self):
+        self.x = None
+
+    def mouse_move(self, x, y):
+        if self.x is not None:
+            self.timeline.set_scrollbar(
+                self.scrollbar.move_scrollbar(
+                    x - self.x
+                )
+            )
