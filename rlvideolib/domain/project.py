@@ -8,6 +8,7 @@ import mlt
 
 from rlvideolib.debug import timeit
 from rlvideolib.domain.clip import Clip
+from rlvideolib.domain.clip import ProxySpec
 from rlvideolib.domain.cut import Cuts
 from rlvideolib.domain.cut import SpaceCut
 from rlvideolib.domain.source import FileSource
@@ -339,52 +340,3 @@ class Transaction:
         cut = source.create_cut(0, length).move(self.project.project_data.cuts_end)
         self.project.set_project_data(self.project.project_data.add_cut(cut))
         return cut.id
-
-class ProxySpec:
-
-    @staticmethod
-    def from_path(path):
-        """
-        >>> ProxySpec.from_path(None).dir
-        '/tmp'
-
-        >>> ProxySpec.from_path("a/file.rlvideo").dir
-        'a/.cache'
-        """
-        if path is None:
-            return ProxySpec()
-        else:
-            return ProxySpec(dir=os.path.join(os.path.dirname(path), ".cache"))
-
-    def __init__(self, dir="/tmp"):
-        self.extension = "mkv"
-        self.height = 540
-        self.vcodec = "mjpeg"
-        self.acodec = "pcm_s16le"
-        self.qscale = "3"
-        self.dir = dir
-
-    def adjust_profile(self, profile):
-        ratio = profile.width() / profile.height()
-        profile.set_width(int(self.height*ratio))
-        profile.set_height(self.height)
-        return profile
-
-    def adjust_consumer(self, consumer):
-        consumer.set("vcodec", self.vcodec)
-        consumer.set("acodec", self.acodec)
-        consumer.set("qscale", self.qscale)
-
-    def get_tmp_path(self, name):
-        """
-        >>> ProxySpec().get_tmp_path("hello")
-        '/tmp/hello.tmp.mkv'
-        """
-        return self.get_path(f"{name}.tmp")
-
-    def get_path(self, name):
-        return os.path.join(self.dir, f"{name}.{self.extension}")
-
-    def ensure_dir(self):
-        if not os.path.exists(self.dir):
-            os.mkdir(self.dir)
