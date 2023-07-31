@@ -70,15 +70,16 @@ class FileSource(namedtuple("FileSource", "id,path,number_of_frames_at_project_f
         proxy_tmp_path = proxy_spec.get_tmp_path(checksum)
         if not os.path.exists(proxy_path):
             proxy_spec.ensure_dir()
-            p = mlt.Profile()
-            p.from_producer(producer)
-            proxy_spec.adjust_profile(p)
-            producer = mlt.Producer(p, self.path)
-            consumer = mlt.Consumer(p, "avformat")
-            consumer.set("target", proxy_tmp_path)
-            proxy_spec.adjust_consumer(consumer)
-            run_consumer(consumer, producer, progress)
-            self.create_producer(profile, proxy_tmp_path)
+            subprocess.check_call([
+                "ffmpeg",
+                "-y",
+                "-i", self.path,
+                "-vf", "yadif,scale=960:540",
+                "-q:v", "3",
+                "-vcodec", "mjpeg",
+                "-acodec", "pcm_s16le",
+                proxy_tmp_path
+            ])
             os.rename(proxy_tmp_path, proxy_path)
         return self.create_producer(profile, proxy_path)
 
