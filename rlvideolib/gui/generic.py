@@ -41,7 +41,7 @@ class Timeline:
     Rectangle(x=0, y=20, width=10, height=50):
       Cut(source=CutSource(source_id='hello'), in_out=Region(start=0, end=10), position=0, id=..., mix_strategy='under')
     Rectangle(x=0, y=0, width=300, height=20):
-      scrub
+      <rlvideolib.gui.generic.ScrubAction object at ...>
     Rectangle(x=0, y=77, width=300, height=23):
       <rlvideolib.gui.generic.ScrollbarDragAction object at ...>
 
@@ -257,7 +257,7 @@ class Timeline:
             y=int(rect_y),
             width=int(rect_w),
             height=int(rect_h)
-        ), "scrub")
+        ), ScrubAction(self.player, self.scrollbar))
 
     def draw_ruler(self, context, area):
         context.set_source_rgba(0.4, 0.9, 0.9)
@@ -455,4 +455,27 @@ class ScrollbarDragAction(Action):
                 self.scrollbar.move_scrollbar(
                     x - self.x
                 )
+            )
+
+class ScrubAction(Action):
+
+    def __init__(self, player, scrollbar):
+        self.player = player
+        self.scrollbar = scrollbar
+        self.mouse_up()
+
+    def left_mouse_down(self, x, y):
+        self.x = x
+
+    def mouse_up(self):
+        self.x = None
+
+    def mouse_move(self, x, y):
+        if self.x is not None:
+            self.player.scrub(
+                int(round(
+                    self.scrollbar.content_start
+                    +
+                    x/self.scrollbar.one_length_in_pixels
+                ))
             )
