@@ -435,6 +435,19 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         return self.cut_map[id]
 
     def add(self, *cuts):
+        """
+        >>> cuts = Cuts.empty()
+        >>> list(cuts.cut_map.keys())
+        []
+        >>> cuts.region_to_cuts
+        RegionToCuts(region_number_to_cut_ids={})
+
+        >>> cuts = cuts.add(Cut.test_instance(id="a"))
+        >>> list(cuts.cut_map.keys())
+        ['a']
+        >>> cuts.region_to_cuts
+        RegionToCuts(region_number_to_cut_ids={0: ['a']})
+        """
         new_region_to_cuts = self.region_to_cuts
         new_cuts = dict(self.cut_map)
         for cut in cuts:
@@ -448,6 +461,33 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         return self._replace(
             cut_map=new_cuts,
             region_to_cuts=new_region_to_cuts,
+        )
+
+    def remove(self, cut_id):
+        """
+        >>> cuts = Cuts.empty()
+        >>> cuts = cuts.add(Cut.test_instance(id="a"))
+        >>> cuts = cuts.add(Cut.test_instance(id="b"))
+        >>> list(cuts.cut_map.keys())
+        ['a', 'b']
+        >>> cuts.region_to_cuts
+        RegionToCuts(region_number_to_cut_ids={0: ['a', 'b']})
+
+        >>> cuts = cuts.remove("b")
+        >>> list(cuts.cut_map.keys())
+        ['a']
+        >>> cuts.region_to_cuts
+        RegionToCuts(region_number_to_cut_ids={0: ['a']})
+        """
+        old_cut = self.cut_map[cut_id]
+        new_cuts = dict(self.cut_map)
+        del new_cuts[cut_id]
+        return self._replace(
+            cut_map=new_cuts,
+            region_to_cuts=self.region_to_cuts.remove_cut_from_regions(
+                cut_id,
+                old_cut.get_region_groups(self.region_group_size)
+            ),
         )
 
     def modify(self, cut_id, fn):
@@ -484,18 +524,6 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         data = data.remove(cut_id)
         data = data.modify(list(data.cut_map.keys())[0], lambda cut: cut.move(-10))
         return data
-
-    def remove(self, cut_id):
-        old_cut = self.cut_map[cut_id]
-        new_cuts = dict(self.cut_map)
-        del new_cuts[cut_id]
-        return self._replace(
-            cut_map=new_cuts,
-            region_to_cuts=self.region_to_cuts.remove_cut_from_regions(
-                cut_id,
-                old_cut.get_region_groups(self.region_group_size)
-            ),
-        )
 
     def yield_cuts_in_period(self, period):
         yielded = set()
