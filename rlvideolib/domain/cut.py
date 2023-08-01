@@ -492,18 +492,21 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
 
     def modify(self, cut_id, fn):
         """
-        It updates groups correctly:
-
-        >>> cut = Cut.test_instance(start=0, end=1, id=99)
         >>> cuts = Cuts.empty()
-        >>> cuts = cuts.add(cut)
+        >>> cuts = cuts.add(Cut.test_instance(start=0, end=1, id="a"))
         >>> cuts.region_to_cuts
-        RegionToCuts(region_number_to_cut_ids={0: [99]})
-        >>> cuts = cuts.modify(cut.id, lambda cut: cut.move(DEFAULT_REGION_GROUP_SIZE))
+        RegionToCuts(region_number_to_cut_ids={0: ['a']})
+        >>> cuts = cuts.modify("a", lambda cut: cut.move(DEFAULT_REGION_GROUP_SIZE))
         >>> cuts.region_to_cuts
-        RegionToCuts(region_number_to_cut_ids={0: [], 1: [99]})
+        RegionToCuts(region_number_to_cut_ids={0: [], 1: ['a']})
+
+        >>> cuts.modify("non-existing-id", lambda cut: cut)
+        Traceback (most recent call last):
+          ...
+        ValueError: cut with id non-existing-id does not exist.
         """
-        # TODO: custom exception if not found
+        if cut_id not in self.cut_map:
+            raise ValueError(f"cut with id {cut_id} does not exist.")
         old_cut = self.cut_map[cut_id]
         new_cut = fn(old_cut)
         new_cuts = dict(self.cut_map)
