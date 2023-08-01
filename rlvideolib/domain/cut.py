@@ -479,6 +479,12 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
             ),
         )
 
+    def ripple_delete(self, cut_id):
+        data = self
+        data = data.remove(cut_id)
+        data = data.modify(list(data.cut_map.keys())[0], lambda cut: cut.move(-10))
+        return data
+
     def remove(self, cut_id):
         old_cut = self.cut_map[cut_id]
         new_cuts = dict(self.cut_map)
