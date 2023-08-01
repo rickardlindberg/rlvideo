@@ -14,6 +14,7 @@ from rlvideolib.domain.section import Sections
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.gui.framework import Action
 from rlvideolib.gui.framework import MenuItem
+from rlvideolib.gui.testing import TestGui
 
 DEFAULT_REGION_GROUP_SIZE = 100
 
@@ -281,6 +282,20 @@ class CutAction(Action):
         self.x = x
 
     def right_mouse_down(self, x, y, gui):
+        """
+        I show a menu item for ripple delete:
+
+        >>> project = None
+        >>> cut = None
+        >>> scrollbar = None
+        >>> action = CutAction(project, cut, scrollbar)
+        >>> gui = TestGui()
+        >>> action.right_mouse_down(x=None, y=None, gui=gui)
+        >>> gui.print_context_menu_items()
+        over
+        under
+        ripple delete
+        """
         def mix_strategy_updater(value):
             def update():
                 with self.project.new_transaction() as transaction:
@@ -290,6 +305,7 @@ class CutAction(Action):
         gui.show_context_menu([
             MenuItem(label="over", action=mix_strategy_updater("over")),
             MenuItem(label="under", action=mix_strategy_updater("under")),
+            MenuItem(label="ripple delete", action=lambda: None),
         ])
 
     def mouse_up(self):
