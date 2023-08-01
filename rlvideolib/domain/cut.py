@@ -545,13 +545,41 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         >>> cuts.to_ascii_canvas()
         |<-B0->      |
         |      <-C0->|
+
+        >>> cuts = Cuts.empty()
+        >>> cuts = cuts.add(Cut.test_instance(
+        ...     name="A", id="a", position=0,
+        ...     start=0, end=6,
+        ... ))
+        >>> cuts = cuts.add(Cut.test_instance(
+        ...     name="B", id="b", position=3,
+        ...     start=0, end=6,
+        ... ))
+        >>> cuts = cuts.add(Cut.test_instance(
+        ...     name="C", id="c", position=6,
+        ...     start=0, end=6,
+        ... ))
+        >>> cuts.to_ascii_canvas()
+        |<-A0->      |
+        |   <-B0->   |
+        |      <-C0->|
+        >>> cuts = cuts.ripple_delete("b")
+        >>> cuts.to_ascii_canvas()
+        |<-A0->   |
+        |   <-C0->|
         """
         cut_to_delete = self.get(cut_id)
         cuts = self
         cuts = cuts.remove(cut_id)
+        ids = []
+        diffs = []
         for cut in cuts.cut_map.values():
-            if cut.start >= cut_to_delete.end:
-                cuts = cuts.modify(cut.id, lambda cut: cut.move(-cut.length))
+            if cut.start > cut_to_delete.start:
+                ids.append(cut.id)
+                diffs.append(cut.start-cut_to_delete.start)
+        delta = -min(diffs)
+        for id in ids:
+            cuts = cuts.modify(id, lambda cut: cut.move(delta))
         return cuts
 
     def yield_cuts_in_period(self, period):
