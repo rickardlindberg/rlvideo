@@ -11,7 +11,7 @@ from rlvideolib.events import Event
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.graphics.rectangle import RectangleMap
 from rlvideolib.gui.framework import Action
-from rlvideolib.gui.testing import TestGui
+from rlvideolib.gui.framework import TestGui
 
 GUI_SPACING = 7
 

@@ -44,7 +44,6 @@ if __name__ == "__main__":
             "rlvideolib.testing",
             "rlvideolib.jobs",
             "rlvideolib.gui",
-            "rlvideolib.gui.testing",
             "rlvideolib.gui.generic",
             "rlvideolib.gui.gtk",
             "rlvideolib.gui.framework",

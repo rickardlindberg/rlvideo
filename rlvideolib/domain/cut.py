@@ -14,7 +14,7 @@ from rlvideolib.domain.section import Sections
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.gui.framework import Action
 from rlvideolib.gui.framework import MenuItem
-from rlvideolib.gui.testing import TestGui
+from rlvideolib.gui.framework import TestGui
 
 DEFAULT_REGION_GROUP_SIZE = 100
 
