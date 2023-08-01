@@ -281,7 +281,7 @@ class CutAction(Action):
         self.transaction = self.project.new_transaction()
         self.x = x
 
-    def right_mouse_down(self, x, y, gui):
+    def right_mouse_down(self, gui):
         """
         I show a menu item for ripple delete:
 
@@ -290,7 +290,7 @@ class CutAction(Action):
         >>> scrollbar = None
         >>> action = CutAction(project, cut, scrollbar)
         >>> gui = TestGui()
-        >>> action.right_mouse_down(x=None, y=None, gui=gui)
+        >>> action.right_mouse_down(gui=gui)
         >>> gui.print_context_menu_items()
         over
         under

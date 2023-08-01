@@ -94,7 +94,7 @@ class Timeline:
 
     def right_mouse_down(self, x, y, gui):
         self.down_action = self.rectangle_map.get(x, y, Action())
-        self.down_action.right_mouse_down(x, y, gui)
+        self.down_action.right_mouse_down(gui)
 
     def mouse_move(self, x, y):
         if self.down_action:

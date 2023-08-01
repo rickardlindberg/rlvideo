@@ -8,7 +8,7 @@ class Action:
     def left_mouse_down(self, x, y):
         pass
 
-    def right_mouse_down(self, x, y, gui):
+    def right_mouse_down(self, gui):
         pass
 
     def mouse_move(self, x, y):
