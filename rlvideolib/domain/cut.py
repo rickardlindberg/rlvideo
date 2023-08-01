@@ -295,10 +295,23 @@ class CutAction(Action):
 
         I ripple delete:
 
-        >>> gui = TestGui(click_context_menu="ripple delete")
-        >>> action = CutAction(project=None, cut=None, scrollbar=None)
-        >>> action.right_mouse_down(gui=gui)
-        do ripple delete
+        >>> from rlvideolib.domain.project import Project
+        >>> project = Project.new()
+        >>> with project.new_transaction() as transaction:
+        ...     hello_id = transaction.add_text_clip("hello", length=10, id="A")
+        ...     _        = transaction.add_text_clip("there", length=10, id="B")
+        >>> project.split_into_sections().to_ascii_canvas()
+        |<-A0-----><-B0----->|
+
+        >>> CutAction(
+        ...     project=project,
+        ...     cut=project.project_data.get_cut(hello_id),
+        ...     scrollbar=None
+        ... ).right_mouse_down(
+        ...     gui=TestGui(click_context_menu="ripple delete")
+        ... )
+        >>> project.split_into_sections().to_ascii_canvas()
+        |<-B0----->|
         """
         def mix_strategy_updater(value):
             def update():
@@ -307,7 +320,7 @@ class CutAction(Action):
                         cut.with_mix_strategy(value))
             return update
         def ripple_delete():
-            print("do ripple delete")
+            self.project.ripple_delete(self.cut.id)
         gui.show_context_menu([
             MenuItem(label="over", action=mix_strategy_updater("over")),
             MenuItem(label="under", action=mix_strategy_updater("under")),
@@ -463,6 +476,18 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
             ).add_cut_to_regions(
                 new_cut.id,
                 new_cut.get_region_groups(self.region_group_size)
+            ),
+        )
+
+    def remove(self, cut_id):
+        old_cut = self.cut_map[cut_id]
+        new_cuts = dict(self.cut_map)
+        del new_cuts[cut_id]
+        return self._replace(
+            cut_map=new_cuts,
+            region_to_cuts=self.region_to_cuts.remove_cut_from_regions(
+                cut_id,
+                old_cut.get_region_groups(self.region_group_size)
             ),
         )
 

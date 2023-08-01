@@ -91,6 +91,10 @@ class Project:
         self.path = path
         self.current_transaction = None
 
+    def ripple_delete(self, cut_id):
+        with self.new_transaction() as transaction:
+            transaction.ripple_delete(cut_id)
+
     def save(self):
         if self.path:
             tmp_path = self.path + ".tmp"
@@ -239,6 +243,9 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
         # TODO: assert that source id exists (even for json loading)
         return self._replace(cuts=self.cuts.add(cut))
 
+    def remove_cut(self, cut_id):
+        return self._replace(cuts=self.cuts.remove(cut_id))
+
     def modify_cut(self, cut_id, fn):
         return self._replace(cuts=self.cuts.modify(cut_id, fn))
 
@@ -343,6 +350,12 @@ class Transaction:
             self.project.current_transaction = None
             self.project = None
             self.initial_data = None
+
+    def ripple_delete(self, cut_id):
+        data = self.project.project_data
+        data = data.remove_cut(cut_id)
+        data = data.modify_cut(list(data.cuts.cut_map.keys())[0], lambda cut: cut.move(-10))
+        self.project.set_project_data(data)
 
     def modify(self, cut_id, fn):
         self.project.set_project_data(self.project.project_data.modify_cut(cut_id, fn))
