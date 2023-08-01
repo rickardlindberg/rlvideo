@@ -283,13 +283,10 @@ class CutAction(Action):
 
     def right_mouse_down(self, gui):
         """
-        I show a menu item for ripple delete:
+        I show cut menu items on right click:
 
-        >>> project = None
-        >>> cut = None
-        >>> scrollbar = None
-        >>> action = CutAction(project, cut, scrollbar)
         >>> gui = TestGui()
+        >>> action = CutAction(project=None, cut=None, scrollbar=None)
         >>> action.right_mouse_down(gui=gui)
         >>> gui.print_context_menu_items()
         over
