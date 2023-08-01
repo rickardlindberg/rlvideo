@@ -292,6 +292,13 @@ class CutAction(Action):
         over
         under
         ripple delete
+
+        I ripple delete:
+
+        >>> gui = TestGui(click_context_menu="ripple delete")
+        >>> action = CutAction(project=None, cut=None, scrollbar=None)
+        >>> action.right_mouse_down(gui=gui)
+        do ripple delete
         """
         def mix_strategy_updater(value):
             def update():
@@ -299,10 +306,12 @@ class CutAction(Action):
                     transaction.modify(self.cut.id, lambda cut:
                         cut.with_mix_strategy(value))
             return update
+        def ripple_delete():
+            print("do ripple delete")
         gui.show_context_menu([
             MenuItem(label="over", action=mix_strategy_updater("over")),
             MenuItem(label="under", action=mix_strategy_updater("under")),
-            MenuItem(label="ripple delete", action=lambda: None),
+            MenuItem(label="ripple delete", action=ripple_delete),
         ])
 
     def mouse_up(self):
