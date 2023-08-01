@@ -258,7 +258,14 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
         context.set_source_rgba(0.1, 0.1, 0.1)
         context.stroke()
         for rectangle in rectangles:
-            rectangle_map.add_from_context(rectangle.x, rectangle.y, rectangle.width, rectangle.height, context, CutAction(project, self.get_source_cut(), scrollbar))
+            rectangle_map.add_from_context(
+                rectangle.x,
+                rectangle.y,
+                rectangle.width,
+                rectangle.height,
+                context,
+                CutAction(project, self.get_source_cut(), scrollbar)
+            )
 
 class CutAction(Action):
 

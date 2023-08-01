@@ -200,7 +200,14 @@ class Timeline:
             ruler_area.width,
             ruler_area.height,
         )
-        self.rectangle_map.add_from_context(x, y, w, h, context, ScrubAction(self.player, self.scrollbar))
+        self.rectangle_map.add_from_context(
+            x,
+            y,
+            w,
+            h,
+            context,
+            ScrubAction(self.player, self.scrollbar)
+        )
 
     def draw_ruler(self, context, area):
         context.set_source_rgba(0.4, 0.9, 0.9)
@@ -246,7 +253,14 @@ class Timeline:
             x_end-x_start,
             area.height
         )
-        self.rectangle_map.add_from_context(x, y, w, h, context, ScrollbarDragAction(self, self.scrollbar))
+        self.rectangle_map.add_from_context(
+            x,
+            y,
+            w,
+            h,
+            context,
+            ScrollbarDragAction(self, self.scrollbar)
+        )
 
         context.rectangle(area.x, area.y, area.width, area.height)
         context.set_source_rgba(0.4, 0.9, 0.4, 0.5)
