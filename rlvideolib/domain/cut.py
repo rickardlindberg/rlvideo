@@ -523,10 +523,36 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         )
 
     def ripple_delete(self, cut_id):
-        data = self
-        data = data.remove(cut_id)
-        data = data.modify(list(data.cut_map.keys())[0], lambda cut: cut.move(-10))
-        return data
+        """
+        >>> cuts = Cuts.empty()
+        >>> cuts = cuts.add(Cut.test_instance(
+        ...     name="A", id="a", position=0,
+        ...     start=0, end=6,
+        ... ))
+        >>> cuts = cuts.add(Cut.test_instance(
+        ...     name="B", id="b", position=6,
+        ...     start=0, end=6,
+        ... ))
+        >>> cuts = cuts.add(Cut.test_instance(
+        ...     name="C", id="c", position=12,
+        ...     start=0, end=6,
+        ... ))
+        >>> cuts.to_ascii_canvas()
+        |<-A0->            |
+        |      <-B0->      |
+        |            <-C0->|
+        >>> cuts = cuts.ripple_delete("a")
+        >>> cuts.to_ascii_canvas()
+        |<-B0->      |
+        |      <-C0->|
+        """
+        cut_to_delete = self.get(cut_id)
+        cuts = self
+        cuts = cuts.remove(cut_id)
+        for cut in cuts.cut_map.values():
+            if cut.start >= cut_to_delete.end:
+                cuts = cuts.modify(cut.id, lambda cut: cut.move(-cut.length))
+        return cuts
 
     def yield_cuts_in_period(self, period):
         yielded = set()
