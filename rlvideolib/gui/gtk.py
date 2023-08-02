@@ -155,6 +155,8 @@ class MltPlayer:
 
     # TODO: extract parts that don't depend on GTK
 
+    # TODO: stop consumer when we close the application to get rid of segfault?
+
     def __init__(self, project, window_id):
         # TODO: player area outside video don't always refresh
         # TODO: figure out why SDL consumer seems to produce brighter images (black -> grey)
