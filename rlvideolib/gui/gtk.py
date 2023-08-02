@@ -50,7 +50,7 @@ class App:
             path = sys.argv[2]
             print(f"Exporting {path}")
             project = Project.load(args=sys.argv[3:])
-            consumer = mlt.Consumer(project.get_preview_profile(), "xml")
+            consumer = mlt.Consumer(project.profile, "xml")
             consumer.set("resource", path)
             consumer.connect(project.get_preview_mlt_producer())
             consumer.start()
