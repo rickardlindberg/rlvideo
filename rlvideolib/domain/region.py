@@ -117,6 +117,12 @@ class Region(namedtuple("Region", "start,end")):
                 end=min(self.end, region.end)
             )
 
+    def resize_to(self, size):
+        return self._replace(end=self.start+size)
+
+    def shorten_left(self, amount):
+        return self._replace(start=self.start+amount)
+
 class UnionRegions:
 
     def __init__(self):

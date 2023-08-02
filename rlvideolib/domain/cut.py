@@ -62,6 +62,18 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
     def with_mix_strategy(self, mix_strategy):
         return self._replace(mix_strategy=mix_strategy)
 
+    def split(self, position):
+        delta = position - self.start
+        return [
+            self._replace(
+                in_out=self.in_out.resize_to(delta),
+            ).with_unique_id(),
+            self._replace(
+                in_out=self.in_out.shorten_left(delta),
+                position=self.position+delta,
+            ).with_unique_id(),
+        ]
+
     def get_region_groups(self, group_size):
         """
         >>> Cut.test_instance(start=0, end=10).get_region_groups(5)
@@ -636,8 +648,25 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         return cuts
 
     def split(self, cut_id, position):
-        print(f"TODO: split at {position}")
-        return self
+        """
+        >>> cuts = Cuts.empty()
+        >>> cuts = cuts.add(Cut.test_instance(
+        ...     name="A", id="a", position=10,
+        ...     start=0, end=20,
+        ... ))
+        >>> cuts.to_ascii_canvas()
+        |          <-A0--------------->|
+        >>> cuts = cuts.split("a", 16)
+        >>> cuts.to_ascii_canvas()
+        |          <-A0->              |
+        |                <-A6--------->|
+        """
+        cut_to_split = self.get(cut_id)
+        cuts = self
+        cuts = cuts.remove(cut_to_split.id)
+        for new in cut_to_split.split(position):
+            cuts = cuts.add(new)
+        return cuts
 
     def yield_cuts_in_period(self, period):
         yielded = set()
