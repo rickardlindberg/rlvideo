@@ -213,18 +213,16 @@ class CustomDrawWidget(Gtk.DrawingArea):
         self.custom_draw_handler(context, self.rectangle_map)
 
     def on_button_press_event(self, widget, event):
-        # TODO: clarify what translate_coordinates do
+        x, y = self.get_coordinates_relative_self(event)
         if event.button == 1:
-            x, y = self.to_local_coordinates(event)
             self.down_action = self.rectangle_map.get(x, y, Action())
             self.down_action.left_mouse_down(x, y)
         elif event.button == 3:
-            x, y = self.to_local_coordinates(event)
             self.down_action = self.rectangle_map.get(x, y, Action())
             self.down_action.right_mouse_down(GtkGui(event))
 
     def on_motion_notify_event(self, widget, event):
-        x, y = self.to_local_coordinates(event)
+        x, y = self.get_coordinates_relative_self(event)
         if self.down_action:
             self.down_action.mouse_move(x, y)
         else:
@@ -235,7 +233,7 @@ class CustomDrawWidget(Gtk.DrawingArea):
             self.down_action.mouse_up()
             self.down_action = None
 
-    def to_local_coordinates(self, event):
+    def get_coordinates_relative_self(self, event):
         return self.translate_coordinates(
             self.main_window,
             event.x,
