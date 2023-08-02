@@ -24,7 +24,11 @@ class Timeline:
     >>> with project.new_transaction() as transaction:
     ...     cut_id = transaction.add_text_clip("hello", length=10, id="hello")
 
-    >>> timeline = Timeline(project=project, player=None)
+    >>> timeline = Timeline(
+    ...     project=project,
+    ...     player=None,
+    ...     rectangle_map=RectangleMap()
+    ... )
     >>> width, height = 300, 100
     >>> surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     >>> context = cairo.Context(surface)
@@ -64,7 +68,7 @@ class Timeline:
     |%<-h0----->|
     """
 
-    def __init__(self, project, player):
+    def __init__(self, project, player, rectangle_map):
         self.scrollbar_event = Event()
         self.project = project
         self.player = player
@@ -74,7 +78,7 @@ class Timeline:
             one_length_in_pixels=1,
             ui_size=10,
         ))
-        self.rectangle_map = RectangleMap()
+        self.rectangle_map = rectangle_map
         self.down_action = None
 
     def get_cut(self, cut_id):
@@ -134,7 +138,11 @@ class Timeline:
         ...     _ = transaction.add_text_clip("end", length=20)
         ...     _ = transaction.add_text_clip("end", length=20)
         ...     transaction.modify(x, lambda cut: cut.move(-10))
-        >>> timeline = Timeline(project=project, player=None)
+        >>> timeline = Timeline(
+        ...     project=project,
+        ...     player=None,
+        ...     rectangle_map=RectangleMap()
+        ... )
         >>> context.translate(0, 0)
         >>> timeline.set_zoom_factor(5)
         >>> timeline.draw_cairo(
@@ -186,7 +194,6 @@ class Timeline:
             ).resize(
                 width=self.scrollbar.content_to_pixels(sections.length)
             ).cairo_clip_translate(context) as sections_area:
-                self.rectangle_map.clear()
                 for cut, boxes in sections.to_cut_boxes(self.scrollbar.region_shown, sections_area).items():
                     cut.draw_cairo(context, boxes, self.rectangle_map, self.project, self.scrollbar)
         context.set_source_rgb(0.1, 0.1, 0.1)

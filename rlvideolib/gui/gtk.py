@@ -149,7 +149,11 @@ class App:
 
         mlt_player = MltPlayer(self.project, preview.get_window().get_xid())
 
-        self.timeline = Timeline(project=self.project, player=mlt_player)
+        self.timeline = Timeline(
+            project=self.project,
+            player=mlt_player,
+            rectangle_map=timeline.rectangle_map
+        )
         self.timeline.set_zoom_factor(25)
         self.timeline.on_scrollbar(timeline.queue_draw)
 
