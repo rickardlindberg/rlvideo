@@ -17,6 +17,9 @@ class Action:
     def mouse_up(self):
         pass
 
+    def simulate_click(self, x=0, y=0):
+        self.left_mouse_down(x=x, y=y)
+
 class TestGui:
 
     def __init__(self, click_context_menu=None):

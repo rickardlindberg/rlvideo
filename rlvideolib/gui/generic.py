@@ -391,6 +391,20 @@ class ScrollbarDragAction(Action):
 
 class ScrubAction(Action):
 
+    """
+    I scrub the player when clicked:
+
+    >>> class MockPlayer:
+    ...     def scrub(self, position):
+    ...         print(f"scrub {position}")
+    >>> class MockScrollbar:
+    ...     content_start = 0
+    ...     one_length_in_pixels = 1
+    >>> action = ScrubAction(player=MockPlayer(), scrollbar=MockScrollbar())
+    >>> action.simulate_click(x=10)
+    scrub 10
+    """
+
     def __init__(self, player, scrollbar):
         self.player = player
         self.scrollbar = scrollbar
@@ -398,16 +412,20 @@ class ScrubAction(Action):
 
     def left_mouse_down(self, x, y):
         self.x = x
+        self.scrub(x)
 
     def mouse_up(self):
         self.x = None
 
     def mouse_move(self, x, y):
         if self.x is not None:
-            self.player.scrub(
-                int(round(
-                    self.scrollbar.content_start
-                    +
-                    x/self.scrollbar.one_length_in_pixels
-                ))
-            )
+            self.scrub(x)
+
+    def scrub(self, x):
+        self.player.scrub(
+            int(round(
+                self.scrollbar.content_start
+                +
+                x/self.scrollbar.one_length_in_pixels
+            ))
+        )
