@@ -49,25 +49,6 @@ class Timeline:
       <rlvideolib.gui.generic.ScrubAction object at ...>
     Rectangle(x=0, y=77, width=300, height=23):
       <rlvideolib.gui.generic.ScrollbarDragAction object at ...>
-
-    TODO: Move these tests to CutAction
-
-    #Right click event:
-
-    #>>> timeline.right_mouse_down(5, 25, TestGui(click_context_menu="over"))
-    #>>> timeline.get_cut(cut_id).mix_strategy
-    #'over'
-
-    #Drag event:
-
-    #>>> timeline.left_mouse_down(5, 25)
-    #>>> timeline.mouse_move(6, 26)
-    #>>> timeline.mouse_up()
-    #>>> timeline.split_into_sections().to_ascii_canvas()
-    #|%<-h0----->|
-    #>>> timeline.mouse_move(7, 27)
-    #>>> timeline.split_into_sections().to_ascii_canvas()
-    #|%<-h0----->|
     """
 
     def __init__(self, project, player, rectangle_map):

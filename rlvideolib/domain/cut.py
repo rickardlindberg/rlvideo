@@ -283,6 +283,8 @@ class CutAction(Action):
 
     def right_mouse_down(self, gui):
         """
+        >>> from rlvideolib.domain.project import Project
+
         I show cut menu items on right click:
 
         >>> gui = TestGui()
@@ -295,7 +297,6 @@ class CutAction(Action):
 
         I ripple delete:
 
-        >>> from rlvideolib.domain.project import Project
         >>> project = Project.new()
         >>> with project.new_transaction() as transaction:
         ...     hello_id = transaction.add_text_clip("hello", length=10, id="A")
@@ -312,6 +313,23 @@ class CutAction(Action):
         ... )
         >>> project.split_into_sections().to_ascii_canvas()
         |<-B0----->|
+
+        I change mix strategy:
+
+        >>> project = Project.new()
+        >>> with project.new_transaction() as transaction:
+        ...     hello_id = transaction.add_text_clip("hello", length=10, id="A")
+        >>> project.project_data.get_cut(hello_id).mix_strategy
+        'under'
+        >>> CutAction(
+        ...     project=project,
+        ...     cut=project.project_data.get_cut(hello_id),
+        ...     scrollbar=None
+        ... ).right_mouse_down(
+        ...     gui=TestGui(click_context_menu="over")
+        ... )
+        >>> project.project_data.get_cut(hello_id).mix_strategy
+        'over'
         """
         def mix_strategy_updater(value):
             def update():
@@ -336,6 +354,28 @@ class CutAction(Action):
         self.x = None
 
     def mouse_move(self, x, y):
+        """
+        I move a cut:
+
+        >>> from rlvideolib.domain.project import Project
+        >>> project = Project.new()
+        >>> with project.new_transaction() as transaction:
+        ...     hello_id = transaction.add_text_clip("hello", length=10, id="A")
+        >>> project.split_into_sections().to_ascii_canvas()
+        |<-A0----->|
+        >>> class MockScrollbar:
+        ...     one_length_in_pixels = 1
+        >>> action = CutAction(
+        ...     project=project,
+        ...     cut=project.project_data.get_cut(hello_id),
+        ...     scrollbar=MockScrollbar()
+        ... )
+        >>> action.left_mouse_down(0, 0)
+        >>> action.mouse_move(5, 0)
+        >>> action.mouse_up()
+        >>> project.split_into_sections().to_ascii_canvas()
+        |%%%%%<-A0----->|
+        """
         if self.transaction is not None:
             self.transaction.reset()
             self.transaction.modify(self.cut.id, lambda cut:
