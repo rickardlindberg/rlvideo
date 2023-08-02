@@ -142,7 +142,31 @@ class MixSection:
             if index > 0:
                 a_track = 0
                 b_track = index
-                mix_video = mlt.Transition(profile, "qtblend")
+                # 'qtblend' that was first used first seems to give problems
+                # when used in a GTK context. The application segfaults when
+                # started.
+                #
+                # Steps to reproduce:
+                #
+                # 1. ./make.py rundev foo.rlvideo resources/*mp4
+                #
+                # 2. Move a cut so that there is a overlap somewhere
+                #
+                # 3. ./make.py rundev foo.rlvideo
+                #
+                # Boom! Stacktrace:
+                #
+                #     (gdb) bt
+                #     #0  0x00007ffff7a64474 in pthread_mutex_lock () at /lib64/libpthread.so.0
+                #     #1  0x00007fffe96866af in XrmQGetResource () at /lib64/libX11.so.6
+                #     #2  0x00007fffe9667fca in XGetDefault () at /lib64/libX11.so.6
+                #     #3  0x00007fffe9a5ae8a in _cairo_xlib_surface_get_font_options () at /lib64/libcairo.so.2
+                #     ...
+                #
+                # frei0r.cairoblend seems to work better.
+                #
+                # TODO: How to fix this problem? Is qtblend just incompatible?
+                mix_video = mlt.Transition(profile, "frei0r.cairoblend")
                 tractor.plant_transition(mix_video, a_track, b_track)
                 mix_audio = mlt.Transition(profile, "mix")
                 mix_audio.set("sum", "1")
