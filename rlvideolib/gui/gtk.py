@@ -9,6 +9,7 @@ from gi.repository import Gtk, Gdk, GLib
 
 from rlvideolib.domain.project import Project
 from rlvideolib.graphics.rectangle import RectangleMap
+from rlvideolib.gui.framework import Action
 from rlvideolib.gui.framework import MenuItem
 from rlvideolib.gui.generic import GUI_SPACING
 from rlvideolib.gui.generic import Timeline
@@ -84,39 +85,15 @@ class App:
                 width=timeline.get_allocated_width(),
                 height=timeline.get_allocated_height(),
             )
-        def timeline_motion(widget, event):
-            self.timeline.mouse_move(*timeline.translate_coordinates(
-                main_window,
-                event.x,
-                event.y
-            ))
-        def timeline_button(widget, event):
-            # TODO: clarify what translate_coordinates do
-            if event.button == 1:
-                self.timeline.left_mouse_down(*timeline.translate_coordinates(
-                    main_window,
-                    event.x,
-                    event.y
-                ))
-            elif event.button == 3:
-                self.timeline.right_mouse_down(*timeline.translate_coordinates(
-                    main_window,
-                    event.x,
-                    event.y
-                ), GtkGui(event))
-        def timeline_button_up(widget, event):
-            self.timeline.mouse_up()
         def timeline_scroll(widget, event):
             if event.direction == Gdk.ScrollDirection.UP:
                 self.timeline.scroll_up(event.x, event.y)
             elif event.direction == Gdk.ScrollDirection.DOWN:
                 self.timeline.scroll_down(event.x, event.y)
         timeline = CustomDrawWidget(
+            main_window=main_window,
             custom_draw_handler=timeline_draw,
         )
-        timeline.connect("button-press-event", timeline_button)
-        timeline.connect("button-release-event", timeline_button_up)
-        timeline.connect("motion-notify-event", timeline_motion)
         timeline.connect("scroll-event", timeline_scroll)
         timeline.set_can_focus(True)
         timeline.grab_focus()
@@ -213,7 +190,7 @@ class MltPlayer:
 
 class CustomDrawWidget(Gtk.DrawingArea):
 
-    def __init__(self, custom_draw_handler):
+    def __init__(self, main_window, custom_draw_handler):
         Gtk.DrawingArea.__init__(self)
         self.add_events(
             self.get_events() |
@@ -223,9 +200,44 @@ class CustomDrawWidget(Gtk.DrawingArea):
             Gdk.EventMask.POINTER_MOTION_MASK
         )
         self.connect("draw", self.on_draw)
+        self.connect("button-press-event", self.on_button_press_event)
+        self.connect("button-release-event", self.on_button_release_event)
+        self.connect("motion-notify-event", self.on_motion_notify_event)
         self.rectangle_map = RectangleMap()
         self.custom_draw_handler = custom_draw_handler
+        self.down_action = None
+        self.main_window = main_window
 
     def on_draw(self, widget, context):
         self.rectangle_map.clear()
         self.custom_draw_handler(context, self.rectangle_map)
+
+    def on_button_press_event(self, widget, event):
+        # TODO: clarify what translate_coordinates do
+        if event.button == 1:
+            x, y = self.to_local_coordinates(event)
+            self.down_action = self.rectangle_map.get(x, y, Action())
+            self.down_action.left_mouse_down(x, y)
+        elif event.button == 3:
+            x, y = self.to_local_coordinates(event)
+            self.down_action = self.rectangle_map.get(x, y, Action())
+            self.down_action.right_mouse_down(GtkGui(event))
+
+    def on_motion_notify_event(self, widget, event):
+        x, y = self.to_local_coordinates(event)
+        if self.down_action:
+            self.down_action.mouse_move(x, y)
+        else:
+            self.rectangle_map.get(x, y, Action()).mouse_move(x, y)
+
+    def on_button_release_event(self, widget, event):
+        if self.down_action:
+            self.down_action.mouse_up()
+            self.down_action = None
+
+    def to_local_coordinates(self, event):
+        return self.translate_coordinates(
+            self.main_window,
+            event.x,
+            event.y
+        )

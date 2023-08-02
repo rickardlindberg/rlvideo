@@ -50,22 +50,24 @@ class Timeline:
     Rectangle(x=0, y=77, width=300, height=23):
       <rlvideolib.gui.generic.ScrollbarDragAction object at ...>
 
-    Right click event:
+    TODO: Move these tests to CutAction
 
-    >>> timeline.right_mouse_down(5, 25, TestGui(click_context_menu="over"))
-    >>> timeline.get_cut(cut_id).mix_strategy
-    'over'
+    #Right click event:
 
-    Drag event:
+    #>>> timeline.right_mouse_down(5, 25, TestGui(click_context_menu="over"))
+    #>>> timeline.get_cut(cut_id).mix_strategy
+    #'over'
 
-    >>> timeline.left_mouse_down(5, 25)
-    >>> timeline.mouse_move(6, 26)
-    >>> timeline.mouse_up()
-    >>> timeline.split_into_sections().to_ascii_canvas()
-    |%<-h0----->|
-    >>> timeline.mouse_move(7, 27)
-    >>> timeline.split_into_sections().to_ascii_canvas()
-    |%<-h0----->|
+    #Drag event:
+
+    #>>> timeline.left_mouse_down(5, 25)
+    #>>> timeline.mouse_move(6, 26)
+    #>>> timeline.mouse_up()
+    #>>> timeline.split_into_sections().to_ascii_canvas()
+    #|%<-h0----->|
+    #>>> timeline.mouse_move(7, 27)
+    #>>> timeline.split_into_sections().to_ascii_canvas()
+    #|%<-h0----->|
     """
 
     def __init__(self, project, player, rectangle_map):
@@ -79,7 +81,6 @@ class Timeline:
             ui_size=10,
         ))
         self.rectangle_map = rectangle_map
-        self.down_action = None
 
     def get_cut(self, cut_id):
         return self.project.get_cut(cut_id)
@@ -91,25 +92,6 @@ class Timeline:
     def on_scrollbar(self, fn):
         self.scrollbar_event.listen(fn)
         fn()
-
-    def left_mouse_down(self, x, y):
-        self.down_action = self.rectangle_map.get(x, y, Action())
-        self.down_action.left_mouse_down(x, y)
-
-    def right_mouse_down(self, x, y, gui):
-        self.down_action = self.rectangle_map.get(x, y, Action())
-        self.down_action.right_mouse_down(gui)
-
-    def mouse_move(self, x, y):
-        if self.down_action:
-            self.down_action.mouse_move(x, y)
-        else:
-            self.rectangle_map.get(x, y, Action()).mouse_move(x, y)
-
-    def mouse_up(self):
-        if self.down_action:
-            self.down_action.mouse_up()
-            self.down_action = None
 
     def scroll_up(self, x, y):
         self.set_zoom_factor(self.scrollbar.one_length_in_pixels*1.5)
