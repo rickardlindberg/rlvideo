@@ -95,6 +95,10 @@ class Project:
         with self.new_transaction() as transaction:
             transaction.ripple_delete(cut_id)
 
+    def split(self, cut_id, position):
+        with self.new_transaction() as transaction:
+            transaction.split(cut_id, position)
+
     def save(self):
         if self.path:
             tmp_path = self.path + ".tmp"
@@ -249,6 +253,9 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
     def ripple_delete(self, cut_id):
         return self._replace(cuts=self.cuts.ripple_delete(cut_id))
 
+    def split(self, cut_id, position):
+        return self._replace(cuts=self.cuts.split(cut_id, position))
+
     def get_source(self, source_id):
         return self.sources.get(source_id)
 
@@ -366,6 +373,9 @@ class Transaction:
 
     def ripple_delete(self, cut_id):
         self.project.set_project_data(self.project.project_data.ripple_delete(cut_id))
+
+    def split(self, cut_id, position):
+        self.project.set_project_data(self.project.project_data.split(cut_id, position))
 
     def modify(self, cut_id, fn):
         self.project.set_project_data(self.project.project_data.modify_cut(cut_id, fn))

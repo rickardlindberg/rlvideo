@@ -34,7 +34,7 @@ class Timeline:
     >>> context = cairo.Context(surface)
     >>> timeline.draw_cairo(
     ...     context=context,
-    ...     playhead_position=0,
+    ...     player=MockPlayer(position=0),
     ...     width=width,
     ...     height=height
     ... )
@@ -87,7 +87,7 @@ class Timeline:
         return self.project.split_into_sections()
 
     @timeit("Timeline.draw_cairo")
-    def draw_cairo(self, context, playhead_position, width, height):
+    def draw_cairo(self, context, player, width, height):
         """
         >>> _ = mlt.Factory().init()
         >>> height = 200
@@ -110,7 +110,7 @@ class Timeline:
         >>> timeline.set_zoom_factor(5)
         >>> timeline.draw_cairo(
         ...     context=context,
-        ...     playhead_position=40,
+        ...     player=MockPlayer(position=40),
         ...     width=width,
         ...     height=height
         ... )
@@ -118,7 +118,7 @@ class Timeline:
         >>> timeline.set_zoom_factor(10)
         >>> timeline.draw_cairo(
         ...     context=context,
-        ...     playhead_position=40,
+        ...     player=MockPlayer(position=40),
         ...     width=width,
         ...     height=height
         ... )
@@ -138,11 +138,11 @@ class Timeline:
         )
         # TODO: only update scrollbar on resize and split_into_sections change event
         with clip_area.cairo_clip_translate(context) as area:
-            self.draw_clips(context, area, playhead_position, sections)
+            self.draw_clips(context, area, player, sections)
         with scroll_area.cairo_clip_translate(context) as area:
-            self.draw_scrollbar(context, area, playhead_position)
+            self.draw_scrollbar(context, area, player)
 
-    def draw_clips(self, context, area, playhead_position, sections):
+    def draw_clips(self, context, area, player, sections):
         ruler_area, clip_area = area.split_height_from_top(top_height=20)
 
         with ruler_area.cairo_clip_translate(context) as ruler_area:
@@ -158,10 +158,17 @@ class Timeline:
                 width=self.scrollbar.content_to_pixels(sections.length)
             ).cairo_clip_translate(context) as sections_area:
                 for cut, boxes in sections.to_cut_boxes(self.scrollbar.region_shown, sections_area).items():
-                    cut.draw_cairo(context, boxes, self.rectangle_map, self.project, self.scrollbar)
+                    cut.draw_cairo(
+                        context=context,
+                        rectangles=boxes,
+                        rectangle_map=self.rectangle_map,
+                        project=self.project,
+                        scrollbar=self.scrollbar,
+                        player=player
+                    )
         context.set_source_rgb(0.1, 0.1, 0.1)
-        context.move_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), 0)
-        context.line_to(self.scrollbar.content_to_pixels(playhead_position-self.scrollbar.content_start), area.height)
+        context.move_to(self.scrollbar.content_to_pixels(player.position()-self.scrollbar.content_start), 0)
+        context.line_to(self.scrollbar.content_to_pixels(player.position()-self.scrollbar.content_start), area.height)
         context.stroke()
 
         x, y, w, h = (
@@ -212,10 +219,10 @@ class Timeline:
         context.set_source_rgb(0.2, 0.2, 0.2)
         area.draw_pixel_perfect_line(context, 1, "bottom")
 
-    def draw_scrollbar(self, context, area, playhead_position):
+    def draw_scrollbar(self, context, area, player):
         x_start = self.scrollbar.region_shown.start / self.scrollbar.whole_region.length * area.width
         x_end = self.scrollbar.region_shown.end / self.scrollbar.whole_region.length * area.width
-        playhead_x = playhead_position / self.scrollbar.whole_region.length * area.width
+        playhead_x = player.position() / self.scrollbar.whole_region.length * area.width
 
         x, y, w, h = (
             area.x+x_start,
@@ -364,9 +371,6 @@ class ScrubAction(Action):
     """
     I scrub the player when clicked:
 
-    >>> class MockPlayer:
-    ...     def scrub(self, position):
-    ...         print(f"scrub {position}")
     >>> class MockScrollbar:
     ...     content_start = 0
     ...     one_length_in_pixels = 1
@@ -399,3 +403,14 @@ class ScrubAction(Action):
                 x/self.scrollbar.one_length_in_pixels
             ))
         )
+
+class MockPlayer:
+
+    def __init__(self, position=0):
+        self.position_ = position
+
+    def position(self):
+        return self.position_
+
+    def scrub(self, position):
+        print(f"scrub {position}")

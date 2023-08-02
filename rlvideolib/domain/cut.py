@@ -244,7 +244,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
             boxes[self.get_source_cut()] = []
         boxes[self.get_source_cut()].append(rectangle)
 
-    def draw_cairo(self, context, rectangles, rectangle_map, project, scrollbar):
+    def draw_cairo(self, context, rectangles, rectangle_map, project, scrollbar, player):
         context.save()
         CutRectangles(rectangles).cairo_fill_path(context)
         context.clip_preserve()
@@ -265,15 +265,21 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
                 rectangle.width,
                 rectangle.height,
                 context,
-                CutAction(project, self.get_source_cut(), scrollbar)
+                CutAction(
+                    project=project,
+                    cut=self.get_source_cut(),
+                    scrollbar=scrollbar,
+                    player=player
+                )
             )
 
 class CutAction(Action):
 
-    def __init__(self, project, cut, scrollbar):
+    def __init__(self, project, cut, scrollbar, player):
         self.project = project
         self.cut = cut
         self.scrollbar = scrollbar
+        self.player = player
         self.transaction = None
         self.x = None
 
@@ -288,12 +294,13 @@ class CutAction(Action):
         I show cut menu items on right click:
 
         >>> gui = TestGui()
-        >>> action = CutAction(project=None, cut=None, scrollbar=None)
+        >>> action = CutAction(project=None, cut=None, scrollbar=None, player=None)
         >>> action.right_mouse_down(gui=gui)
         >>> gui.print_context_menu_items()
         over
         under
         ripple delete
+        split at playhead
 
         I ripple delete:
 
@@ -307,7 +314,8 @@ class CutAction(Action):
         >>> CutAction(
         ...     project=project,
         ...     cut=project.project_data.get_cut(hello_id),
-        ...     scrollbar=None
+        ...     scrollbar=None,
+        ...     player=None,
         ... ).right_mouse_down(
         ...     gui=TestGui(click_context_menu="ripple delete")
         ... )
@@ -324,7 +332,8 @@ class CutAction(Action):
         >>> CutAction(
         ...     project=project,
         ...     cut=project.project_data.get_cut(hello_id),
-        ...     scrollbar=None
+        ...     scrollbar=None,
+        ...     player=None,
         ... ).right_mouse_down(
         ...     gui=TestGui(click_context_menu="over")
         ... )
@@ -339,10 +348,13 @@ class CutAction(Action):
             return update
         def ripple_delete():
             self.project.ripple_delete(self.cut.id)
+        def split_at_playhead():
+            self.project.split(self.cut.id, self.player.position())
         gui.show_context_menu([
             MenuItem(label="over", action=mix_strategy_updater("over")),
             MenuItem(label="under", action=mix_strategy_updater("under")),
             MenuItem(label="ripple delete", action=ripple_delete),
+            MenuItem(label="split at playhead", action=split_at_playhead),
         ])
 
     def mouse_up(self):
@@ -368,7 +380,8 @@ class CutAction(Action):
         >>> action = CutAction(
         ...     project=project,
         ...     cut=project.project_data.get_cut(hello_id),
-        ...     scrollbar=MockScrollbar()
+        ...     scrollbar=MockScrollbar(),
+        ...     player=None,
         ... )
         >>> action.left_mouse_down(0, 0)
         >>> action.mouse_move(5, 0)
@@ -621,6 +634,10 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
         for id in ids:
             cuts = cuts.modify(id, lambda cut: cut.move(delta))
         return cuts
+
+    def split(self, cut_id, position):
+        print(f"TODO: split at {position}")
+        return self
 
     def yield_cuts_in_period(self, period):
         yielded = set()

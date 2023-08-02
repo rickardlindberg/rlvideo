@@ -83,7 +83,7 @@ class App:
         def timeline_draw(context, rectangle_map):
             self.timeline.draw_cairo(
                 context=context,
-                playhead_position=mlt_player.position(),
+                player=mlt_player,
                 width=timeline.get_allocated_width(),
                 height=timeline.get_allocated_height(),
             )
