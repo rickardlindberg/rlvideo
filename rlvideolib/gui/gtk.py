@@ -50,8 +50,10 @@ class App:
             # TODO: return True to mark event as handled?
             if event.get_keyval().keyval == Gdk.keyval_from_name("0"):
                 mlt_player.seek_beginning()
-            elif event.get_keyval().keyval == Gdk.keyval_from_name("space"):
-                mlt_player.play_pause()
+            elif event.get_keyval().keyval == Gdk.keyval_from_name("1"):
+                mlt_player.play_pause(1)
+            elif event.get_keyval().keyval == Gdk.keyval_from_name("2"):
+                mlt_player.play_pause(2)
             elif event.get_keyval().keyval == Gdk.keyval_from_name("Left"):
                 mlt_player.seek_left_one_frame()
             elif event.get_keyval().keyval == Gdk.keyval_from_name("Right"):
@@ -154,10 +156,10 @@ class MltPlayer:
         # TODO: why is this position on the producer and not the consumer?
         return self.producer.position()
 
-    def play_pause(self):
+    def play_pause(self, speed):
         if self.producer.get_speed() == 0:
             print("Play")
-            self.producer.set_speed(1)
+            self.producer.set_speed(speed)
         else:
             print("Pause")
             self.producer.set_speed(0)
