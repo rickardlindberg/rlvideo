@@ -152,6 +152,7 @@ class App:
         def delete_event(widget, event):
             # If we don't stop the player here, we might get a segfault in a
             # thread inside MLT.
+            # TODO: how can we express this in code instead of a comment?
             mlt_player.stop()
         main_window.connect("delete-event", delete_event)
 
