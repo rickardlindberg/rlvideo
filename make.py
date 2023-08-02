@@ -61,8 +61,8 @@ if __name__ == "__main__":
         path_to_main = os.path.join(os.path.dirname(__file__), "rlvideo.py")
         ensure(["gdb", sys.executable, "--ex", f"run {path_to_main} {' '.join(command[1:])}"])
     elif command[0:1] == ["commit"]:
-        ensure([sys.executable, "make.py", "build"])
         ensure(["bash", "-c", "if git status | grep -A 5 'Untracked files:'; then exit 1; fi"])
+        ensure([sys.executable, "make.py", "build"])
         ensure(["git", "commit", "-a", "--verbose"]+command[1:])
     else:
         sys.exit("\n".join(usage()))
