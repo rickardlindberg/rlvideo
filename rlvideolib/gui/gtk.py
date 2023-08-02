@@ -77,12 +77,12 @@ class App:
         preview = Gtk.DrawingArea()
         hbox.pack_start(preview, True, True, 0)
 
-        def timeline_draw(widget, context):
+        def timeline_draw(context, rectangle_map):
             self.timeline.draw_cairo(
                 context=context,
                 playhead_position=mlt_player.position(),
-                width=widget.get_allocated_width(),
-                height=widget.get_allocated_height(),
+                width=timeline.get_allocated_width(),
+                height=timeline.get_allocated_height(),
             )
         def timeline_motion(widget, event):
             self.timeline.mouse_move(*timeline.translate_coordinates(
@@ -111,8 +111,9 @@ class App:
                 self.timeline.scroll_up(event.x, event.y)
             elif event.direction == Gdk.ScrollDirection.DOWN:
                 self.timeline.scroll_down(event.x, event.y)
-        timeline = CustomDrawWidget()
-        timeline.connect("draw", timeline_draw)
+        timeline = CustomDrawWidget(
+            custom_draw_handler=timeline_draw,
+        )
         timeline.connect("button-press-event", timeline_button)
         timeline.connect("button-release-event", timeline_button_up)
         timeline.connect("motion-notify-event", timeline_motion)
@@ -208,7 +209,7 @@ class MltPlayer:
 
 class CustomDrawWidget(Gtk.DrawingArea):
 
-    def __init__(self):
+    def __init__(self, custom_draw_handler):
         Gtk.DrawingArea.__init__(self)
         self.add_events(
             self.get_events() |
@@ -217,4 +218,10 @@ class CustomDrawWidget(Gtk.DrawingArea):
             Gdk.EventMask.BUTTON_RELEASE_MASK |
             Gdk.EventMask.POINTER_MOTION_MASK
         )
+        self.connect("draw", self.on_draw)
         self.rectangle_map = RectangleMap()
+        self.custom_draw_handler = custom_draw_handler
+
+    def on_draw(self, widget, context):
+        self.rectangle_map.clear()
+        self.custom_draw_handler(context, self.rectangle_map)
