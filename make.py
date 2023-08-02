@@ -2,6 +2,7 @@
 
 import doctest
 import importlib
+import os
 import subprocess
 import sys
 import unittest
@@ -57,7 +58,8 @@ if __name__ == "__main__":
     elif command[0:1] == ["rundev"]:
         ensure([sys.executable, "rlvideo.py"]+command[1:])
     elif command[0:1] == ["gdb"]:
-        ensure(["gdb", sys.executable, "--ex", f"run rlvideo.py {' '.join(command[1:])}"])
+        path_to_main = os.path.join(os.path.dirname(__file__), "rlvideo.py")
+        ensure(["gdb", sys.executable, "--ex", f"run {path_to_main} {' '.join(command[1:])}"])
     elif command[0:1] == ["commit"]:
         ensure([sys.executable, "make.py", "build"])
         ensure(["bash", "-c", "if git status | grep -A 5 'Untracked files:'; then exit 1; fi"])
