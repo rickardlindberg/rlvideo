@@ -116,13 +116,6 @@ class App:
         timeline.connect("button-release-event", timeline_button_up)
         timeline.connect("motion-notify-event", timeline_motion)
         timeline.connect("scroll-event", timeline_scroll)
-        timeline.add_events(
-            timeline.get_events() |
-            Gdk.EventMask.SCROLL_MASK |
-            Gdk.EventMask.BUTTON_PRESS_MASK |
-            Gdk.EventMask.BUTTON_RELEASE_MASK |
-            Gdk.EventMask.POINTER_MOTION_MASK
-        )
         timeline.set_can_focus(True)
         timeline.grab_focus()
         def redraw():
@@ -213,4 +206,13 @@ class MltPlayer:
         self.consumer.connect(self.producer)
 
 class CustomDrawWidget(Gtk.DrawingArea):
-    pass
+
+    def __init__(self):
+        Gtk.DrawingArea.__init__(self)
+        self.add_events(
+            self.get_events() |
+            Gdk.EventMask.SCROLL_MASK |
+            Gdk.EventMask.BUTTON_PRESS_MASK |
+            Gdk.EventMask.BUTTON_RELEASE_MASK |
+            Gdk.EventMask.POINTER_MOTION_MASK
+        )
