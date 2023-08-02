@@ -151,11 +151,13 @@ class App:
 
         Gtk.main()
 
+        # If we don't stop the player here, we might get a segfault in a thread
+        # inside MLT.
+        mlt_player.stop()
+
 class MltPlayer:
 
     # TODO: extract parts that don't depend on GTK
-
-    # TODO: stop consumer when we close the application to get rid of segfault?
 
     def __init__(self, project, window_id):
         # TODO: player area outside video don't always refresh
@@ -204,6 +206,9 @@ class MltPlayer:
         self.consumer.disconnect_all_producers()
         self.producer = producer
         self.consumer.connect(self.producer)
+
+    def stop(self):
+        self.consumer.stop()
 
 class CustomDrawWidget(Gtk.DrawingArea):
 
