@@ -243,6 +243,8 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
         playlist.append(self.to_mlt_producer(profile, cache))
 
     def to_mlt_producer(self, profile, cache):
+        # TODO: is this `cut` really working? It seems not for cuts of cuts in
+        # mixed sections.
         return self.source.to_mlt_producer(profile, cache).cut(
             self.in_out.start,
             self.in_out.end-1
