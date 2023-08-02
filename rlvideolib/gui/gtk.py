@@ -110,7 +110,7 @@ class App:
                 self.timeline.scroll_up(event.x, event.y)
             elif event.direction == Gdk.ScrollDirection.DOWN:
                 self.timeline.scroll_down(event.x, event.y)
-        timeline = Gtk.DrawingArea()
+        timeline = CustomDrawWidget()
         timeline.connect("draw", timeline_draw)
         timeline.connect("button-press-event", timeline_button)
         timeline.connect("button-release-event", timeline_button_up)
@@ -211,3 +211,6 @@ class MltPlayer:
         self.consumer.disconnect_all_producers()
         self.producer = producer
         self.consumer.connect(self.producer)
+
+class CustomDrawWidget(Gtk.DrawingArea):
+    pass
