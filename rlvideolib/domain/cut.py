@@ -195,6 +195,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
                 return self._replace(
                     source=self,
                     in_out=Region(
+                        # TODO: is start/end properly calculated here?
                         start=overlap.start-self.start,
                         end=overlap.start-self.start+overlap.length
                     ),
