@@ -132,7 +132,7 @@ class MixSection:
 
         The only track left now is that with index 0.
         """
-        tractor = mlt.Tractor()
+        tractor = mlt.Tractor(profile)
         for playlist in self.playlists:
             tractor.insert_track(
                 playlist.to_mlt_producer(profile, cache),
