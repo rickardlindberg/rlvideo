@@ -66,7 +66,8 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
 
     def create_producer(self, profile, path):
         producer = mlt.Producer(profile, path)
-        if producer.get_playtime() != self.length:
+        # TODO: Why do proxies sometimes get a longer playtime?
+        if producer.get_playtime() < self.length:
             raise ValueError(f"Producer {path} (original {self.path}) has a playtime of {producer.get_playtime()}, but length is {self.length}")
         return producer
 
