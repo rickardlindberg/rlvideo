@@ -36,6 +36,7 @@ class Sections:
         playlist = mlt.Playlist()
         for section in self.sections:
             playlist.append(section.to_mlt_producer(profile, cache))
+        assert playlist.get_playtime() == self.length
         return playlist
 
     def to_cut_boxes(self, region, rectangle):
