@@ -270,6 +270,21 @@ class ExportSourceLoader:
     def get_source_mlt_producer(self, source_id):
         return self.project.get_source(source_id).load(self.profile)
 
+class LoadingProducer(mlt.Producer):
+
+    def __init__(self, profile):
+        mlt.Producer.__init__(self, profile, "pango")
+        self.set("text", "Loading...")
+        self.set("bgcolour", "red")
+
+    def cut(self, in_, out):
+        # An mlt.Producer has a default maximum length of 15000.
+        max_out = max(out, int(self.get("out")))
+        self.set("in", "0")
+        self.set("out", max_out)
+        self.set("length", max_out+1)
+        return mlt.Producer.cut(self, in_, out)
+
 class ProxySourceLoader:
 
     def __init__(self, project, profile, background_worker, proxy_spec):
@@ -277,9 +292,7 @@ class ProxySourceLoader:
         self.profile = profile
         self.background_worker = background_worker
         self.mlt_producers = {}
-        self.load_producer = mlt.Producer(self.profile, "pango")
-        self.load_producer.set("text", "Loading...")
-        self.load_producer.set("bgcolour", "red")
+        self.load_producer = LoadingProducer(self.profile)
         self.proxy_spec = proxy_spec
 
     def ensure_present(self, source_ids):
