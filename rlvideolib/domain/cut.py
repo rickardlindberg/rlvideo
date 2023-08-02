@@ -186,6 +186,19 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
 
         >>> cut.create_cut(Region(start=0, end=10)) is None
         True
+
+        Error case:
+
+        >>> cut = Cut.test_instance(name="A", start=10, end=20, position=5)
+        >>> cut.in_out
+        Region(start=10, end=20)
+        >>> cut.position
+        5
+        >>> subcut = cut.create_cut(Region(start=10, end=13))
+        >>> subcut.in_out
+        Region(start=15, end=18)
+        >>> subcut.position
+        10
         """
         overlap = self.region.get_overlap(region)
         if overlap:
@@ -195,9 +208,8 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
                 return self._replace(
                     source=self,
                     in_out=Region(
-                        # TODO: is start/end properly calculated here?
-                        start=overlap.start-self.start,
-                        end=overlap.start-self.start+overlap.length
+                        start=self.in_out.start+overlap.start-self.start,
+                        end=self.in_out.end-self.end+overlap.end
                     ),
                     position=overlap.start
                 )
