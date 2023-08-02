@@ -46,6 +46,19 @@ class App:
 
         mlt.Factory().init()
 
+        if sys.argv[1:2] == ["--export-melt"]:
+            path = sys.argv[2]
+            print(f"Exporting {path}")
+            project = Project.load(args=sys.argv[3:])
+            consumer = mlt.Consumer(project.get_preview_profile(), "xml")
+            consumer.set("resource", path)
+            consumer.connect(project.get_preview_mlt_producer())
+            consumer.start()
+            while consumer.is_stopped() == 0:
+                time.sleep(0.5)
+            print("Done")
+            return
+
         def key_press_handler(window, event):
             # TODO: return True to mark event as handled?
             if event.get_keyval().keyval == Gdk.keyval_from_name("0"):
