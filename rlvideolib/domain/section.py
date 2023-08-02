@@ -33,7 +33,7 @@ class Sections:
         return canvas
 
     def to_mlt_producer(self, profile, cache):
-        playlist = mlt.Playlist()
+        playlist = mlt.Playlist(profile)
         for section in self.sections:
             playlist.append(section.to_mlt_producer(profile, cache))
         assert playlist.get_playtime() == self.length
@@ -71,7 +71,7 @@ class PlaylistSection:
         return canvas
 
     def to_mlt_producer(self, profile, cache):
-        playlist = mlt.Playlist()
+        playlist = mlt.Playlist(profile)
         for part in self.parts:
             part.add_to_mlt_playlist(profile, cache, playlist)
         assert playlist.get_playtime() == self.length
