@@ -155,7 +155,7 @@ class Timeline:
             with clip_area.move(
                 dx=self.scrollbar.content_to_pixels(-self.scrollbar.content_start)
             ).resize(
-                width=self.scrollbar.content_to_pixels(sections.length)
+                width=self.scrollbar.content_to_pixels(max(1, sections.length))
             ).cairo_clip_translate(context) as sections_area:
                 for cut, boxes in sections.to_cut_boxes(self.scrollbar.region_shown, sections_area).items():
                     cut.draw_cairo(
