@@ -18,7 +18,7 @@ from rlvideolib.gui.framework import TestGui
 
 DEFAULT_REGION_GROUP_SIZE = 100
 
-class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
+class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
 
     @staticmethod
     def test_instance(name="A", start=0, end=5, position=0, id=None, mix_strategy="under"):
@@ -27,17 +27,19 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
             in_out=Region(start=start, end=end),
             position=position,
             id=id,
-            mix_strategy=mix_strategy
+            mix_strategy=mix_strategy,
+            volume=0
         )
 
     @staticmethod
-    def new(source, in_out, position=0, id=None, mix_strategy="under"):
+    def new(source, in_out, position=0, id=None, mix_strategy="under", volume=0):
         return Cut(
             source=source,
             in_out=in_out,
             position=position,
             id=id,
-            mix_strategy=mix_strategy
+            mix_strategy=mix_strategy,
+            volume=volume
         )
 
     @staticmethod
@@ -48,6 +50,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
             position=json["position"],
             id=id,
             mix_strategy=json["mix_strategy"],
+            volume=json.get("volume", 0),
         )
 
     def to_json(self):
@@ -57,6 +60,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
             "in_out": self.in_out.to_json(),
             "position": self.position,
             "mix_strategy": self.mix_strategy,
+            "volume": self.volume,
         }
 
     def with_mix_strategy(self, mix_strategy):
@@ -162,15 +166,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy")):
         """
         >>> cut = Cut.test_instance(name="A", start=0, end=20, position=10)
         >>> cut
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under')
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under', volume=0)
 
         Contains all:
 
         >>> cut.create_cut(Region(start=0, end=40))
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under')
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under', volume=0)
 
         >>> cut.create_cut(Region(start=10, end=30))
-        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under')
+        Cut(source=CutSource(source_id='A'), in_out=Region(start=0, end=20), position=10, id=None, mix_strategy='under', volume=0)
 
         Subcut left:
 
