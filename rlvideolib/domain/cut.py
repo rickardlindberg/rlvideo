@@ -265,10 +265,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
     def to_mlt_producer(self, profile, cache):
         # TODO: is this `cut` really working? It seems not for cuts of cuts in
         # mixed sections.
-        return self.source.to_mlt_producer(profile, cache).cut(
+        producer = self.source.to_mlt_producer(profile, cache).cut(
             self.in_out.start,
             self.in_out.end-1
         )
+        if self.volume != 0:
+            volume_filter = mlt.Filter(profile, "volume")
+            volume_filter.set("level", f"0={self.volume}")
+            producer.attach(volume_filter)
+        return producer
 
     def collect_cut_boxes(self, region, boxes, rectangle, pos):
         if self.get_source_cut() in boxes:
