@@ -340,6 +340,8 @@ class CutAction(Action):
         under
         ripple delete
         split at playhead
+        volume: -25
+        volume: -20
         volume: -15
         volume: -13
         volume: -10
@@ -352,7 +354,6 @@ class CutAction(Action):
         volume: 8
         volume: 10
         volume: 13
-        volume: 15
 
         I ripple delete:
 
@@ -417,9 +418,9 @@ class CutAction(Action):
             MenuItem(label=f"volume: {volume}", action=volume_updater(volume))
             for volume
             in [
-                -15, -13, -10, -8, -5, -3,
+                -25, -20, -15, -13, -10, -8, -5, -3,
                 0,
-                3, 5, 8, 10, 13, 15
+                3, 5, 8, 10, 13
             ]
         ])
 
