@@ -203,6 +203,17 @@ class MltPlayer:
         self.producer.seek(0)
 
     def update_producer(self):
+        # TODO: creating the producer here sometimes yield a segfault
+        #
+        #     0x00007fffe917b3c5 in mlt_multitrack_refresh () from /lib64/libmlt.so.6
+        #     (gdb) bt
+        #     #0  0x00007fffe917b3c5 in mlt_multitrack_refresh () at /lib64/libmlt.so.6
+        #     #1  0x00007fffe917bf99 in mlt_tractor_refresh () at /lib64/libmlt.so.6
+        #     #2  0x00007fffe916eacb in mlt_events_fire () at /lib64/libmlt.so.6
+        #     #3  0x00007fffe916ea91 in mlt_events_fire () at /lib64/libmlt.so.6
+        #
+        # My suspicion is that we try to set the position of a proxy producer
+        # and they interfere with each other.
         producer = self.project.get_preview_mlt_producer()
         if self.producer:
             producer.seek(self.position())
