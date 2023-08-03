@@ -214,16 +214,21 @@ class MltPlayer:
         #
         # My suspicion is that we try to set the position of a proxy producer
         # and they interfere with each other.
+        #
+        # Solution? Try disconnect and purge before moving on.
+        self.consumer.disconnect_all_producers()
+        self.consumer.purge()
         producer = self.project.get_preview_mlt_producer()
         if self.producer:
             producer.seek(self.position())
             producer.set_speed(self.producer.get_speed())
-        self.consumer.disconnect_all_producers()
         self.producer = producer
         self.consumer.connect(self.producer)
 
     def stop(self):
         self.consumer.stop()
+        while self.consumer.is_stopped() == 0:
+            time.sleep(0.1)
 
 class CustomDrawWidget(Gtk.DrawingArea):
 
