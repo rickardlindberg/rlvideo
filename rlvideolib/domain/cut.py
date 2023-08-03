@@ -66,6 +66,9 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
     def with_mix_strategy(self, mix_strategy):
         return self._replace(mix_strategy=mix_strategy)
 
+    def with_volume(self, volume):
+        return self._replace(volume=volume)
+
     def split(self, position):
         delta = position - self.start
         return [
@@ -332,6 +335,19 @@ class CutAction(Action):
         under
         ripple delete
         split at playhead
+        volume: -15
+        volume: -13
+        volume: -10
+        volume: -8
+        volume: -5
+        volume: -3
+        volume: 0
+        volume: 3
+        volume: 5
+        volume: 8
+        volume: 10
+        volume: 13
+        volume: 15
 
         I ripple delete:
 
@@ -377,6 +393,12 @@ class CutAction(Action):
                     transaction.modify(self.cut.id, lambda cut:
                         cut.with_mix_strategy(value))
             return update
+        def volume_updater(volume):
+            def update():
+                with self.project.new_transaction() as transaction:
+                    transaction.modify(self.cut.id, lambda cut:
+                        cut.with_volume(volume))
+            return update
         def ripple_delete():
             self.project.ripple_delete(self.cut.id)
         def split_at_playhead():
@@ -386,6 +408,14 @@ class CutAction(Action):
             MenuItem(label="under", action=mix_strategy_updater("under")),
             MenuItem(label="ripple delete", action=ripple_delete),
             MenuItem(label="split at playhead", action=split_at_playhead),
+        ]+[
+            MenuItem(label=f"volume: {volume}", action=volume_updater(volume))
+            for volume
+            in [
+                -15, -13, -10, -8, -5, -3,
+                0,
+                3, 5, 8, 10, 13, 15
+            ]
         ])
 
     def mouse_up(self):
