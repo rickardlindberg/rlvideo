@@ -51,6 +51,7 @@ class GtkGui:
 
     def set_cursor(self, cursor=None):
         self.widget.get_window().set_cursor(cursor)
+        # TODO: apply cursor only once so that we don't get flicker?
 
 class App:
 
