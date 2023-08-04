@@ -279,6 +279,15 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
     0
     """
 
+    @staticmethod
+    def test_instance(content_length=0, one_length_in_pixels=1, ui_size=100, content_desired_start=0):
+        return Scrollbar(
+            content_length=content_length,
+            one_length_in_pixels=one_length_in_pixels,
+            ui_size=ui_size,
+            content_desired_start=content_desired_start
+        )
+
     @property
     def content_start(self):
         """
@@ -400,10 +409,7 @@ class ScrubAction(Action):
     """
     I scrub the player when clicked:
 
-    >>> class MockScrollbar:
-    ...     content_start = 0
-    ...     one_length_in_pixels = 1
-    >>> action = ScrubAction(player=MockPlayer(), scrollbar=MockScrollbar())
+    >>> action = ScrubAction(player=MockPlayer(), scrollbar=Scrollbar.test_instance())
     >>> action.simulate_click(x=10)
     scrub 10
     """
