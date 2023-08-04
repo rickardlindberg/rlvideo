@@ -313,6 +313,12 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
         else:
             return self.content_desired_start
 
+    def zoom_in(self, x):
+        return self._replace(one_length_in_pixels=self.one_length_in_pixels*1.5)
+
+    def zoom_out(self, x):
+        return self._replace(one_length_in_pixels=self.one_length_in_pixels/1.5)
+
     def move_scrollbar(self, pixels):
         """
         >>> Scrollbar(
@@ -416,12 +422,10 @@ class ScrollAction(Action):
         self.scrollbar = scrollbar
 
     def scroll_up(self, x, y):
-        self.timeline.set_scrollbar(self.scrollbar._replace(one_length_in_pixels=
-            self.scrollbar.one_length_in_pixels*1.5))
+        self.timeline.set_scrollbar(self.scrollbar.zoom_in(x))
 
     def scroll_down(self, x, y):
-        self.timeline.set_scrollbar(self.scrollbar._replace(one_length_in_pixels=
-            self.scrollbar.one_length_in_pixels/1.5))
+        self.timeline.set_scrollbar(self.scrollbar.zoom_out(x))
 
 class MockPlayer:
 
