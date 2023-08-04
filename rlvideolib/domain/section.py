@@ -74,7 +74,13 @@ class PlaylistSection:
         playlist = mlt.Playlist(profile)
         for part in self.parts:
             part.add_to_mlt_playlist(profile, cache, playlist)
-        assert playlist.get_playtime() == self.length
+        if playlist.get_playtime() != self.length:
+            parts_string = "- "+"\n- ".join(str(x) for x in self.parts)
+            raise MltInconsistencyError(
+                f"The playlist length={playlist.get_playtime()} "
+                f"does not match the PlaylistSection length={self.length}."
+                f"\n\n{parts_string}"
+            )
         return playlist
 
     def collect_cut_boxes(self, region, boxes, rectangle, pos):
@@ -87,6 +93,9 @@ class PlaylistSection:
             elif pos + part.length > region.start:
                 part.collect_cut_boxes(region, boxes, part_rectangle, pos)
             pos += part.length
+
+class MltInconsistencyError(Exception):
+    pass
 
 class MixSection:
 
