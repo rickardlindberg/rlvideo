@@ -26,15 +26,6 @@ class Action:
 
 class RectangleMap:
 
-    """
-    >>> r = RectangleMap()
-    >>> r.add(Rectangle(x=0, y=0, width=10, height=10), "item")
-    >>> r.get(5, 5)
-    'item'
-    >>> r.get(100, 100) is None
-    True
-    """
-
     def __init__(self):
         self.map = []
 
@@ -57,12 +48,6 @@ class RectangleMap:
 
     def add(self, rectangle, item):
         self.map.append((rectangle, item))
-
-    def get(self, x, y, default=None):
-        for rectangle, item in self.map:
-            if rectangle.contains(x, y):
-                return item
-        return default
 
     def perform(self, x, y, fn):
         """
