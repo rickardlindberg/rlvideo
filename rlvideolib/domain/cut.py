@@ -377,7 +377,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
                 player=player
             )
         )
-        right = rectangles[0].right_side(HANDLE_WIDTH_IN_PX)
+        right = rectangles[-1].right_side(HANDLE_WIDTH_IN_PX)
         rectangle_map.add_from_context(
             right.x,
             right.y,
