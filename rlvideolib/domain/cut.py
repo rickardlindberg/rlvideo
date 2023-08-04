@@ -350,7 +350,7 @@ class ResizeLeftAction(Action):
         self.player = player
 
     def mouse_move(self, x, y, gui):
-        print("left")
+        gui.set_cursor_resize()
 
 class ResizeRightAction(Action):
 
@@ -361,7 +361,7 @@ class ResizeRightAction(Action):
         self.player = player
 
     def mouse_move(self, x, y, gui):
-        print("right")
+        gui.set_cursor_resize()
 
 class CutAction(Action):
 

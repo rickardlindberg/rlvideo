@@ -16,13 +16,14 @@ from rlvideolib.jobs import BackgroundWorker
 
 class GtkGui:
 
-    def __init__(self, event):
+    def __init__(self, event, widget):
         self.event = event
+        self.widget = widget
 
     def show_context_menu(self, menu):
         """
         >>> event = namedtuple("FakeEvent", "button,time")(3, 0)
-        >>> GtkGui(event).show_context_menu([
+        >>> GtkGui(event, None).show_context_menu([
         ...     MenuItem(label="over", action=lambda: print("over")),
         ...     MenuItem(label="under", action=lambda: print("under")),
         ... ])
@@ -38,6 +39,12 @@ class GtkGui:
             gtk_menu_item.show()
             gtk_menu.append(gtk_menu_item)
         gtk_menu.popup(None, None, None, None, self.event.button, self.event.time)
+
+    def set_cursor_normal(self):
+        self.widget.get_window().set_cursor(None)
+
+    def set_cursor_resize(self):
+        self.widget.get_window().set_cursor(Gdk.Cursor(Gdk.CursorType.SB_H_DOUBLE_ARROW))
 
 class App:
 
@@ -254,15 +261,17 @@ class CustomDrawWidget(Gtk.DrawingArea):
                 action.left_mouse_down(x, y))
         elif event.button == 3:
             self.down_action = self.perform_action(event, lambda x, y, action:
-                action.right_mouse_down(GtkGui(event)))
+                action.right_mouse_down(GtkGui(event, widget)))
 
     def on_motion_notify_event(self, widget, event):
+        gui = GtkGui(event, widget)
         if self.down_action:
             x, y = self.get_coordinates_relative_self(event)
-            self.down_action.mouse_move(x, y, GtkGui(event))
+            self.down_action.mouse_move(x, y, gui)
         else:
+            gui.set_cursor_normal()
             self.perform_action(event, lambda x, y, action:
-                action.mouse_move(x, y, GtkGui(event)))
+                action.mouse_move(x, y, gui))
 
     def on_button_release_event(self, widget, event):
         if self.down_action:
