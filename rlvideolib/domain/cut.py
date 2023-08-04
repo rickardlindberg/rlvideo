@@ -393,7 +393,11 @@ class CutDragActionBase(Action):
         if self.transaction:
             self.transaction.reset()
             self.transaction.modify(self.cut.id, lambda cut:
-                self.modify_cut_on_drag(x-self.x, cut))
+                self.modify_cut_on_drag(
+                    int(round((x-self.x)/self.scrollbar.one_length_in_pixels)),
+                    cut
+                )
+            )
 
     def mouse_up(self):
         if self.transaction:
@@ -422,16 +426,16 @@ class ResizeLeftAction(CutDragActionBase):
     def cursor(self, gui):
         gui.set_cursor_resize_left()
 
-    def modify_cut_on_drag(self, dx, cut):
-        return cut.move_left(int(dx/self.scrollbar.one_length_in_pixels))
+    def modify_cut_on_drag(self, delta, cut):
+        return cut.move_left(delta)
 
 class ResizeRightAction(CutDragActionBase):
 
     def cursor(self, gui):
         gui.set_cursor_resize_right()
 
-    def modify_cut_on_drag(self, dx, cut):
-        return cut.move_right(int(dx/self.scrollbar.one_length_in_pixels))
+    def modify_cut_on_drag(self, delta, cut):
+        return cut.move_right(delta)
 
 class CutAction(Action):
 
