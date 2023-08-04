@@ -371,7 +371,32 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
             )
         )
 
-class ResizeLeftAction(Action):
+class CutDragActionBase(Action):
+
+    def __init__(self, project, cut, scrollbar, player):
+        self.project = project
+        self.cut = cut
+        self.scrollbar = scrollbar
+        self.player = player
+        self.transaction = None
+
+    def left_mouse_down(self, x, y):
+        self.transaction = self.project.new_transaction()
+        self.x = x
+
+    def mouse_move(self, x, y, gui):
+        self.cursor(gui)
+        if self.transaction:
+            self.transaction.reset()
+            self.transaction.modify(self.cut.id, lambda cut:
+                self.modify_cut_on_drag(x-self.x, cut))
+
+    def mouse_up(self):
+        if self.transaction:
+            self.transaction.commit()
+            self.transaction = None
+
+class ResizeLeftAction(CutDragActionBase):
 
     """
     >>> from rlvideolib.domain.project import Project
@@ -390,28 +415,11 @@ class ResizeLeftAction(Action):
     True
     """
 
-    def __init__(self, project, cut, scrollbar, player):
-        self.project = project
-        self.cut = cut
-        self.scrollbar = scrollbar
-        self.player = player
-        self.transaction = None
-
-    def left_mouse_down(self, x, y):
-        self.transaction = self.project.new_transaction()
-        self.x = x
-
-    def mouse_move(self, x, y, gui):
+    def cursor(self, gui):
         gui.set_cursor_resize_left()
-        if self.transaction:
-            self.transaction.reset()
-            self.transaction.modify(self.cut.id, lambda cut:
-                cut.move_left(int((x-self.x)/self.scrollbar.one_length_in_pixels)))
 
-    def mouse_up(self):
-        if self.transaction:
-            self.transaction.commit()
-            self.transaction = None
+    def modify_cut_on_drag(self, dx, cut):
+        return cut.move_left(int(dx/self.scrollbar.one_length_in_pixels))
 
 class ResizeRightAction(Action):
 
