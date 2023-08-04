@@ -45,10 +45,10 @@ class Timeline:
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
     Rectangle(x=0, y=0, width=300, height=70):
       <rlvideolib.gui.generic.ScrollAction object at ...>
+    Rectangle(x=0, y=0, width=300, height=70):
+      <rlvideolib.gui.generic.ScrubAction object at ...>
     Rectangle(x=0, y=20, width=10, height=50):
       <rlvideolib.domain.cut.CutAction object at ...>
-    Rectangle(x=0, y=0, width=300, height=20):
-      <rlvideolib.gui.generic.ScrubAction object at ...>
     Rectangle(x=0, y=77, width=300, height=23):
       <rlvideolib.gui.generic.ScrollbarDragAction object at ...>
     """
@@ -159,6 +159,14 @@ class Timeline:
             context,
             ScrollAction(self)
         )
+        self.rectangle_map.add_from_context(
+            x,
+            y,
+            w,
+            h,
+            context,
+            ScrubAction(self.player, self.scrollbar)
+        )
 
         ruler_area, clip_area = area.split_height_from_top(top_height=20)
 
@@ -188,20 +196,6 @@ class Timeline:
         context.line_to(self.scrollbar.content_to_pixels(player.position()-self.scrollbar.content_start), area.height)
         context.stroke()
 
-        x, y, w, h = (
-            ruler_area.x,
-            ruler_area.y,
-            ruler_area.width,
-            ruler_area.height,
-        )
-        self.rectangle_map.add_from_context(
-            x,
-            y,
-            w,
-            h,
-            context,
-            ScrubAction(self.player, self.scrollbar)
-        )
 
     def draw_ruler(self, context, area):
         context.set_source_rgba(0.4, 0.9, 0.9)
