@@ -28,7 +28,7 @@ NO_ACTION = object()
 
 class Action:
 
-    def left_mouse_down(self, x, y):
+    def left_mouse_down(self, x, y, ctrl):
         return NO_ACTION
 
     def right_mouse_down(self, gui):
@@ -47,10 +47,10 @@ class Action:
         return NO_ACTION
 
     def simulate_click(self, x=0, y=0):
-        self.left_mouse_down(x=x, y=y)
+        self.left_mouse_down(x=x, y=y, ctrl=False)
 
     def simulate_drag(self, x_start=0, x_end=10, y_start=0, y_end=10, gui=TestGui()):
-        self.left_mouse_down(x=x_start, y=y_start)
+        self.left_mouse_down(x=x_start, y=y_start, ctrl=False)
         self.mouse_move(x=x_start+(x_end-x_start)/2, y=y_start+(y_end-y_start)/2, gui=gui)
         self.mouse_move(x=x_end, y=y_end, gui=gui)
         self.mouse_up()
@@ -83,14 +83,14 @@ class RectangleMap:
     def perform(self, x, y, fn):
         """
         >>> class TestAction(Action):
-        ...     def left_mouse_down(self, x, y):
+        ...     def left_mouse_down(self, x, y, ctrl):
         ...         pass
         >>> no_action = Action()
         >>> some_action = TestAction()
         >>> r = RectangleMap()
         >>> r.add(Rectangle(x=0, y=0, width=10, height=10), some_action)
         >>> r.add(Rectangle(x=0, y=0, width=10, height=10), no_action)
-        >>> action = r.perform(10, 10, lambda action: action.left_mouse_down(10, 10))
+        >>> action = r.perform(10, 10, lambda action: action.left_mouse_down(10, 10, False))
         >>> action is some_action
         True
         """

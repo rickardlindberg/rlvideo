@@ -401,7 +401,7 @@ class CutDragActionBase(Action):
         self.player = player
         self.transaction = None
 
-    def left_mouse_down(self, x, y):
+    def left_mouse_down(self, x, y, ctrl):
         self.transaction = self.project.new_transaction()
         self.x = x
 
@@ -464,7 +464,7 @@ class CutAction(Action):
         self.transaction = None
         self.x = None
 
-    def left_mouse_down(self, x, y):
+    def left_mouse_down(self, x, y, ctrl):
         self.transaction = self.project.new_transaction()
         self.x = x
 
@@ -592,7 +592,7 @@ class CutAction(Action):
         ...     scrollbar=MockScrollbar(),
         ...     player=None,
         ... )
-        >>> action.left_mouse_down(0, 0)
+        >>> action.left_mouse_down(0, 0, False)
         >>> action.mouse_move(5, 0, None)
         >>> action.mouse_up()
         >>> project.split_into_sections().to_ascii_canvas()

@@ -265,7 +265,12 @@ class CustomDrawWidget(Gtk.DrawingArea):
     def on_button_press_event(self, widget, event):
         if event.button == 1:
             self.down_action = self.perform_action(event, lambda x, y, action:
-                action.left_mouse_down(x, y))
+                action.left_mouse_down(
+                    x,
+                    y,
+                    ctrl=(event.state & Gdk.ModifierType.CONTROL_MASK) == Gdk.ModifierType.CONTROL_MASK
+                )
+            )
         elif event.button == 3:
             self.down_action = self.perform_action(event, lambda x, y, action:
                 action.right_mouse_down(GtkGui(event, widget)))

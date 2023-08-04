@@ -390,7 +390,7 @@ class ScrollbarDragAction(Action):
         self.scrollbar = scrollbar
         self.mouse_up()
 
-    def left_mouse_down(self, x, y):
+    def left_mouse_down(self, x, y, ctrl):
         self.x = x
 
     def mouse_up(self):
@@ -419,7 +419,7 @@ class ScrubAction(Action):
         self.scrollbar = scrollbar
         self.mouse_up()
 
-    def left_mouse_down(self, x, y):
+    def left_mouse_down(self, x, y, ctrl):
         self.x = x
         self.scrub(x)
 
