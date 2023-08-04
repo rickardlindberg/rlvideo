@@ -21,7 +21,7 @@ DEFAULT_REGION_GROUP_SIZE = 100
 class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed")):
 
     @staticmethod
-    def test_instance(name="A", start=0, end=5, position=0, id=None, mix_strategy="under"):
+    def test_instance(name="A", start=0, end=5, position=0, id=None, mix_strategy="under", speed=1):
         return Cut(
             source=CutSource(source_id=name),
             in_out=Region(start=start, end=end),
@@ -29,7 +29,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
             id=id,
             mix_strategy=mix_strategy,
             volume=0,
-            speed=1
+            speed=speed
         )
 
     @staticmethod
@@ -134,7 +134,17 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
 
     @property
     def length(self):
-        return self.in_out.length
+        """
+        >>> Cut.test_instance(start=0, end=5).length
+        5
+
+        >>> Cut.test_instance(start=0, end=5, speed=0.5).length
+        10
+
+        >>> Cut.test_instance(start=0, end=5, speed=2).length
+        2
+        """
+        return int(self.in_out.length/abs(self.speed))
 
     @property
     def start(self):
