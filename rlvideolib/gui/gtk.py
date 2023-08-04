@@ -41,10 +41,16 @@ class GtkGui:
         gtk_menu.popup(None, None, None, None, self.event.button, self.event.time)
 
     def set_cursor_normal(self):
-        self.widget.get_window().set_cursor(None)
+        self.set_cursor(None)
 
-    def set_cursor_resize(self):
-        self.widget.get_window().set_cursor(Gdk.Cursor(Gdk.CursorType.SB_H_DOUBLE_ARROW))
+    def set_cursor_resize_left(self):
+        self.set_cursor(Gdk.Cursor(Gdk.CursorType.LEFT_SIDE))
+
+    def set_cursor_resize_right(self):
+        self.set_cursor(Gdk.Cursor(Gdk.CursorType.RIGHT_SIDE))
+
+    def set_cursor(self, cursor=None):
+        self.widget.get_window().set_cursor(cursor)
 
 class App:
 
