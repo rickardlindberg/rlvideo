@@ -66,6 +66,36 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
     def with_mix_strategy(self, mix_strategy):
         return self._replace(mix_strategy=mix_strategy)
 
+    def move_left(self, amount):
+        """
+        >>> cut = Cut.test_instance(start=5, end=10, position=5).move_left(-5)
+        >>> cut.in_out, cut.position
+        (Region(start=0, end=10), 0)
+
+        >>> cut = Cut.test_instance(start=5, end=10, position=5).move_left(-6)
+        >>> cut.in_out, cut.position
+        (Region(start=0, end=10), 0)
+
+        >>> cut = Cut.test_instance(start=9, end=10, position=1).move_left(-6)
+        >>> cut.in_out, cut.position
+        (Region(start=8, end=10), 0)
+
+        >>> cut = Cut.test_instance(start=8, end=10, position=1).move_left(1)
+        >>> cut.in_out, cut.position
+        (Region(start=9, end=10), 2)
+
+        >>> cut = Cut.test_instance(start=8, end=10, position=1).move_left(2)
+        >>> cut.in_out, cut.position
+        (Region(start=9, end=10), 2)
+        """
+        amount = max(amount, -self.in_out.start)
+        amount = max(amount, -self.position)
+        amount = min(amount, self.length-1)
+        return self._replace(
+            in_out=self.in_out._replace(start=self.in_out.start+amount),
+            position=self.position+amount
+        )
+
     def with_volume(self, volume):
         return self._replace(volume=volume)
 
@@ -343,14 +373,45 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
 
 class ResizeLeftAction(Action):
 
+    """
+    >>> from rlvideolib.domain.project import Project
+    >>> from rlvideolib.gui.generic import Scrollbar
+    >>> project = Project.new()
+    >>> with project.new_transaction() as transaction:
+    ...     hello_id = transaction.add_text_clip("hello", length=10, id="A")
+    >>> cut = project.project_data.get_cut(hello_id)
+    >>> cut.in_out
+    Region(start=0, end=10)
+    >>> action = ResizeLeftAction(project=project, cut=cut, scrollbar=Scrollbar.test_instance(), player=None)
+    >>> action.simulate_drag(x_start=0, x_end=5)
+    >>> project.project_data.get_cut(hello_id).in_out
+    Region(start=5, end=10)
+    >>> project.current_transaction is None
+    True
+    """
+
     def __init__(self, project, cut, scrollbar, player):
         self.project = project
         self.cut = cut
         self.scrollbar = scrollbar
         self.player = player
+        self.transaction = None
+
+    def left_mouse_down(self, x, y):
+        self.transaction = self.project.new_transaction()
+        self.x = x
 
     def mouse_move(self, x, y, gui):
         gui.set_cursor_resize_left()
+        if self.transaction:
+            self.transaction.reset()
+            self.transaction.modify(self.cut.id, lambda cut:
+                cut.move_left(int((x-self.x)/self.scrollbar.one_length_in_pixels)))
+
+    def mouse_up(self):
+        if self.transaction:
+            self.transaction.commit()
+            self.transaction = None
 
 class ResizeRightAction(Action):
 

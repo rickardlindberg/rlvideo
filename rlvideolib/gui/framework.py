@@ -2,6 +2,25 @@ from collections import namedtuple
 
 from rlvideolib.graphics.rectangle import Rectangle
 
+class TestGui:
+
+    def __init__(self, click_context_menu=None):
+        self.click_context_menu = click_context_menu
+
+    def show_context_menu(self, menu):
+        self.last_context_menu = menu
+        for item in menu:
+            if item.label == self.click_context_menu:
+                item.action()
+                return
+
+    def set_cursor_resize_left(self):
+        pass
+
+    def print_context_menu_items(self):
+        for item in self.last_context_menu:
+            print(item.label)
+
 class MenuItem(namedtuple("MenuItem", "label,action")):
     pass
 
@@ -29,6 +48,12 @@ class Action:
 
     def simulate_click(self, x=0, y=0):
         self.left_mouse_down(x=x, y=y)
+
+    def simulate_drag(self, x_start=0, x_end=10, y_start=0, y_end=10, gui=TestGui()):
+        self.left_mouse_down(x=x_start, y=y_start)
+        self.mouse_move(x=x_start+(x_end-x_start)/2, y=y_start+(y_end-y_start)/2, gui=gui)
+        self.mouse_move(x=x_end, y=y_end, gui=gui)
+        self.mouse_up()
 
 class RectangleMap:
 
@@ -77,19 +102,3 @@ class RectangleMap:
 
     def __repr__(self):
         return "\n".join(f"{rectangle}:\n  {item}" for rectangle, item in self.map)
-
-class TestGui:
-
-    def __init__(self, click_context_menu=None):
-        self.click_context_menu = click_context_menu
-
-    def show_context_menu(self, menu):
-        self.last_context_menu = menu
-        for item in menu:
-            if item.label == self.click_context_menu:
-                item.action()
-                return
-
-    def print_context_menu_items(self):
-        for item in self.last_context_menu:
-            print(item.label)
