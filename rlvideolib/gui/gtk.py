@@ -249,21 +249,19 @@ class CustomDrawWidget(Gtk.DrawingArea):
         self.custom_draw_handler(context, self.rectangle_map)
 
     def on_button_press_event(self, widget, event):
-        x, y = self.get_coordinates_relative_self(event)
         if event.button == 1:
-            self.down_action = self.rectangle_map.perform(x, y, lambda action:
+            self.down_action = self.perform_action(event, lambda x, y, action:
                 action.left_mouse_down(x, y))
         elif event.button == 3:
-            self.down_action = self.rectangle_map.perform(x, y, lambda action:
+            self.down_action = self.perform_action(event, lambda x, y, action:
                 action.right_mouse_down(GtkGui(event)))
 
     def on_motion_notify_event(self, widget, event):
-        x, y = self.get_coordinates_relative_self(event)
         if self.down_action:
+            x, y = self.get_coordinates_relative_self(event)
             self.down_action.mouse_move(x, y)
         else:
-            self.rectangle_map.perform(x, y, lambda action:
-                action.mouse_move(x, y))
+            self.perform_action(event, lambda x, y, action: action.mouse_move(x, y))
 
     def on_button_release_event(self, widget, event):
         if self.down_action:
@@ -271,13 +269,16 @@ class CustomDrawWidget(Gtk.DrawingArea):
             self.down_action = None
 
     def on_scroll_event(self, widget, event):
-        x, y = self.get_coordinates_relative_self(event)
         if event.direction == Gdk.ScrollDirection.UP:
-            self.rectangle_map.perform(x, y, lambda action:
-                action.scroll_up(x, y))
+            self.perform_action(event, lambda x, y, action: action.scroll_up(x, y))
         elif event.direction == Gdk.ScrollDirection.DOWN:
-            self.rectangle_map.perform(x, y, lambda action:
-                action.scroll_down(x, y))
+            self.perform_action(event, lambda x, y, action: action.scroll_down(x, y))
+
+    def perform_action(self, event, fn):
+        x, y = self.get_coordinates_relative_self(event)
+        def wrap(action):
+            return fn(x, y, action)
+        return self.rectangle_map.perform(x, y, wrap)
 
     def get_coordinates_relative_self(self, event):
         return self.translate_coordinates(
