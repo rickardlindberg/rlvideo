@@ -96,6 +96,10 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
             position=self.position+amount
         )
 
+    def move_right(self, amount):
+        print("TODO: implement me!")
+        return self
+
     def with_volume(self, volume):
         return self._replace(volume=volume)
 
@@ -421,16 +425,13 @@ class ResizeLeftAction(CutDragActionBase):
     def modify_cut_on_drag(self, dx, cut):
         return cut.move_left(int(dx/self.scrollbar.one_length_in_pixels))
 
-class ResizeRightAction(Action):
+class ResizeRightAction(CutDragActionBase):
 
-    def __init__(self, project, cut, scrollbar, player):
-        self.project = project
-        self.cut = cut
-        self.scrollbar = scrollbar
-        self.player = player
-
-    def mouse_move(self, x, y, gui):
+    def cursor(self, gui):
         gui.set_cursor_resize_right()
+
+    def modify_cut_on_drag(self, dx, cut):
+        return cut.move_right(int(dx/self.scrollbar.one_length_in_pixels))
 
 class CutAction(Action):
 
