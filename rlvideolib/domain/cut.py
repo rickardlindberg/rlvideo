@@ -101,7 +101,15 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
         )
 
     def move_right(self, amount):
-        print("TODO: implement me!")
+        print("TODO: implement move_right!")
+        return self
+
+    def resize_left(self, amount):
+        print("TODO: implement resize_left!")
+        return self
+
+    def resize_right(self, amount):
+        print("TODO: implement resize_right!")
         return self
 
     def with_volume(self, volume):
@@ -404,6 +412,7 @@ class CutDragActionBase(Action):
     def left_mouse_down(self, x, y, ctrl):
         self.transaction = self.project.new_transaction()
         self.x = x
+        self.ctrl = ctrl
 
     def mouse_move(self, x, y, gui):
         self.cursor(gui)
@@ -444,7 +453,10 @@ class ResizeLeftAction(CutDragActionBase):
         gui.set_cursor_resize_left()
 
     def modify_cut_on_drag(self, delta, cut):
-        return cut.move_left(delta)
+        if self.ctrl:
+            return cut.resize_left(delta)
+        else:
+            return cut.move_left(delta)
 
 class ResizeRightAction(CutDragActionBase):
 
@@ -452,7 +464,10 @@ class ResizeRightAction(CutDragActionBase):
         gui.set_cursor_resize_right()
 
     def modify_cut_on_drag(self, delta, cut):
-        return cut.move_right(delta)
+        if self.ctrl:
+            return cut.resize_right(delta)
+        else:
+            return cut.move_right(delta)
 
 class CutAction(Action):
 
