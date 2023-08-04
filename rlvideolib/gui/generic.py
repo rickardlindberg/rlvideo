@@ -416,10 +416,12 @@ class ScrollAction(Action):
         self.scrollbar = scrollbar
 
     def scroll_up(self, x, y):
-        self.timeline.set_zoom_factor(self.scrollbar.one_length_in_pixels*1.5)
+        self.timeline.set_scrollbar(self.scrollbar._replace(one_length_in_pixels=
+            self.scrollbar.one_length_in_pixels*1.5))
 
     def scroll_down(self, x, y):
-        self.timeline.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
+        self.timeline.set_scrollbar(self.scrollbar._replace(one_length_in_pixels=
+            self.scrollbar.one_length_in_pixels/1.5))
 
 class MockPlayer:
 
