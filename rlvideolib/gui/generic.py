@@ -262,6 +262,8 @@ class Timeline:
         context.set_source_rgb(0.1, 0.1, 0.1)
         scroll_box.draw_pixel_perfect_border(context, 2)
 
+ZOOM_STEP = 1.5
+
 class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_size,content_desired_start")):
 
     # TODO: clean up Scrollbar interface
@@ -314,12 +316,19 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
             return self.content_desired_start
 
     def zoom_in(self, x):
-        return self.zoom(1.5)
+        return self.zoom(ZOOM_STEP)
 
     def zoom_out(self, x):
-        return self.zoom(0.5)
+        return self.zoom(1/ZOOM_STEP)
 
     def zoom(self, factor):
+        """
+        >>> s = Scrollbar(10, 1, 100, 0)
+        >>> s
+        Scrollbar(content_length=10, one_length_in_pixels=1, ui_size=100, content_desired_start=0)
+        >>> s.zoom_in(0).zoom_out(0)
+        Scrollbar(content_length=10, one_length_in_pixels=1.0, ui_size=100, content_desired_start=0)
+        """
         return self._replace(
             one_length_in_pixels=self.one_length_in_pixels*factor,
             content_desired_start=self.content_desired_start
