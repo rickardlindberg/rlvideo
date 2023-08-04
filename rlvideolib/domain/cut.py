@@ -464,6 +464,7 @@ class ResizeRightAction(CutDragActionBase):
         gui.set_cursor_resize_right()
 
     def modify_cut_on_drag(self, delta, cut):
+        # TODO: different cursors/tooltips for move/resize. Return different classes from left_mouse_down?
         if self.ctrl:
             return cut.resize_right(delta)
         else:
