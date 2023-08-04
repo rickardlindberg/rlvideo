@@ -8,7 +8,6 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
 from rlvideolib.domain.project import Project
-from rlvideolib.gui.framework import Action
 from rlvideolib.gui.framework import MenuItem
 from rlvideolib.gui.framework import RectangleMap
 from rlvideolib.gui.generic import GUI_SPACING
@@ -257,18 +256,19 @@ class CustomDrawWidget(Gtk.DrawingArea):
     def on_button_press_event(self, widget, event):
         x, y = self.get_coordinates_relative_self(event)
         if event.button == 1:
-            self.down_action = self.rectangle_map.get(x, y, Action())
-            self.down_action.left_mouse_down(x, y)
+            self.down_action = self.rectangle_map.perform(x, y, lambda action:
+                action.left_mouse_down(x, y))
         elif event.button == 3:
-            self.down_action = self.rectangle_map.get(x, y, Action())
-            self.down_action.right_mouse_down(GtkGui(event))
+            self.down_action = self.rectangle_map.perform(x, y, lambda action:
+                action.right_mouse_down(GtkGui(event)))
 
     def on_motion_notify_event(self, widget, event):
         x, y = self.get_coordinates_relative_self(event)
         if self.down_action:
             self.down_action.mouse_move(x, y)
         else:
-            self.rectangle_map.get(x, y, Action()).mouse_move(x, y)
+            self.rectangle_map.perform(x, y, lambda action:
+                action.mouse_move(x, y))
 
     def on_button_release_event(self, widget, event):
         if self.down_action:

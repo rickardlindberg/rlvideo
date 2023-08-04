@@ -82,6 +82,7 @@ class RectangleMap:
             if rectangle.contains(x, y):
                 if fn(item) is not NO_ACTION:
                     return item
+        return Action()
 
     def __repr__(self):
         return "\n".join(f"{rectangle}:\n  {item}" for rectangle, item in self.map)
