@@ -8,9 +8,9 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
 from rlvideolib.domain.project import Project
-from rlvideolib.graphics.rectangle import RectangleMap
 from rlvideolib.gui.framework import Action
 from rlvideolib.gui.framework import MenuItem
+from rlvideolib.gui.framework import RectangleMap
 from rlvideolib.gui.generic import GUI_SPACING
 from rlvideolib.gui.generic import Timeline
 from rlvideolib.jobs import BackgroundWorker
