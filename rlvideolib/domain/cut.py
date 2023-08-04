@@ -499,6 +499,7 @@ class CutAction(Action):
         volume: 8
         volume: 10
         volume: 13
+        debug
 
         I ripple delete:
 
@@ -567,6 +568,8 @@ class CutAction(Action):
                 0,
                 3, 5, 8, 10, 13
             ]
+        ]+[
+            MenuItem(label="debug", action=lambda: print(self.cut)),
         ])
 
     def mouse_up(self):
