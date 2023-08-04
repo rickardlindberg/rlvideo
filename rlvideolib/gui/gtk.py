@@ -99,16 +99,10 @@ class App:
                 width=timeline.get_allocated_width(),
                 height=timeline.get_allocated_height(),
             )
-        def timeline_scroll(widget, event):
-            if event.direction == Gdk.ScrollDirection.UP:
-                self.timeline.scroll_up(event.x, event.y)
-            elif event.direction == Gdk.ScrollDirection.DOWN:
-                self.timeline.scroll_down(event.x, event.y)
         timeline = CustomDrawWidget(
             main_window=main_window,
             custom_draw_handler=timeline_draw,
         )
-        timeline.connect("scroll-event", timeline_scroll)
         timeline.set_can_focus(True)
         timeline.grab_focus()
         def redraw():
@@ -244,6 +238,7 @@ class CustomDrawWidget(Gtk.DrawingArea):
         self.connect("button-press-event", self.on_button_press_event)
         self.connect("button-release-event", self.on_button_release_event)
         self.connect("motion-notify-event", self.on_motion_notify_event)
+        self.connect("scroll-event", self.on_scroll_event)
         self.rectangle_map = RectangleMap()
         self.custom_draw_handler = custom_draw_handler
         self.down_action = None
@@ -274,6 +269,15 @@ class CustomDrawWidget(Gtk.DrawingArea):
         if self.down_action:
             self.down_action.mouse_up()
             self.down_action = None
+
+    def on_scroll_event(self, widget, event):
+        x, y = self.get_coordinates_relative_self(event)
+        if event.direction == Gdk.ScrollDirection.UP:
+            self.rectangle_map.perform(x, y, lambda action:
+                action.scroll_up(x, y))
+        elif event.direction == Gdk.ScrollDirection.DOWN:
+            self.rectangle_map.perform(x, y, lambda action:
+                action.scroll_down(x, y))
 
     def get_coordinates_relative_self(self, event):
         return self.translate_coordinates(

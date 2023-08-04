@@ -21,6 +21,12 @@ class Action:
     def mouse_up(self):
         return NO_ACTION
 
+    def scroll_up(self, x, y):
+        return NO_ACTION
+
+    def scroll_down(self, x, y):
+        return NO_ACTION
+
     def simulate_click(self, x=0, y=0):
         self.left_mouse_down(x=x, y=y)
 

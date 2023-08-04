@@ -43,6 +43,8 @@ class Timeline:
     |<-h0----->|
 
     >>> timeline.rectangle_map # doctest: +ELLIPSIS
+    Rectangle(x=0, y=0, width=300, height=70):
+      <rlvideolib.gui.generic.ScrollAction object at ...>
     Rectangle(x=0, y=20, width=10, height=50):
       <rlvideolib.domain.cut.CutAction object at ...>
     Rectangle(x=0, y=0, width=300, height=20):
@@ -143,6 +145,21 @@ class Timeline:
             self.draw_scrollbar(context, area, player)
 
     def draw_clips(self, context, area, player, sections):
+        x, y, w, h = (
+            area.x,
+            area.y,
+            area.width,
+            area.height,
+        )
+        self.rectangle_map.add_from_context(
+            x,
+            y,
+            w,
+            h,
+            context,
+            ScrollAction(self)
+        )
+
         ruler_area, clip_area = area.split_height_from_top(top_height=20)
 
         with ruler_area.cairo_clip_translate(context) as ruler_area:
@@ -403,6 +420,17 @@ class ScrubAction(Action):
                 x/self.scrollbar.one_length_in_pixels
             ))
         )
+
+class ScrollAction(Action):
+
+    def __init__(self, timeline):
+        self.timeline = timeline
+
+    def scroll_up(self, x, y):
+        self.timeline.scroll_up(x, y)
+
+    def scroll_down(self, x, y):
+        self.timeline.scroll_down(x, y)
 
 class MockPlayer:
 
