@@ -135,7 +135,10 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
     @property
     def length(self):
         """
-        >>> Cut.test_instance(start=0, end=5).length
+        >>> Cut.test_instance(start=0, end=5, speed=1).length
+        5
+
+        >>> Cut.test_instance(start=0, end=5, speed=-1).length
         5
 
         >>> Cut.test_instance(start=0, end=5, speed=0.5).length
