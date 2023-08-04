@@ -109,8 +109,25 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
         return self
 
     def resize_right(self, amount):
-        print("TODO: implement resize_right!")
-        return self
+        """
+        >>> cut = Cut.test_instance(start=5, end=10, position=5)
+        >>> cut.in_out, cut.position, cut.speed
+        (Region(start=5, end=10), 5, 1)
+
+        >>> cut = cut.resize_right(5)
+        >>> cut.in_out, cut.position, cut.speed
+        (Region(start=10, end=20), 5, 0.5)
+
+        >>> cut = cut.resize_right(-5)
+        >>> cut.in_out, cut.position, cut.speed
+        (Region(start=5, end=10), 5, 1.0)
+        """
+        # TODO: check amount > start
+        speed_change = self.in_out.length / self.in_out.move_end(amount).length
+        return self._replace(
+            in_out=self.in_out.scale(1/speed_change),
+            speed=self.speed*speed_change
+        )
 
     def with_volume(self, volume):
         return self._replace(volume=volume)
@@ -308,10 +325,10 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
     def add_to_mlt_playlist(self, profile, cache, playlist):
         playlist.append(self.to_mlt_producer(profile, cache))
 
-    def to_mlt_producer(self, profile, cache):
+    def to_mlt_producer(self, profile, cache, speed=None):
         # TODO: is this `cut` really working? It seems not for cuts of cuts in
         # mixed sections.
-        producer = self.source.to_mlt_producer(profile, cache).cut(
+        producer = self.source.to_mlt_producer(profile, cache, self.speed).cut(
             self.in_out.start,
             self.in_out.end-1
         )
@@ -670,6 +687,8 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
     CutSource(source_id='A'): [Rectangle(x=67, y=0, width=66, height=25)]
     CutSource(source_id='b'): [Rectangle(x=67, y=25, width=66, height=25)]
     """
+
+    # TODO: eliminate nested cuts?
 
     @staticmethod
     def from_json(json):
@@ -1160,8 +1179,12 @@ class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
 
 class CutSource(namedtuple("CutSource", "source_id")):
 
-    def to_mlt_producer(self, profile, cache):
-        return cache.get_source_mlt_producer(self.get_source_id())
+    def to_mlt_producer(self, profile, cache, speed):
+        producer = cache.get_source_mlt_producer(self.get_source_id())
+        if speed != 1:
+            old_path = producer.get('resource')
+            producer = mlt.Producer(profile, f"timewarp:{speed}:{old_path}")
+        return producer
 
     def starts_at(self, position):
         return True

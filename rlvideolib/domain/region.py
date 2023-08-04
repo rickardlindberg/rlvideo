@@ -25,6 +25,12 @@ class Region(namedtuple("Region", "start,end")):
             "end": self.end,
         }
 
+    def scale(self, factor):
+        return self._replace(
+            start=int(self.start*factor),
+            end=int(self.end*factor),
+        )
+
     @property
     def length(self):
         return self.end - self.start
@@ -122,6 +128,15 @@ class Region(namedtuple("Region", "start,end")):
 
     def shorten_left(self, amount):
         return self._replace(start=self.start+amount)
+
+    def move_end(self, amount):
+        """
+        >>> Region(0, 1).move_end(-1)
+        Region(start=0, end=0)
+
+        TODO: why no exception?
+        """
+        return self._replace(end=self.end+amount)
 
 class UnionRegions:
 
