@@ -311,6 +311,57 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
                     player=player
                 )
             )
+        SIZE = scrollbar.one_length_in_pixels / 5
+        left = rectangles[0].left_side(SIZE)
+        rectangle_map.add_from_context(
+            left.x,
+            left.y,
+            left.width,
+            left.height,
+            context,
+            ResizeLeftAction(
+                project=project,
+                cut=self.get_source_cut(),
+                scrollbar=scrollbar,
+                player=player
+            )
+        )
+        right = rectangles[0].right_side(SIZE)
+        rectangle_map.add_from_context(
+            right.x,
+            right.y,
+            right.width,
+            right.height,
+            context,
+            ResizeRightAction(
+                project=project,
+                cut=self.get_source_cut(),
+                scrollbar=scrollbar,
+                player=player
+            )
+        )
+
+class ResizeLeftAction(Action):
+
+    def __init__(self, project, cut, scrollbar, player):
+        self.project = project
+        self.cut = cut
+        self.scrollbar = scrollbar
+        self.player = player
+
+    def mouse_move(self, x, y):
+        print("left")
+
+class ResizeRightAction(Action):
+
+    def __init__(self, project, cut, scrollbar, player):
+        self.project = project
+        self.cut = cut
+        self.scrollbar = scrollbar
+        self.player = player
+
+    def mouse_move(self, x, y):
+        print("right")
 
 class CutAction(Action):
 

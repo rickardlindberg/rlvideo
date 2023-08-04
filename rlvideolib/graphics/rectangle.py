@@ -20,6 +20,25 @@ class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
         if height <= 0:
             raise ValueError("Height must be > 0.")
 
+    def left_side(self, size):
+        """
+        >>> Rectangle.from_size(100, 100).left_side(10)
+        Rectangle(x=0, y=0, width=10, height=100)
+        """
+        return self._replace(
+            width=size
+        )
+
+    def right_side(self, size):
+        """
+        >>> Rectangle.from_size(100, 100).right_side(10)
+        Rectangle(x=90, y=0, width=10, height=100)
+        """
+        return self._replace(
+            x=self.right-size,
+            width=size
+        )
+
     @property
     def left(self):
         return self.x
