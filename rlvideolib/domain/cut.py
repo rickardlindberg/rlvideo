@@ -341,8 +341,8 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
                     player=player
                 )
             )
-        SIZE = scrollbar.one_length_in_pixels / 5
-        left = rectangles[0].left_side(SIZE)
+        HANDLE_WIDTH_IN_PX = 5
+        left = rectangles[0].left_side(HANDLE_WIDTH_IN_PX)
         rectangle_map.add_from_context(
             left.x,
             left.y,
@@ -356,7 +356,7 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume")):
                 player=player
             )
         )
-        right = rectangles[0].right_side(SIZE)
+        right = rectangles[0].right_side(HANDLE_WIDTH_IN_PX)
         rectangle_map.add_from_context(
             right.x,
             right.y,
