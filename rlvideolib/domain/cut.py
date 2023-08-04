@@ -349,7 +349,7 @@ class ResizeLeftAction(Action):
         self.scrollbar = scrollbar
         self.player = player
 
-    def mouse_move(self, x, y):
+    def mouse_move(self, x, y, gui):
         print("left")
 
 class ResizeRightAction(Action):
@@ -360,7 +360,7 @@ class ResizeRightAction(Action):
         self.scrollbar = scrollbar
         self.player = player
 
-    def mouse_move(self, x, y):
+    def mouse_move(self, x, y, gui):
         print("right")
 
 class CutAction(Action):
@@ -483,7 +483,7 @@ class CutAction(Action):
         self.transaction = None
         self.x = None
 
-    def mouse_move(self, x, y):
+    def mouse_move(self, x, y, gui):
         """
         I move a cut:
 
@@ -502,7 +502,7 @@ class CutAction(Action):
         ...     player=None,
         ... )
         >>> action.left_mouse_down(0, 0)
-        >>> action.mouse_move(5, 0)
+        >>> action.mouse_move(5, 0, None)
         >>> action.mouse_up()
         >>> project.split_into_sections().to_ascii_canvas()
         |%%%%%<-A0----->|

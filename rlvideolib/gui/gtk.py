@@ -259,9 +259,10 @@ class CustomDrawWidget(Gtk.DrawingArea):
     def on_motion_notify_event(self, widget, event):
         if self.down_action:
             x, y = self.get_coordinates_relative_self(event)
-            self.down_action.mouse_move(x, y)
+            self.down_action.mouse_move(x, y, GtkGui(event))
         else:
-            self.perform_action(event, lambda x, y, action: action.mouse_move(x, y))
+            self.perform_action(event, lambda x, y, action:
+                action.mouse_move(x, y, GtkGui(event)))
 
     def on_button_release_event(self, widget, event):
         if self.down_action:

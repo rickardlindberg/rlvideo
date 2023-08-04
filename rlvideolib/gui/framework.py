@@ -15,7 +15,7 @@ class Action:
     def right_mouse_down(self, gui):
         return NO_ACTION
 
-    def mouse_move(self, x, y):
+    def mouse_move(self, x, y, gui):
         return NO_ACTION
 
     def mouse_up(self):

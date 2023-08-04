@@ -387,7 +387,7 @@ class ScrollbarDragAction(Action):
     def mouse_up(self):
         self.x = None
 
-    def mouse_move(self, x, y):
+    def mouse_move(self, x, y, gui):
         if self.x is not None:
             self.timeline.set_scrollbar(
                 self.scrollbar.move_scrollbar(
@@ -420,7 +420,7 @@ class ScrubAction(Action):
     def mouse_up(self):
         self.x = None
 
-    def mouse_move(self, x, y):
+    def mouse_move(self, x, y, gui):
         if self.x is not None:
             self.scrub(x)
 
