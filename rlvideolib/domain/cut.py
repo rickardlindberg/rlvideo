@@ -11,6 +11,7 @@ from rlvideolib.domain.region import UnionRegions
 from rlvideolib.domain.section import MixSection
 from rlvideolib.domain.section import PlaylistSection
 from rlvideolib.domain.section import Sections
+from rlvideolib.domain.section import MltInconsistencyError
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.gui.framework import Action
 from rlvideolib.gui.framework import MenuItem
@@ -1183,7 +1184,7 @@ class CutSource(namedtuple("CutSource", "source_id")):
         producer = cache.get_source_mlt_producer(self.get_source_id())
         if speed != 1:
             old_path = producer.get('resource')
-            producer = mlt.Producer(profile, f"timewarp:{speed}:{old_path}")
+            producer = MltInconsistencyError.create_producer(profile, f"timewarp:{speed}:{old_path}")
         return producer
 
     def starts_at(self, position):

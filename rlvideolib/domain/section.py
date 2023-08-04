@@ -95,7 +95,14 @@ class PlaylistSection:
             pos += part.length
 
 class MltInconsistencyError(Exception):
-    pass
+
+    @staticmethod
+    def create_producer(profile, arg):
+        producer = mlt.Producer(profile, arg)
+        if not producer.is_valid():
+            raise MltInconsistencyError(
+                f"Invalid producer: {arg!r}."
+            )
 
 class MixSection:
 
