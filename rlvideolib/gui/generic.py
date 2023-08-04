@@ -314,10 +314,16 @@ class Scrollbar(namedtuple("Scrollbar", "content_length,one_length_in_pixels,ui_
             return self.content_desired_start
 
     def zoom_in(self, x):
-        return self._replace(one_length_in_pixels=self.one_length_in_pixels*1.5)
+        return self.zoom(1.5)
 
     def zoom_out(self, x):
-        return self._replace(one_length_in_pixels=self.one_length_in_pixels/1.5)
+        return self.zoom(0.5)
+
+    def zoom(self, factor):
+        return self._replace(
+            one_length_in_pixels=self.one_length_in_pixels*factor,
+            content_desired_start=self.content_desired_start
+        )
 
     def move_scrollbar(self, pixels):
         """
