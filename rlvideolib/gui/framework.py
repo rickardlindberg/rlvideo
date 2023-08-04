@@ -3,19 +3,21 @@ from collections import namedtuple
 class MenuItem(namedtuple("MenuItem", "label,action")):
     pass
 
+NO_ACTION = object()
+
 class Action:
 
     def left_mouse_down(self, x, y):
-        pass
+        return NO_ACTION
 
     def right_mouse_down(self, gui):
-        pass
+        return NO_ACTION
 
     def mouse_move(self, x, y):
-        pass
+        return NO_ACTION
 
     def mouse_up(self):
-        pass
+        return NO_ACTION
 
     def simulate_click(self, x=0, y=0):
         self.left_mouse_down(x=x, y=y)

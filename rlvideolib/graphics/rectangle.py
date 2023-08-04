@@ -1,6 +1,9 @@
 from collections import namedtuple
 from contextlib import contextmanager
 
+from rlvideolib.gui.framework import Action
+from rlvideolib.gui.framework import NO_ACTION
+
 class Rectangle(namedtuple("Rectangle", "x,y,width,height")):
 
     def __init__(self, x, y, width, height):
@@ -225,6 +228,25 @@ class RectangleMap:
             if rectangle.contains(x, y):
                 return item
         return default
+
+    def perform(self, x, y, fn):
+        """
+        >>> class TestAction(Action):
+        ...     def left_mouse_down(self, x, y):
+        ...         pass
+        >>> no_action = Action()
+        >>> some_action = TestAction()
+        >>> r = RectangleMap()
+        >>> r.add(Rectangle(x=0, y=0, width=10, height=10), no_action)
+        >>> r.add(Rectangle(x=0, y=0, width=10, height=10), some_action)
+        >>> action = r.perform(10, 10, lambda action: action.left_mouse_down(10, 10))
+        >>> action is some_action
+        True
+        """
+        for rectangle, item in self.map:
+            if rectangle.contains(x, y):
+                if fn(item) is not NO_ACTION:
+                    return item
 
     def __repr__(self):
         return "\n".join(f"{rectangle}:\n  {item}" for rectangle, item in self.map)
