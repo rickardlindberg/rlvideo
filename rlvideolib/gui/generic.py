@@ -76,12 +76,6 @@ class Timeline:
         self.scrollbar_event.listen(fn)
         fn()
 
-    def scroll_up(self, x, y):
-        self.set_zoom_factor(self.scrollbar.one_length_in_pixels*1.5)
-
-    def scroll_down(self, x, y):
-        self.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
-
     def set_zoom_factor(self, zoom_factor):
         self.set_scrollbar(self.scrollbar._replace(one_length_in_pixels=zoom_factor))
 
@@ -157,7 +151,7 @@ class Timeline:
             w,
             h,
             context,
-            ScrollAction(self)
+            ScrollAction(self, self.scrollbar)
         )
         self.rectangle_map.add_from_context(
             x,
@@ -417,14 +411,15 @@ class ScrubAction(Action):
 
 class ScrollAction(Action):
 
-    def __init__(self, timeline):
+    def __init__(self, timeline, scrollbar):
         self.timeline = timeline
+        self.scrollbar = scrollbar
 
     def scroll_up(self, x, y):
-        self.timeline.scroll_up(x, y)
+        self.timeline.set_zoom_factor(self.scrollbar.one_length_in_pixels*1.5)
 
     def scroll_down(self, x, y):
-        self.timeline.scroll_down(x, y)
+        self.timeline.set_zoom_factor(self.scrollbar.one_length_in_pixels/1.5)
 
 class MockPlayer:
 
