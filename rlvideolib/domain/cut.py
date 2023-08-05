@@ -424,12 +424,16 @@ class CutDragActionBase(Action):
         self.cursor(gui)
         if self.transaction:
             self.transaction.reset()
-            self.transaction.modify(self.cut.id, lambda cut:
-                self.modify_cut_on_drag(
-                    int(round((x-self.x)/self.scrollbar.one_length_in_pixels)),
-                    cut
-                )
+            self.drag_operation(
+                self.transaction,
+                int(round((x-self.x)/self.scrollbar.one_length_in_pixels))
             )
+
+    def drag_operation(self, transaction, delta):
+        self.transaction.modify(
+            self.cut.id,
+            lambda cut: self.modify_cut_on_drag(delta, cut)
+        )
 
     def mouse_up(self):
         if self.transaction:
@@ -517,12 +521,16 @@ class CutAction(CutDragActionBase):
         ... )
         >>> action.simulate_drag(x_start=0, x_end=2, ctrl=True)
         >>> project.split_into_sections().to_ascii_canvas()
-        |<-A0-----><-B0-----><-C0----->|
+        |<-A0----->%%<-B0-----><-C0----->|
         """
+        return cut.move(delta)
+
+    def drag_operation(self, transaction, delta):
         if self.ctrl:
-            return cut
+            for cut_id in transaction.get_cut_ids(lambda cut: cut.start >= self.cut.start):
+                self.transaction.modify(cut_id, lambda cut: cut.move(delta))
         else:
-            return cut.move(delta)
+            return CutDragActionBase.drag_operation(self, transaction, delta)
 
     def cursor(self, gui):
         pass

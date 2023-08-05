@@ -334,6 +334,12 @@ class Transaction:
         else:
             self.rollback()
 
+    def get_cut_ids(self, matcher):
+        # TODO: fix law of demeter here
+        for cut in self.project.project_data.cuts.cut_map.values():
+            if matcher(cut):
+                yield cut.id
+
     def rollback(self):
         with self.cleanup():
             self.reset()
