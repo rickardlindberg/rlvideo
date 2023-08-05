@@ -476,19 +476,35 @@ class ResizeRightAction(CutDragActionBase):
         else:
             return cut.move_right(delta)
 
-class CutAction(Action):
+class CutAction(CutDragActionBase):
 
-    def __init__(self, project, cut, scrollbar, player):
-        self.project = project
-        self.cut = cut
-        self.scrollbar = scrollbar
-        self.player = player
-        self.transaction = None
-        self.x = None
+    def modify_cut_on_drag(self, delta, cut):
+        """
+        I move a cut:
 
-    def left_mouse_down(self, x, y, ctrl):
-        self.transaction = self.project.new_transaction()
-        self.x = x
+        >>> from rlvideolib.domain.project import Project
+        >>> project = Project.new()
+        >>> with project.new_transaction() as transaction:
+        ...     hello_id = transaction.add_text_clip("hello", length=10, id="A")
+        >>> project.split_into_sections().to_ascii_canvas()
+        |<-A0----->|
+        >>> class MockScrollbar:
+        ...     one_length_in_pixels = 1
+        >>> action = CutAction(
+        ...     project=project,
+        ...     cut=project.project_data.get_cut(hello_id),
+        ...     scrollbar=MockScrollbar(),
+        ...     player=None,
+        ... )
+
+        >>> action.simulate_drag(x_start=0, x_end=5)
+        >>> project.split_into_sections().to_ascii_canvas()
+        |%%%%%<-A0----->|
+        """
+        return cut.move(delta)
+
+    def cursor(self, gui):
+        pass
 
     def right_mouse_down(self, gui):
         """
@@ -590,43 +606,6 @@ class CutAction(Action):
         ]+[
             MenuItem(label="debug", action=lambda: print(self.cut)),
         ])
-
-    def mouse_up(self):
-        if self.transaction:
-            # TODO: how to ensure that transactions that we create are
-            # committed or rolled back?
-            self.transaction.commit()
-        self.transaction = None
-        self.x = None
-
-    def mouse_move(self, x, y, gui):
-        """
-        I move a cut:
-
-        >>> from rlvideolib.domain.project import Project
-        >>> project = Project.new()
-        >>> with project.new_transaction() as transaction:
-        ...     hello_id = transaction.add_text_clip("hello", length=10, id="A")
-        >>> project.split_into_sections().to_ascii_canvas()
-        |<-A0----->|
-        >>> class MockScrollbar:
-        ...     one_length_in_pixels = 1
-        >>> action = CutAction(
-        ...     project=project,
-        ...     cut=project.project_data.get_cut(hello_id),
-        ...     scrollbar=MockScrollbar(),
-        ...     player=None,
-        ... )
-        >>> action.left_mouse_down(0, 0, False)
-        >>> action.mouse_move(5, 0, None)
-        >>> action.mouse_up()
-        >>> project.split_into_sections().to_ascii_canvas()
-        |%%%%%<-A0----->|
-        """
-        if self.transaction is not None:
-            self.transaction.reset()
-            self.transaction.modify(self.cut.id, lambda cut:
-                cut.move(int((x-self.x)/self.scrollbar.one_length_in_pixels)))
 
 class SpaceCut(namedtuple("SpaceCut", "length")):
 
