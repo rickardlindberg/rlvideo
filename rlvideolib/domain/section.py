@@ -4,6 +4,7 @@ from rlvideolib.asciicanvas import AsciiCanvas
 from rlvideolib.debug import timeit
 from rlvideolib.domain.region import Region
 from rlvideolib.graphics.rectangle import Rectangle
+from rlvideolib.mlthelpers import MltInconsistencyError
 
 class Sections:
 
@@ -93,16 +94,6 @@ class PlaylistSection:
             elif pos + part.length > region.start:
                 part.collect_cut_boxes(region, boxes, part_rectangle, pos)
             pos += part.length
-
-class MltInconsistencyError(Exception):
-
-    @staticmethod
-    def create_producer(profile, arg):
-        producer = mlt.Producer(profile, arg)
-        if not producer.is_valid():
-            raise MltInconsistencyError(
-                f"Invalid producer: {arg!r}."
-            )
 
 class MixSection:
 

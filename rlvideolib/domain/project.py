@@ -17,6 +17,7 @@ from rlvideolib.domain.source import Sources
 from rlvideolib.domain.source import TextSource
 from rlvideolib.events import Event
 from rlvideolib.jobs import NonThreadedBackgroundWorker
+from rlvideolib.mlthelpers import LoadingProducer
 from rlvideolib.testing import capture_stdout_stderr
 from rlvideolib.testing import doctest_equal
 
@@ -276,21 +277,6 @@ class ExportSourceLoader:
 
     def get_source_mlt_producer(self, source_id):
         return self.project.get_source(source_id).load(self.profile)
-
-class LoadingProducer(mlt.Producer):
-
-    def __init__(self, profile):
-        mlt.Producer.__init__(self, profile, "pango")
-        self.set("text", "Loading...")
-        self.set("bgcolour", "red")
-
-    def cut(self, in_, out):
-        # An mlt.Producer has a default maximum length of 15000.
-        max_out = max(out, int(self.get("out")))
-        self.set("in", "0")
-        self.set("out", max_out)
-        self.set("length", max_out+1)
-        return mlt.Producer.cut(self, in_, out)
 
 class ProxySourceLoader:
 

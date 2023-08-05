@@ -11,11 +11,12 @@ from rlvideolib.domain.region import UnionRegions
 from rlvideolib.domain.section import MixSection
 from rlvideolib.domain.section import PlaylistSection
 from rlvideolib.domain.section import Sections
-from rlvideolib.domain.section import MltInconsistencyError
 from rlvideolib.graphics.rectangle import Rectangle
 from rlvideolib.gui.framework import Action
 from rlvideolib.gui.framework import MenuItem
 from rlvideolib.gui.framework import TestGui
+from rlvideolib.mlthelpers import MltInconsistencyError
+from rlvideolib.mlthelpers import TimewarpProducer
 
 DEFAULT_REGION_GROUP_SIZE = 100
 
@@ -1181,12 +1182,11 @@ class RegionToCuts(namedtuple("RegionToCuts", "region_number_to_cut_ids")):
 class CutSource(namedtuple("CutSource", "source_id")):
 
     def to_mlt_producer(self, profile, cache, speed):
-        producer = cache.get_source_mlt_producer(self.get_source_id())
-        from rlvideolib.domain.project import LoadingProducer
-        if speed != 1 and not isinstance(producer, LoadingProducer):
-            old_path = producer.get('resource')
-            producer = MltInconsistencyError.create_producer(profile, f"timewarp:{speed}:{old_path}")
-        return producer
+        return TimewarpProducer(
+            producer=cache.get_source_mlt_producer(self.get_source_id()),
+            profile=profile,
+            speed=speed
+        )
 
     def starts_at(self, position):
         return True
