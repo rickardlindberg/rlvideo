@@ -49,8 +49,8 @@ class Action:
     def simulate_click(self, x=0, y=0):
         self.left_mouse_down(x=x, y=y, ctrl=False)
 
-    def simulate_drag(self, x_start=0, x_end=10, y_start=0, y_end=10, gui=TestGui()):
-        self.left_mouse_down(x=x_start, y=y_start, ctrl=False)
+    def simulate_drag(self, x_start=0, x_end=10, y_start=0, y_end=10, gui=TestGui(), ctrl=False):
+        self.left_mouse_down(x=x_start, y=y_start, ctrl=ctrl)
         self.mouse_move(x=x_start+(x_end-x_start)/2, y=y_start+(y_end-y_start)/2, gui=gui)
         self.mouse_move(x=x_end, y=y_end, gui=gui)
         self.mouse_up()

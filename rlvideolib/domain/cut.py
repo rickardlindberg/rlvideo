@@ -480,28 +480,49 @@ class CutAction(CutDragActionBase):
 
     def modify_cut_on_drag(self, delta, cut):
         """
+        >>> from rlvideolib.domain.project import Project
+        >>> from rlvideolib.gui.generic import Scrollbar
+
         I move a cut:
 
-        >>> from rlvideolib.domain.project import Project
         >>> project = Project.new()
         >>> with project.new_transaction() as transaction:
         ...     hello_id = transaction.add_text_clip("hello", length=10, id="A")
         >>> project.split_into_sections().to_ascii_canvas()
         |<-A0----->|
-        >>> class MockScrollbar:
-        ...     one_length_in_pixels = 1
         >>> action = CutAction(
         ...     project=project,
         ...     cut=project.project_data.get_cut(hello_id),
-        ...     scrollbar=MockScrollbar(),
+        ...     scrollbar=Scrollbar.test_instance(),
         ...     player=None,
         ... )
-
         >>> action.simulate_drag(x_start=0, x_end=5)
         >>> project.split_into_sections().to_ascii_canvas()
         |%%%%%<-A0----->|
+
+        I move all cuts to the right:
+
+        >>> project = Project.new()
+        >>> with project.new_transaction() as transaction:
+        ...     a_id = transaction.add_text_clip("hello", length=10, id="A")
+        ...     b_id = transaction.add_text_clip("hello", length=10, id="B")
+        ...     c_id = transaction.add_text_clip("hello", length=10, id="C")
+        >>> project.split_into_sections().to_ascii_canvas()
+        |<-A0-----><-B0-----><-C0----->|
+        >>> action = CutAction(
+        ...     project=project,
+        ...     cut=project.project_data.get_cut(b_id),
+        ...     scrollbar=Scrollbar.test_instance(),
+        ...     player=None,
+        ... )
+        >>> action.simulate_drag(x_start=0, x_end=2, ctrl=True)
+        >>> project.split_into_sections().to_ascii_canvas()
+        |<-A0-----><-B0-----><-C0----->|
         """
-        return cut.move(delta)
+        if self.ctrl:
+            return cut
+        else:
+            return cut.move(delta)
 
     def cursor(self, gui):
         pass
