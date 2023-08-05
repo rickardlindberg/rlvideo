@@ -1182,7 +1182,8 @@ class CutSource(namedtuple("CutSource", "source_id")):
 
     def to_mlt_producer(self, profile, cache, speed):
         producer = cache.get_source_mlt_producer(self.get_source_id())
-        if speed != 1:
+        from rlvideolib.domain.project import LoadingProducer
+        if speed != 1 and not isinstance(producer, LoadingProducer):
             old_path = producer.get('resource')
             producer = MltInconsistencyError.create_producer(profile, f"timewarp:{speed}:{old_path}")
         return producer
