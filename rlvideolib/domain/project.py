@@ -227,6 +227,8 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
 
     @staticmethod
     def from_json(json):
+        # TODO: validate the cuts point to valid sources and that they have
+        # valid in/out points.
         return ProjectData(
             sources=Sources.from_json(json["sources"]),
             cuts=Cuts.from_json(json["cuts"])
@@ -246,7 +248,7 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
         return self._replace(sources=self.sources.add(source))
 
     def add_cut(self, cut):
-        # TODO: assert that source id exists (even for json loading)
+        # TODO: ensure in/out
         return self._replace(cuts=self.cuts.add(cut))
 
     def modify_cut(self, cut_id, fn):
