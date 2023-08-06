@@ -248,8 +248,18 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
         return self._replace(sources=self.sources.add(source))
 
     def add_cut(self, cut):
-        # TODO: ensure in/out
-        return self._replace(cuts=self.cuts.add(cut))
+        """
+        In/Out is modified according to source:
+
+        >>> ProjectData.empty(
+        ... ).add_source(
+        ...     FileSource(id="source_a", path="a.mp4", length=5)
+        ... ).add_cut(
+        ...     Cut.test_instance(name="source_a", start=0, end=10, id="cut_a")
+        ... ).get_cut("cut_a").in_out
+        Region(start=0, end=5)
+        """
+        return self._replace(cuts=self.cuts.add(self.adjust_cut_in_out(cut)))
 
     def modify_cut(self, cut_id, fn):
         """
@@ -262,9 +272,13 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
         >>> data.get_cut("cut_a").in_out
         Region(start=0, end=5)
         """
-        def wrapper(cut):
-            return self.get_source(cut.source.source_id).limit_in_out(fn(cut))
-        return self._replace(cuts=self.cuts.modify(cut_id, wrapper))
+        return self._replace(cuts=self.cuts.modify(
+            cut_id,
+            lambda cut: self.adjust_cut_in_out(fn(cut))
+        ))
+
+    def adjust_cut_in_out(self, cut):
+        return self.get_source(cut.source.source_id).limit_in_out(cut)
 
     def ripple_delete(self, cut_id):
         return self._replace(cuts=self.cuts.ripple_delete(cut_id))
