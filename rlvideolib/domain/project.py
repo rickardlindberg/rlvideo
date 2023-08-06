@@ -10,6 +10,7 @@ import mlt
 from rlvideolib.debug import timeit
 from rlvideolib.domain.clip import Clip
 from rlvideolib.domain.clip import ProxySpec
+from rlvideolib.domain.cut import Cut
 from rlvideolib.domain.cut import Cuts
 from rlvideolib.domain.cut import SpaceCut
 from rlvideolib.domain.source import FileSource
@@ -249,7 +250,19 @@ class ProjectData(namedtuple("ProjectData", "sources,cuts")):
         return self._replace(cuts=self.cuts.add(cut))
 
     def modify_cut(self, cut_id, fn):
-        return self._replace(cuts=self.cuts.modify(cut_id, fn))
+        """
+        A cut's out point is adjusted if going outside the limit:
+
+        >>> data = ProjectData.empty()
+        >>> data = data.add_source(FileSource(id="source_a", path="a.mp4", length=5))
+        >>> data = data.add_cut(Cut.test_instance(name="source_a", start=0, end=3, id="cut_a"))
+        >>> data = data.modify_cut("cut_a", lambda cut: cut.move_right(10))
+        >>> data.get_cut("cut_a").in_out
+        Region(start=0, end=5)
+        """
+        def wrapper(cut):
+            return self.get_source(cut.source.source_id).limit_in_out(fn(cut))
+        return self._replace(cuts=self.cuts.modify(cut_id, wrapper))
 
     def ripple_delete(self, cut_id):
         return self._replace(cuts=self.cuts.ripple_delete(cut_id))

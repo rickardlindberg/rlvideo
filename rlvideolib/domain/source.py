@@ -74,6 +74,9 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
     def get_label(self):
         return os.path.basename(self.path)
 
+    def limit_in_out(self, cut):
+        return cut.limit_out(self.length)
+
 class TextSource(namedtuple("TextSource", "id,text")):
 
     @staticmethod
@@ -109,6 +112,9 @@ class TextSource(namedtuple("TextSource", "id,text")):
 
     def get_label(self):
         return self.text
+
+    def limit_in_out(self, cut):
+        return cut
 
 # TODO: add image sequence source
 

@@ -138,6 +138,9 @@ class Region(namedtuple("Region", "start,end")):
         """
         return self._replace(end=self.end+amount)
 
+    def limit_end(self, max_end):
+        return self._replace(end=min(self.end, max_end))
+
 class UnionRegions:
 
     def __init__(self):

@@ -103,8 +103,9 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
         )
 
     def move_right(self, amount):
-        print("TODO: implement move_right!")
-        return self
+        return self._replace(
+            in_out=self.in_out.move_end(amount),
+        )
 
     def resize_left(self, amount):
         print("TODO: implement resize_left!")
@@ -405,6 +406,9 @@ class Cut(namedtuple("Cut", "source,in_out,position,id,mix_strategy,volume,speed
                 player=player
             )
         )
+
+    def limit_out(self, max_out):
+        return self._replace(in_out=self.in_out.limit_end(max_out))
 
 class CutDragActionBase(Action):
 
