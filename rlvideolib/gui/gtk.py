@@ -239,6 +239,8 @@ class MltPlayer:
 
 class CustomDrawWidget(Gtk.DrawingArea):
 
+    # TODO: double click causes "transaction already in progress"?
+
     def __init__(self, main_window, custom_draw_handler):
         Gtk.DrawingArea.__init__(self)
         self.add_events(
