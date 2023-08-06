@@ -75,7 +75,15 @@ class FileSource(namedtuple("FileSource", "id,path,length")):
         return os.path.basename(self.path)
 
     def limit_in_out(self, cut):
-        # TODO: test limit with different speed
+        """
+        >>> source = FileSource(id="source_a", path="a.mp4", length=5)
+
+        >>> source.limit_in_out(Cut.test_instance(start=0, end=10)).in_out
+        Region(start=0, end=5)
+
+        >>> source.limit_in_out(Cut.test_instance(start=0, end=20, speed=0.5)).in_out
+        Region(start=0, end=10)
+        """
         return cut.limit_out(int(self.length/cut.speed))
 
 class TextSource(namedtuple("TextSource", "id,text")):
