@@ -735,6 +735,21 @@ class Cuts(namedtuple("Cuts", "cut_map,region_to_cuts,region_group_size")):
     def get(self, id):
         return self.cut_map[id]
 
+    def has_overlap_with_cut(self, cut):
+        """
+        >>> cut = Cut.test_instance()
+
+        >>> Cuts.empty().has_overlap_with_cut(cut)
+        False
+
+        >>> Cuts.empty().add(cut).has_overlap_with_cut(cut)
+        True
+        """
+        for x in self.cut_map.values():
+            if x.get_overlap(cut) is not None:
+                return True
+        return False
+
     def add(self, *cuts):
         """
         >>> cuts = Cuts.empty()
